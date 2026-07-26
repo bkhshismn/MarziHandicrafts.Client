@@ -1,0 +1,23 @@
+@inherits LayoutComponentBase
+@using MudBlazor
+@using Marzi.Client.Shared.Components.Navigation
+
+<MudThemeProvider Theme="@Marzi.Client.Shared.Theme.MarziTheme.Default" />
+<MudDialogProvider />
+<MudSnackbarProvider />
+
+<MudLayout RightToLeft="true">
+    <MudAppBar Elevation="1" Color="Color.Primary">
+        <MudText Typo="Typo.h6" Class="mx-2">Marzi Handicrafts</MudText>
+        <MudSpacer />
+        <MudIconButton Icon="@Icons.Material.Filled.Notifications" Color="Color.Inherit" />
+    </MudAppBar>
+
+    <MudMainContent>
+        <div class="pa-4 pb-10">
+            @Body
+        </div>
+    </MudMainContent>
+
+    <BottomNavigation />
+</MudLayout>

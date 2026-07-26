@@ -1,0 +1,18 @@
+@using MudBlazor
+
+<Row Justify="Justify.SpaceBetween" Align="Align.Center" Class="mb-3">
+    <MudText Typo="Typo.h6" Class="fw-bold">@Title</MudText>
+
+    @if (!string.IsNullOrWhiteSpace(ActionText))
+    {
+        <MudLink Href="@ActionLink" Color="Color.Primary" Underline="Underline.None">
+            @ActionText
+        </MudLink>
+    }
+</Row>
+
+@code {
+    [Parameter] public string Title { get; set; } = string.Empty;
+    [Parameter] public string? ActionText { get; set; }
+    [Parameter] public string ActionLink { get; set; } = "#";
+}

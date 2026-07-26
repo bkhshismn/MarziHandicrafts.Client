@@ -1,0 +1,34 @@
+@page "/login"
+@layout Marzi.Client.Shared.Layouts.MainLayout
+@using MudBlazor
+
+<Box Class="d-flex justify-center align-center" Style="min-height:70vh;">
+    <MudPaper Class="pa-6" Width="100%" MaxWidth="420px" Elevation="3" Style="border-radius:24px;">
+        <Box Class="d-flex justify-center mb-3">
+            <MudAvatar Size="Size.Large" Color="Color.Primary" Icon="@Icons.Material.Filled.Palette" />
+        </Box>
+
+        <MudText Typo="Typo.h5" Align="Align.Center" Class="fw-bold mb-1">
+            ورود به Marzi Handicrafts
+        </MudText>
+
+        <MudText Typo="Typo.body2" Align="Align.Center" Color="Color.Secondary" Class="mb-4">
+            با شماره موبایل و رمز عبور وارد شوید
+        </MudText>
+
+        <MudTextField Label="شماره موبایل" Variant="Variant.Outlined" FullWidth="true" Class="mb-3" />
+
+        <MudTextField Label="رمز عبور" Variant="Variant.Outlined" InputType="InputType.Password" FullWidth="true" Class="mb-2" />
+
+        <MudCheckBox Label="مرا به خاطر بسپار" Color="Color.Primary" Class="mb-3" />
+
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" FullWidth="true" Size="Size.Large">
+            ورود
+        </MudButton>
+
+        <Box Class="d-flex justify-space-between mt-3" Style="font-size:14px;" Wrap="Wrap.Wrap" RowGap="1">
+            <MudLink Href="/register" Color="Color.Primary" Underline="Underline.None">ثبت نام</MudLink>
+            <MudLink Href="/forgot-password" Color="Color.Primary" Underline="Underline.None">فراموشی رمز</MudLink>
+        </Box>
+    </MudPaper>
+</Box>

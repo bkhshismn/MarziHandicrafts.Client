@@ -1,0 +1,53 @@
+@page "/"
+@layout Marzi.Client.Shared.Layouts.MainLayout
+@using MudBlazor
+@using Marzi.Client.Shared.Components.Common
+@using Marzi.Client.Shared.Components.Cards
+
+<HeroBanner />
+
+<MudText Typo="Typo.h5" Class="mb-2">سلام 🌸</MudText>
+<MudText Typo="Typo.body1" Color="Color.Secondary" Class="mb-4">
+    امروز آماده‌ای یک اثر هنری جدید خلق کنیم؟
+</MudText>
+
+<SectionTitle Title="دوره‌های آموزشی" ActionText="همه" ActionLink="/courses" />
+
+<MudGrid Class="mb-4">
+    <MudItem xs="12" sm="6" md="4" lg="3">
+        <CourseCard />
+    </MudItem>
+
+    <MudItem xs="12" sm="6" md="4" lg="3">
+        <CourseCard />
+    </MudItem>
+</MudGrid>
+
+<SectionTitle Title="نمونه کارها" ActionText="همه" ActionLink="/portfolio" />
+
+<MudGrid Class="mb-4">
+    <MudItem xs="12" sm="6" md="4" lg="3">
+        <PortfolioCard />
+    </MudItem>
+
+    <MudItem xs="12" sm="6" md="4" lg="3">
+        <PortfolioCard />
+    </MudItem>
+</MudGrid>
+
+<MudPaper Class="pa-5" Elevation="1" Style="border-radius:20px;">
+    <Row Align="Align.Center" ColumnGap="3">
+        <MudAvatar Icon="@Icons.Material.Filled.ShoppingBag" Color="Color.Primary" Size="Size.Large" />
+
+        <Box Flex="1" Gap="1" Direction="Column">
+            <MudText Typo="Typo.h6" Class="fw-bold">سفارش ساخت اثر هنری</MudText>
+            <MudText Typo="Typo.body2" Color="Color.Secondary">
+                عکس ایده‌ات را ارسال کن تا برایت مجسمه یا تابلو اختصاصی ساخته شود.
+            </MudText>
+        </Box>
+    </Row>
+
+    <MudButton Variant="Variant.Filled" Color="Color.Primary" Href="/orders" FullWidth="true" Class="mt-4">
+        ثبت سفارش
+    </MudButton>
+</MudPaper>

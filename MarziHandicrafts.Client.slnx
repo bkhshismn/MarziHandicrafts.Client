@@ -1,0 +1,7 @@
+<Solution>
+  <Project Path="Marzi.Client.Core/Marzi.Client.Core.csproj" />
+  <Project Path="Marzi.Client.Infrastructure/Marzi.Client.Infrastructure.csproj" />
+  <Project Path="Marzi.Client.Maui/Marzi.Client.Maui.csproj" />
+  <Project Path="Marzi.Client.Shared/Marzi.Client.Shared.csproj" />
+  <Project Path="Marzi.Client.Web/Marzi.Client.Web.csproj" />
+</Solution>

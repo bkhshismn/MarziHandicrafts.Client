@@ -1,0 +1,33 @@
+@using MudBlazor
+
+<MudCard Class="course-card" Elevation="2">
+    <MudCardMedia Image="https://images.unsplash.com/photo-1513364776144-60967b0f800f?auto=format&fit=crop&w=800&q=80" Height="170" />
+
+    <MudCardContent>
+        <MudText Typo="Typo.subtitle1" Class="fw-bold mb-1">آموزش نقاشی مدرن</MudText>
+        <MudText Typo="Typo.body2" Color="Color.Secondary" Class="mb-2">۱۲ جلسه • مقدماتی تا پیشرفته</MudText>
+
+        <Row Justify="Justify.SpaceBetween" Align="Align.Center">
+            <MudChip Color="Color.Primary" Variant="Variant.Outlined" Size="Size.Small">
+                آنلاین
+            </MudChip>
+
+            <MudText Typo="Typo.subtitle2" Color="Color.Primary" Class="fw-bold">
+                ۴۹۰ هزار تومان
+            </MudText>
+        </Row>
+    </MudCardContent>
+
+    <MudCardActions>
+        <MudButton FullWidth="true" Variant="Variant.Filled" Color="Color.Primary" Href="/courses/1">
+            مشاهده دوره
+        </MudButton>
+    </MudCardActions>
+</MudCard>
+
+<style>
+    .course-card {
+        border-radius: 20px;
+        overflow: hidden;
+    }
+</style>
