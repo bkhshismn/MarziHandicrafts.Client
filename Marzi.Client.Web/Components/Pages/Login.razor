@@ -1,0 +1,133 @@
+﻿@page "/login"
+@rendermode InteractiveServer
+@using MudBlazor
+@using Marzi.Client.Core.Requests
+@using Marzi.Client.Infrastructure.Services
+@inject AuthService AuthService
+@inject NavigationManager NavigationManager
+@inject ISnackbar Snackbar
+
+<div class="d-flex justify-center align-center" style="min-height:70vh;">
+    <MudPaper Class="pa-6" Width="100%" MaxWidth="420px" Elevation="3" Style="border-radius:24px;">
+        <div class="d-flex justify-center mb-3">
+            <MudAvatar Size="Size.Large" Color="Color.Primary" Icon="@Icons.Material.Filled.Palette" />
+        </div>
+
+        <MudText Typo="Typo.h5" Align="Align.Center" Class="fw-bold mb-1">
+            ورود به Marzi Handicrafts
+        </MudText>
+
+        <MudText Typo="Typo.body2" Align="Align.Center" Color="Color.Secondary" Class="mb-4">
+            با شماره موبایل و رمز عبور وارد شوید
+        </MudText>
+
+        <MudTextField T="string"
+                      @bind-Value="phoneNumber"
+                      Label="شماره موبایل"
+                      Variant="Variant.Outlined"
+                      FullWidth="true"
+                      Class="mb-3"
+                      Adornment="Adornment.Start"
+                      AdornmentIcon="@Icons.Material.Filled.Phone" />
+
+        <MudTextField T="string"
+                      @bind-Value="password"
+                      Label="رمز عبور"
+                      Variant="Variant.Outlined"
+                      InputType="@(showPassword ? InputType.Text : InputType.Password)"
+                      FullWidth="true"
+                      Class="mb-2"
+                      Adornment="Adornment.End"
+                      AdornmentIcon="@(showPassword ? Icons.Material.Filled.Visibility : Icons.Material.Filled.VisibilityOff)"
+                      OnAdornmentClick="TogglePasswordVisibility" />
+
+        <MudCheckBox T="bool"
+                     @bind-Value="rememberMe"
+                     Label="مرا به خاطر بسپار"
+                     Color="Color.Primary"
+                     Class="mb-3" />
+
+        <MudButton Variant="Variant.Filled"
+                   Color="Color.Primary"
+                   FullWidth="true"
+                   Size="Size.Large"
+                   OnClick="HandleLogin"
+                   Disabled="isLoading">
+            @if (isLoading)
+            {
+                <MudProgressCircular Size="Size.Small" Indeterminate="true" Class="ms-2" />
+                <span>در حال ورود...</span>
+            }
+            else
+            {
+                <span>ورود</span>
+            }
+        </MudButton>
+
+        <div class="d-flex justify-space-between mt-3" style="font-size:14px;">
+            <MudLink Href="/register" Color="Color.Primary" Underline="Underline.None">ثبت نام</MudLink>
+            <MudLink Href="/forgot-password" Color="Color.Primary" Underline="Underline.None">فراموشی رمز</MudLink>
+        </div>
+    </MudPaper>
+</div>
+
+@code {
+    private string phoneNumber = string.Empty;
+    private string password = string.Empty;
+    private bool rememberMe;
+    private bool showPassword;
+    private bool isLoading;
+
+    private void TogglePasswordVisibility()
+    {
+        showPassword = !showPassword;
+    }
+
+    private async Task HandleLogin()
+    {
+        Console.WriteLine("HandleLogin called");
+
+        Snackbar.Add("متد لاگین اجرا شد", Severity.Info);
+
+        if (string.IsNullOrWhiteSpace(phoneNumber) || string.IsNullOrWhiteSpace(password))
+        {
+            Snackbar.Add("لطفا شماره موبایل و رمز عبور را وارد کنید", Severity.Warning);
+            return;
+        }
+
+        isLoading = true;
+
+        try
+        {
+            Console.WriteLine("Before AuthService.Login");
+
+            var request = new LoginRequest
+            {
+                Phone = phoneNumber.Trim(),
+                Password = password
+            };
+
+            var result = await AuthService.Login(request);
+
+            Console.WriteLine("After AuthService.Login");
+
+            if (result is not null)
+            {
+                Snackbar.Add("ورود موفق بود", Severity.Success);
+                NavigationManager.NavigateTo("/");
+                return;
+            }
+
+            Snackbar.Add("ناموفق", Severity.Error);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Login Error: {ex}");
+            Snackbar.Add($"خطا: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+}

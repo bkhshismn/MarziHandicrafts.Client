@@ -1,5 +1,6 @@
 @using MudBlazor
 
+
 <MudPaper Elevation="6" Class="bottom-nav">
     <MudGrid Class="ma-0 pa-0" Justify="Justify.SpaceAround" AlignItems="AlignItems.Center">
         <MudItem>
@@ -29,6 +30,13 @@
         <MudItem>
             <MudNavLink Href="/profile" Icon="@Icons.Material.Filled.Person" Class="nav-link">
                 پروفایل
+            </MudNavLink>
+        </MudItem>
+
+        <!-- ✅ اضافه کردن لاگین -->
+        <MudItem>
+            <MudNavLink Href="/login" Icon="@Icons.Material.Filled.Login" Class="nav-link">
+                ورود
             </MudNavLink>
         </MudItem>
     </MudGrid>
