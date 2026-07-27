@@ -1,10 +1,25 @@
-<Router AppAssembly="@typeof(Marzi.Client.Shared.Layouts.MainLayout).Assembly">
+<Router AppAssembly="@typeof(App).Assembly">
+
     <Found Context="routeData">
-        <RouteView RouteData="@routeData" DefaultLayout="@typeof(Marzi.Client.Shared.Layouts.MainLayout)" />
+
+        <RouteView RouteData="@routeData"
+                   DefaultLayout="@typeof(MainLayout)" />
+
+        <FocusOnNavigate RouteData="@routeData"
+                         Selector="h1" />
+
     </Found>
+
     <NotFound>
-        <LayoutView Layout="@typeof(Marzi.Client.Shared.Layouts.MainLayout)">
-            <MudText Typo="Typo.h5">صفحه پیدا نشد</MudText>
+
+        <LayoutView Layout="@typeof(MainLayout)">
+
+            <MudText Typo="Typo.h5">
+                صفحه مورد نظر پیدا نشد
+            </MudText>
+
         </LayoutView>
+
     </NotFound>
+
 </Router>

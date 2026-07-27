@@ -2,11 +2,12 @@
 @layout Marzi.Client.Shared.Layouts.MainLayout
 @using MudBlazor
 
-<Box Class="d-flex justify-center align-center" Style="min-height:70vh;">
+<div class="d-flex justify-center align-center" style="min-height:70vh;">
     <MudPaper Class="pa-6" Width="100%" MaxWidth="420px" Elevation="3" Style="border-radius:24px;">
-        <Box Class="d-flex justify-center mb-3">
+
+        <div class="d-flex justify-center mb-3">
             <MudAvatar Size="Size.Large" Color="Color.Primary" Icon="@Icons.Material.Filled.Palette" />
-        </Box>
+        </div>
 
         <MudText Typo="Typo.h5" Align="Align.Center" Class="fw-bold mb-1">
             ورود به Marzi Handicrafts
@@ -16,19 +17,83 @@
             با شماره موبایل و رمز عبور وارد شوید
         </MudText>
 
-        <MudTextField Label="شماره موبایل" Variant="Variant.Outlined" FullWidth="true" Class="mb-3" />
+        <MudTextField T="string"
+                      @bind-Value="_phone"
+                      Label="شماره موبایل"
+                      Variant="Variant.Outlined"
+                      FullWidth="true"
+                      Class="mb-3"
+                      Adornment="Adornment.Start"
+                      AdornmentIcon="@Icons.Material.Filled.Phone" />
 
-        <MudTextField Label="رمز عبور" Variant="Variant.Outlined" InputType="InputType.Password" FullWidth="true" Class="mb-2" />
+        <MudTextField T="string"
+                      @bind-Value="_password"
+                      Label="رمز عبور"
+                      Variant="Variant.Outlined"
+                      InputType="@(_showPassword ? InputType.Text : InputType.Password)"
+                      FullWidth="true"
+                      Class="mb-2"
+                      Adornment="Adornment.End"
+                      AdornmentIcon="@(_showPassword ? Icons.Material.Filled.Visibility : Icons.Material.Filled.VisibilityOff)"
+                      OnAdornmentClick="TogglePasswordVisibility" />
 
-        <MudCheckBox Label="مرا به خاطر بسپار" Color="Color.Primary" Class="mb-3" />
+        <MudCheckBox T="bool"
+                     @bind-Value="_rememberMe"
+                     Label="مرا به خاطر بسپار"
+                     Color="Color.Primary"
+                     Class="mb-3" />
 
-        <MudButton Variant="Variant.Filled" Color="Color.Primary" FullWidth="true" Size="Size.Large">
-            ورود
+        <MudButton Variant="Variant.Filled"
+                   Color="Color.Primary"
+                   FullWidth="true"
+                   Size="Size.Large"
+                   OnClick="HandleLogin"
+                   Disabled="_isLoading">
+            @if (_isLoading)
+            {
+                <MudProgressCircular Size="Size.Small" Indeterminate="true" Class="ms-2" />
+                <span>در حال ورود...</span>
+            }
+            else
+            {
+                <span>ورود</span>
+            }
         </MudButton>
 
-        <Box Class="d-flex justify-space-between mt-3" Style="font-size:14px;" Wrap="Wrap.Wrap" RowGap="1">
+        <div class="d-flex justify-space-between mt-3" style="font-size:14px;">
             <MudLink Href="/register" Color="Color.Primary" Underline="Underline.None">ثبت نام</MudLink>
             <MudLink Href="/forgot-password" Color="Color.Primary" Underline="Underline.None">فراموشی رمز</MudLink>
-        </Box>
+        </div>
+
     </MudPaper>
-</Box>
+</div>
+
+@code {
+    private string _phone = string.Empty;
+    private string _password = string.Empty;
+    private bool _rememberMe = false;
+    private bool _showPassword = false;
+    private bool _isLoading = false;
+
+    private void TogglePasswordVisibility()
+    {
+        _showPassword = !_showPassword;
+    }
+
+    private async Task HandleLogin()
+    {
+        if (string.IsNullOrWhiteSpace(_phone) || string.IsNullOrWhiteSpace(_password))
+            return;
+
+        _isLoading = true;
+        try
+        {
+            // اینجا سرویس لاگین را صدا بزن
+            // await AuthService.LoginAsync(_phone, _password);
+        }
+        finally
+        {
+            _isLoading = false;
+        }
+    }
+}

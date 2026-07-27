@@ -1,4 +1,5 @@
 ﻿using Microsoft.Extensions.Logging;
+using MudBlazor.Services;
 
 namespace Marzi.Client.Maui;
 
@@ -19,8 +20,10 @@ public static class MauiProgram
 #if DEBUG
 		builder.Services.AddBlazorWebViewDeveloperTools();
 		builder.Logging.AddDebug();
+        builder.Services.AddMudServices();
+        builder.Services.AddMauiBlazorWebView();
 #endif
 
-		return builder.Build();
+        return builder.Build();
 	}
 }
