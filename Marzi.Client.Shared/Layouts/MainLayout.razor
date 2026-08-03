@@ -2,11 +2,11 @@
 @using MudBlazor
 @using Marzi.Client.Shared.Components.Navigation
 
-<MudThemeProvider Theme="@Marzi.Client.Shared.Theme.MarziTheme.Default" />
+<MudThemeProvider Theme="@Marzi.Client.Shared.Theme.AppTheme.Default" />
 <MudDialogProvider />
 <MudSnackbarProvider />
 
-<MudLayout RightToLeft="true">
+<MudRTLProvider RightToLeft="true">
     <MudAppBar Elevation="1" Color="Color.Primary">
         <MudText Typo="Typo.h6" Class="mx-2">Marzi Handicrafts</MudText>
         <MudSpacer />
@@ -20,4 +20,4 @@
     </MudMainContent>
 
     <BottomNavigation />
-</MudLayout>
+</MudRTLProvider>

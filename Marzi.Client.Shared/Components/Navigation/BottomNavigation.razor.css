@@ -1,0 +1,41 @@
+﻿.bottom-nav {
+    position: fixed;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    z-index: 1200;
+    display: flex;
+    align-items: stretch;
+    justify-content: space-around;
+    min-height: 72px;
+    padding: 6px 4px max(6px, env(safe-area-inset-bottom));
+    border-radius: 18px 18px 0 0;
+}
+
+.nav-link {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 0;
+    text-align: center;
+    font-size: 0.75rem;
+}
+
+::deep .nav-link .mud-nav-link {
+    height: 100%;
+}
+
+::deep .nav-link .mud-nav-link-text {
+    white-space: nowrap;
+}
+
+::deep .nav-link .mud-icon-root {
+    font-size: 24px;
+}
+
+@media (min-width: 960px) {
+    .bottom-nav {
+        display: none;
+    }
+}

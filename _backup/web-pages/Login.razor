@@ -6,6 +6,8 @@
 @inject AuthService AuthService
 @inject NavigationManager NavigationManager
 @inject ISnackbar Snackbar
+@using Marzi.Client.Web.Authentication
+@inject CustomAuthenticationStateProvider AuthStateProvider
 
 <div class="d-flex justify-center align-center" style="min-height:70vh;">
     <MudPaper Class="pa-6" Width="100%" MaxWidth="420px" Elevation="3" Style="border-radius:24px;">
@@ -107,14 +109,22 @@
                 Password = password
             };
 
-            var result = await AuthService.Login(request);
-
-            Console.WriteLine("After AuthService.Login");
+            var result =
+            await AuthService.LoginAsync(request);
 
             if (result is not null)
             {
-                Snackbar.Add("ورود موفق بود", Severity.Success);
-                NavigationManager.NavigateTo("/");
+                AuthStateProvider.MarkUserAsAuthenticated(
+                    result.Token);
+
+                Snackbar.Add(
+                    "ورود با موفقیت انجام شد.",
+                    Severity.Success);
+
+                NavigationManager.NavigateTo(
+                    "/",
+                    replace: true);
+
                 return;
             }
 

@@ -1,28 +1,32 @@
-﻿<!DOCTYPE html>
-<html lang="fa">
+﻿@using Microsoft.AspNetCore.Components.Web
+
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
 
 <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0" />
+
     <base href="/" />
 
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,600,700&display=swap" />
-    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons" />
-    <link rel="stylesheet" href="_content/MudBlazor/MudBlazor.min.css" />
+    <link rel="stylesheet"
+          href="_content/MudBlazor/MudBlazor.min.css" />
 
-    <link rel="stylesheet" href="@Assets["app.css"]" />
-    <link rel="stylesheet" href="@Assets["Marzi.Client.Web.styles.css"]" />
+    <link rel="stylesheet"
+          href="css/app.css" />
 
-    <ImportMap />
-    <link rel="icon" type="image/png" href="favicon.png" />
-    <HeadOutlet @rendermode="InteractiveServer" />
+    <HeadOutlet @rendermode="@(new InteractiveServerRenderMode(prerender: false))" />
 </head>
 
 <body>
-    <Routes @rendermode="InteractiveServer" />
 
-    <script src="_content/MudBlazor/MudBlazor.min.js"></script>
+    <Routes @rendermode="@(new InteractiveServerRenderMode(prerender: false))" />
+
     <script src="_framework/blazor.web.js"></script>
+    <script src="_content/MudBlazor/MudBlazor.min.js"></script>
+
+
 </body>
 
 </html>

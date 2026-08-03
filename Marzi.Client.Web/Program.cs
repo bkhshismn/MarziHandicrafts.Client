@@ -1,39 +1,60 @@
+using Marzi.Client.Core.Authentication;
 using Marzi.Client.Core.Interfaces;
 using Marzi.Client.Infrastructure.Extensions;
-using Marzi.Client.Infrastructure.Services;
 using Marzi.Client.Infrastructure.Storage;
+using Marzi.Client.Shared.Layouts;
+using Marzi.Client.Web.Authentication;
 using Marzi.Client.Web.Components;
+using Microsoft.AspNetCore.Components.Authorization;
 using MudBlazor.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddRazorComponents()
+builder.Services
+    .AddRazorComponents()
     .AddInteractiveServerComponents();
+
 builder.Services.AddMudServices();
-builder.Services.AddInfrastructure(builder.Configuration["Api:BaseUrl"]!);
+
+var apiBaseUrl =
+    builder.Configuration["Api:BaseUrl"]
+    ?? throw new InvalidOperationException(
+        "Api:BaseUrl is not configured.");
+
 builder.Services.AddScoped<ILocalStorage, LocalStorage>();
-builder.Services.AddScoped<AuthService>();
+
+builder.Services.AddInfrastructure(apiBaseUrl);
+
+builder.Services.AddAuthorizationCore();
+
+builder.Services.AddScoped<CustomAuthenticationStateProvider>();
+
+builder.Services.AddScoped<AuthenticationStateProvider>(
+    sp => sp.GetRequiredService<CustomAuthenticationStateProvider>());
+
+builder.Services.AddScoped<IAuthenticationNotifier>(
+    sp => sp.GetRequiredService<CustomAuthenticationStateProvider>());
 
 var app = builder.Build();
 
 if (!app.Environment.IsDevelopment())
 {
-    app.UseExceptionHandler("/Error", createScopeForErrors: true);
+    app.UseExceptionHandler(
+        "/Error",
+        createScopeForErrors: true);
+
     app.UseHsts();
 }
 
-app.UseHttpsRedirection();
+// فعلاً برای development خاموش
+// app.UseHttpsRedirection();
+
 app.UseAntiforgery();
+
 app.MapStaticAssets();
 
-// ✅ فقط یکی از این دو خط را نگه دارید:
-
-// گزینه ۱: استفاده از App.razor در پروژه Web (پیشنهادی)
 app.MapRazorComponents<App>()
-    .AddInteractiveServerRenderMode();
-
-// گزینه ۲: استفاده از App.razor در پروژه Shared
-// app.MapRazorComponents<Marzi.Client.Shared.App>()
-//     .AddInteractiveServerRenderMode();
+    .AddInteractiveServerRenderMode()
+    .AddAdditionalAssemblies(typeof(MainLayout).Assembly);
 
 app.Run();

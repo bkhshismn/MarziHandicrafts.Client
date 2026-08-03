@@ -1,9 +1,13 @@
-﻿using Refit;
+﻿using Marzi.Client.Core.Models.Portfolio;
+using Refit;
 
 namespace Marzi.Client.Infrastructure.Api;
 
 public interface IPortfolioApi
 {
-    //    [Get("/api/portfolio")]
-    //    Task<List<PortfolioDto>> GetAll();
+    [Get("/api/portfolio/published")]
+    Task<ApiResponse<List<PortfolioItemDto>>> GetPublishedAsync();
+
+    [Get("/api/portfolio/category/{category}")]
+    Task<ApiResponse<List<PortfolioItemDto>>> GetByCategoryAsync(string category);
 }

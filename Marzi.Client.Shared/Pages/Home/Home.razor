@@ -35,19 +35,38 @@
     </MudItem>
 </MudGrid>
 
-<MudPaper Class="pa-5" Elevation="1" Style="border-radius:20px;">
-    <Row Align="Align.Center" ColumnGap="3">
-        <MudAvatar Icon="@Icons.Material.Filled.ShoppingBag" Color="Color.Primary" Size="Size.Large" />
+<MudPaper Class="pa-5 order-cta"
+          Elevation="1">
 
-        <Box Flex="1" Gap="1" Direction="Column">
-            <MudText Typo="Typo.h6" Class="fw-bold">سفارش ساخت اثر هنری</MudText>
-            <MudText Typo="Typo.body2" Color="Color.Secondary">
-                عکس ایده‌ات را ارسال کن تا برایت مجسمه یا تابلو اختصاصی ساخته شود.
+    <div class="order-cta-header">
+
+        <MudIcon Icon="@Icons.Material.Filled.ShoppingBag"
+                 Color="Color.Primary"
+                 Size="Size.Large" />
+
+        <div class="order-cta-content">
+
+            <MudText Typo="Typo.h6"
+                     Class="fw-bold">
+                سفارش ساخت اثر هنری
             </MudText>
-        </Box>
-    </Row>
 
-    <MudButton Variant="Variant.Filled" Color="Color.Primary" Href="/orders" FullWidth="true" Class="mt-4">
+            <MudText Typo="Typo.body2"
+                     Color="Color.Secondary">
+                عکس یا ایده‌ات را ارسال کن تا برایت مجسمه یا تابلوی اختصاصی ساخته شود.
+            </MudText>
+
+        </div>
+
+    </div>
+
+    <MudButton Variant="Variant.Filled"
+               Color="Color.Primary"
+               Href="/orders"
+               FullWidth="true"
+               Size="Size.Large"
+               Class="mt-4">
         ثبت سفارش
     </MudButton>
+
 </MudPaper>

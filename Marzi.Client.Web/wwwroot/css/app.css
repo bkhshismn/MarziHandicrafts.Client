@@ -1,0 +1,135 @@
+@font-face {
+    font-family: "Vazirmatn";
+    src: url("../fonts/Vazirmatn-Regular.woff2") format("woff2");
+    font-weight: 400;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: "Vazirmatn";
+    src: url("../fonts/Vazirmatn-Medium.woff2") format("woff2");
+    font-weight: 500;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: "Vazirmatn";
+    src: url("../fonts/Vazirmatn-SemiBold.woff2") format("woff2");
+    font-weight: 600;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: "Vazirmatn";
+    src: url("../fonts/Vazirmatn-Bold.woff2") format("woff2");
+    font-weight: 700;
+    font-style: normal;
+    font-display: swap;
+}
+
+html,
+body {
+    font-family: "Vazirmatn", Tahoma, Arial, sans-serif;
+    direction: rtl;
+}
+
+body {
+    font-size: 16px;
+    line-height: 1.8;
+}
+
+button,
+input,
+textarea,
+select {
+    font-family: inherit;
+}
+
+/* MudBlazor */
+.mud-typography,
+.mud-button-root,
+.mud-input,
+.mud-input-label,
+.mud-nav-link,
+.mud-list-item,
+.mud-table,
+.mud-chip,
+.mud-alert,
+.mud-snackbar {
+    font-family: "Vazirmatn", Tahoma, Arial, sans-serif !important;
+}
+
+.mud-typography-h1 {
+    font-weight: 700;
+}
+
+.mud-typography-h2,
+.mud-typography-h3,
+.mud-typography-h4,
+.mud-typography-h5,
+.mud-typography-h6 {
+    font-weight: 600;
+}
+
+.mud-typography-body1 {
+    font-size: 1rem;
+    line-height: 1.9;
+}
+
+.mud-typography-body2 {
+    font-size: 0.925rem;
+    line-height: 1.8;
+}
+
+.mud-button-label {
+    font-weight: 500;
+}
+@font-face {
+    font-family: "Vazirmatn";
+    src: url("../fonts/Vazirmatn-Regular.woff2") format("woff2");
+    font-weight: 400;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: "Vazirmatn";
+    src: url("../fonts/Vazirmatn-Medium.woff2") format("woff2");
+    font-weight: 500;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: "Vazirmatn";
+    src: url("../fonts/Vazirmatn-SemiBold.woff2") format("woff2");
+    font-weight: 600;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: "Vazirmatn";
+    src: url("../fonts/Vazirmatn-Bold.woff2") format("woff2");
+    font-weight: 700;
+    font-style: normal;
+    font-display: swap;
+}
+
+html,
+body {
+    margin: 0;
+    font-family: "Vazirmatn", Tahoma, Arial, sans-serif;
+    direction: rtl;
+    background: #FAF8F4;
+}
+
+button,
+input,
+textarea,
+select {
+    font-family: inherit;
+}

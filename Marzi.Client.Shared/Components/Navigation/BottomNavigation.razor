@@ -1,77 +1,37 @@
 @using MudBlazor
 
+<MudPaper Elevation="8"
+          Class="bottom-nav">
 
-<MudPaper Elevation="6" Class="bottom-nav">
-    <MudGrid Class="ma-0 pa-0" Justify="Justify.SpaceAround" AlignItems="AlignItems.Center">
-        <MudItem>
-            <MudNavLink Href="/" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.Home" Class="nav-link">
-                خانه
-            </MudNavLink>
-        </MudItem>
+    <MudNavLink Href="/"
+                Match="NavLinkMatch.All"
+                Icon="@Icons.Material.Filled.Home"
+                Class="nav-link">
+        خانه
+    </MudNavLink>
 
-        <MudItem>
-            <MudNavLink Href="/courses" Icon="@Icons.Material.Filled.School" Class="nav-link">
-                آموزش
-            </MudNavLink>
-        </MudItem>
+    <MudNavLink Href="/courses"
+                Icon="@Icons.Material.Filled.School"
+                Class="nav-link">
+        آموزش
+    </MudNavLink>
 
-        <MudItem>
-            <MudNavLink Href="/portfolio" Icon="@Icons.Material.Filled.Palette" Class="nav-link">
-                نمونه کار
-            </MudNavLink>
-        </MudItem>
+    <MudNavLink Href="/portfolio"
+                Icon="@Icons.Material.Filled.Palette"
+                Class="nav-link">
+        نمونه‌کار
+    </MudNavLink>
 
-        <MudItem>
-            <MudNavLink Href="/orders" Icon="@Icons.Material.Filled.ShoppingBag" Class="nav-link">
-                سفارش
-            </MudNavLink>
-        </MudItem>
+    <MudNavLink Href="/orders"
+                Icon="@Icons.Material.Filled.ShoppingBag"
+                Class="nav-link">
+        سفارش
+    </MudNavLink>
 
-        <MudItem>
-            <MudNavLink Href="/profile" Icon="@Icons.Material.Filled.Person" Class="nav-link">
-                پروفایل
-            </MudNavLink>
-        </MudItem>
+    <MudNavLink Href="/profile"
+                Icon="@Icons.Material.Filled.Person"
+                Class="nav-link">
+        پروفایل
+    </MudNavLink>
 
-        <!-- ✅ اضافه کردن لاگین -->
-        <MudItem>
-            <MudNavLink Href="/login" Icon="@Icons.Material.Filled.Login" Class="nav-link">
-                ورود
-            </MudNavLink>
-        </MudItem>
-    </MudGrid>
 </MudPaper>
-
-<style>
-    .bottom-nav {
-        position: fixed;
-        bottom: 0;
-        left: 0;
-        right: 0;
-        z-index: 1200;
-        border-top-left-radius: 18px;
-        border-top-right-radius: 18px;
-        padding: 8px 0;
-    }
-
-    .nav-link {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        gap: 2px;
-        min-width: 64px;
-        text-decoration: none;
-        color: #6B5A4A;
-        font-size: 12px;
-    }
-
-    .nav-link.active {
-        color: #8B5E3C;
-        font-weight: 600;
-    }
-
-    .nav-link .mud-icon-root {
-        font-size: 26px;
-    }
-</style>

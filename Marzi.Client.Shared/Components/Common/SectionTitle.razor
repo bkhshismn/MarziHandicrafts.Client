@@ -1,18 +1,32 @@
 @using MudBlazor
 
-<Row Justify="Justify.SpaceBetween" Align="Align.Center" Class="mb-3">
-    <MudText Typo="Typo.h6" Class="fw-bold">@Title</MudText>
+<div class="section-title">
+
+    <MudText Typo="Typo.h5"
+             Class="section-heading">
+        @Title
+    </MudText>
 
     @if (!string.IsNullOrWhiteSpace(ActionText))
     {
-        <MudLink Href="@ActionLink" Color="Color.Primary" Underline="Underline.None">
+        <MudButton Variant="Variant.Text"
+                   Color="Color.Primary"
+                   Href="@ActionLink"
+                   EndIcon="@Icons.Material.Filled.ArrowBack">
             @ActionText
-        </MudLink>
+        </MudButton>
     }
-</Row>
+
+</div>
 
 @code {
-    [Parameter] public string Title { get; set; } = string.Empty;
-    [Parameter] public string? ActionText { get; set; }
-    [Parameter] public string ActionLink { get; set; } = "#";
+
+    [Parameter]
+    public string Title { get; set; } = string.Empty;
+
+    [Parameter]
+    public string? ActionText { get; set; }
+
+    [Parameter]
+    public string? ActionLink { get; set; }
 }

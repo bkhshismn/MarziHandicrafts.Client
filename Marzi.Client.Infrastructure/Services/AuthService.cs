@@ -1,4 +1,4 @@
-﻿using Marzi.Client.Core.Interfaces;
+﻿using Marzi.Client.Core.Authentication;
 using Marzi.Client.Core.Requests;
 using Marzi.Client.Core.Responses;
 using Marzi.Client.Infrastructure.Api;
@@ -6,85 +6,175 @@ using Refit;
 
 namespace Marzi.Client.Infrastructure.Services;
 
-public class AuthService
+public sealed class AuthService
 {
     private readonly IAuthApi _api;
-    private readonly ILocalStorage _storage;
+    private readonly ITokenStorage _tokenStorage;
+    private readonly IAuthenticationNotifier _authenticationNotifier;
 
-    public AuthService(IAuthApi api, ILocalStorage storage)
+    public AuthService(
+        IAuthApi api,
+        ITokenStorage tokenStorage,
+        IAuthenticationNotifier authenticationNotifier)
     {
         _api = api;
-        _storage = storage;
+        _tokenStorage = tokenStorage;
+        _authenticationNotifier = authenticationNotifier;
     }
 
-    public async Task<AuthResponse?> Login(LoginRequest request)
+    public async Task<AuthResponse?> LoginAsync(
+        LoginRequest request,
+        CancellationToken cancellationToken = default)
     {
         try
         {
-            var response = await _api.Login(request);
+            var response = await _api.LoginAsync(request);
 
-            if (response.IsSuccessStatusCode && response.Content != null)
+            if (!response.IsSuccessStatusCode ||
+                response.Content is null)
             {
-                await _storage.SetAsync("auth_token", response.Content.Token);
-                await _storage.SetAsync("refresh_token", response.Content.RefreshToken);
-                return response.Content;
+                return null;
             }
 
-            return null;
-        }
-        catch (ApiException ex)
-        {
-            Console.WriteLine($"Login error: {ex.Message}");
-            Console.WriteLine($"Status Code: {ex.StatusCode}");
-            Console.WriteLine($"Content: {ex.Content}");
-            return null; // ✅ این خط را اضافه کنید
-        }
-    }
+            await SaveAuthResponseAsync(response.Content);
 
-    public async Task<bool> Logout()
-    {
-        try
-        {
-            await _api.Logout();
-            await _storage.RemoveAsync("auth_token");
-            await _storage.RemoveAsync("refresh_token");
-            return true;
-        }
-        catch
-        {
-            return false;
-        }
-    }
+            _authenticationNotifier.NotifyAuthenticated(
+                response.Content.Token);
 
-    public async Task<string?> GetToken()
-    {
-        return await _storage.GetAsync<string>("auth_token");
-    }
-
-    public async Task<bool> IsLoggedIn()
-    {
-        var token = await GetToken();
-        return !string.IsNullOrEmpty(token);
-    }
-
-    public async Task<AuthResponse?> Refresh(RefreshRequest request)
-    {
-        try
-        {
-            var response = await _api.Refresh(request);
-
-            if (response.IsSuccessStatusCode && response.Content != null)
-            {
-                await _storage.SetAsync("auth_token", response.Content.Token);
-                await _storage.SetAsync("refresh_token", response.Content.RefreshToken);
-                return response.Content;
-            }
-
-            return null;
+            return response.Content;
         }
         catch (ApiException)
         {
             return null;
         }
+    }
+
+    public async Task<AuthResponse?> RegisterAsync(
+        RegisterRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            var response = await _api.RegisterAsync(request);
+
+            if (!response.IsSuccessStatusCode ||
+                response.Content is null)
+            {
+                return null;
+            }
+
+            await SaveAuthResponseAsync(response.Content);
+
+            _authenticationNotifier.NotifyAuthenticated(
+                response.Content.Token);
+
+            return response.Content;
+        }
+        catch (ApiException)
+        {
+            return null;
+        }
+    }
+
+    public Task<string?> GetAccessTokenAsync()
+    {
+        return _tokenStorage.GetAccessTokenAsync();
+    }
+
+    public async Task<bool> IsLoggedInAsync()
+    {
+        var token =
+            await _tokenStorage.GetAccessTokenAsync();
+
+        return !string.IsNullOrWhiteSpace(token);
+    }
+
+    public async Task<bool> RefreshAsync()
+    {
+        var refreshToken =
+            await _tokenStorage.GetRefreshTokenAsync();
+
+        if (string.IsNullOrWhiteSpace(refreshToken))
+        {
+            await ClearSessionAsync();
+            return false;
+        }
+
+        try
+        {
+            var response = await _api.RefreshAsync(
+                new RefreshRequest
+                {
+                    Token = refreshToken
+                });
+
+            if (!response.IsSuccessStatusCode ||
+                response.Content is null)
+            {
+                await ClearSessionAsync();
+                return false;
+            }
+
+            await SaveAuthResponseAsync(response.Content);
+
+            _authenticationNotifier.NotifyAuthenticated(
+                response.Content.Token);
+
+            return true;
+        }
+        catch (ApiException)
+        {
+            await ClearSessionAsync();
+            return false;
+        }
+    }
+
+    public async Task LogoutAsync()
+    {
+        var accessToken =
+            await _tokenStorage.GetAccessTokenAsync();
+
+        var refreshToken =
+            await _tokenStorage.GetRefreshTokenAsync();
+
+        try
+        {
+            if (!string.IsNullOrWhiteSpace(accessToken))
+            {
+                await _api.LogoutAsync(
+                    $"Bearer {accessToken}");
+            }
+            else if (!string.IsNullOrWhiteSpace(refreshToken))
+            {
+                await _api.RevokeAsync(
+                    new RefreshRequest
+                    {
+                        Token = refreshToken
+                    });
+            }
+        }
+        catch (ApiException)
+        {
+            // حتی اگر Backend در دسترس نباشد،
+            // session محلی باید پاک شود.
+        }
+        finally
+        {
+            await ClearSessionAsync();
+        }
+    }
+    private Task SaveAuthResponseAsync(
+        AuthResponse response)
+    {
+        return _tokenStorage.SaveTokensAsync(
+            response.Token,
+            response.RefreshToken);
+    }
+
+    private async Task ClearSessionAsync()
+    {
+        await _tokenStorage.ClearAsync();
+
+        _authenticationNotifier.NotifyLoggedOut();
     }
 }
