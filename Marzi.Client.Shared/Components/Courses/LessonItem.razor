@@ -1,0 +1,35 @@
+@using Marzi.Client.Core.Models.Courses
+@using MudBlazor
+
+<MudList T="CourseLessonDto" Dense="true">
+
+    <MudListItem T="CourseLessonDto" Value="Lesson">
+
+        <MudText>
+
+            @Lesson.Title
+
+        </MudText>
+
+        <MudSpacer />
+
+        @if (Lesson.IsFreePreview)
+        {
+            <MudChip T="string"
+                     Color="Color.Success">
+
+                پیش نمایش
+
+            </MudChip>
+        }
+
+    </MudListItem>
+
+</MudList>
+
+@code {
+
+    [Parameter]
+    public required CourseLessonDto Lesson { get; set; }
+
+}

@@ -1,23 +1,137 @@
 @using MudBlazor
 
-<MudPaper Class="hero-banner pa-6 mb-4" Elevation="0">
-    <MudText Typo="Typo.h4" Color="Color.Inherit" Class="mb-2">
-        خلق هنر با دستان شما
-    </MudText>
+<MudPaper Class="hero-banner" Elevation="0">
 
-    <MudText Typo="Typo.body1" Color="Color.Inherit" Class="mb-4">
-        آموزش نقاشی، مجسمه‌سازی و ثبت سفارش آثار هنری اختصاصی
-    </MudText>
+    <div class="hero-overlay">
 
-    <MudButton Variant="Variant.Filled" Color="Color.Secondary" Href="/courses" StartIcon="@Icons.Material.Filled.PlayArrow">
-        شروع یادگیری
-    </MudButton>
+        <MudChip T="string"
+                 Color="Color.Secondary"
+                 Variant="Variant.Filled"
+                 Class="hero-chip">
+
+            ✨ هنر دست، هنر ماندگار
+
+        </MudChip>
+
+        <MudText Typo="Typo.h3"
+                 Class="hero-title">
+
+            خلق آثار هنری
+            <br />
+            با دستان شما
+
+        </MudText>
+
+        <MudText Typo="Typo.body1"
+                 Class="hero-description">
+
+            آموزش تخصصی صنایع دستی، مجسمه‌سازی،
+            نقاشی و ثبت سفارش آثار هنری اختصاصی.
+
+        </MudText>
+
+        <MudStack Row="true"
+                  Spacing="2"
+                  Class="mt-5">
+
+            <MudButton Variant="Variant.Filled"
+                       Color="Color.Secondary"
+                       Href="/courses"
+                       Size="Size.Large"
+                       StartIcon="@Icons.Material.Filled.PlayArrow">
+
+                شروع یادگیری
+
+            </MudButton>
+
+            <MudButton Variant="Variant.Outlined"
+                       Color="Color.Inherit"
+                       Href="/portfolio"
+                       Size="Size.Large">
+
+                مشاهده نمونه‌کارها
+
+            </MudButton>
+
+        </MudStack>
+
+    </div>
+
 </MudPaper>
 
-<style>
-    .hero-banner {
-        background: linear-gradient(135deg, #8B5E3C 0%, #B58A62 100%);
-        color: white;
-        border-radius: 28px;
-    }
-</style>
+<MudGrid Class="hero-stats">
+
+    <MudItem xs="4">
+
+        <MudPaper Class="stat-card">
+
+            <MudIcon Icon="@Icons.Material.Filled.School"
+                     Color="Color.Primary"
+                     Size="Size.Large" />
+
+            <MudText Typo="Typo.h6">
+
+                دوره‌ها
+
+            </MudText>
+
+            <MudText Typo="Typo.body2">
+
+                آموزش آنلاین
+
+            </MudText>
+
+        </MudPaper>
+
+    </MudItem>
+
+    <MudItem xs="4">
+
+        <MudPaper Class="stat-card">
+
+            <MudIcon Icon="@Icons.Material.Filled.Palette"
+                     Color="Color.Primary"
+                     Size="Size.Large" />
+
+            <MudText Typo="Typo.h6">
+
+                گالری
+
+            </MudText>
+
+            <MudText Typo="Typo.body2">
+
+                آثار هنری
+
+            </MudText>
+
+        </MudPaper>
+
+    </MudItem>
+
+    <MudItem xs="4">
+
+        <MudPaper Class="stat-card">
+
+            <MudIcon Icon="@Icons.Material.Filled.ShoppingBag"
+                     Color="Color.Primary"
+                     Size="Size.Large" />
+
+            <MudText Typo="Typo.h6">
+
+                سفارش
+
+            </MudText>
+
+            <MudText Typo="Typo.body2">
+
+                اختصاصی
+
+            </MudText>
+
+        </MudPaper>
+
+    </MudItem>
+
+</MudGrid>
+

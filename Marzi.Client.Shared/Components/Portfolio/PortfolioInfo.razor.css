@@ -1,0 +1,53 @@
+﻿.portfolio-info {
+    background: white;
+    border-radius: 24px;
+    padding: 36px;
+    margin-top: 28px;
+    box-shadow: 0 10px 40px rgba(0,0,0,.06);
+}
+
+.category-chip {
+    margin-bottom: 20px;
+}
+
+.portfolio-title {
+    font-weight: 800;
+    line-height: 1.4;
+    margin-bottom: 18px;
+}
+
+.portfolio-description {
+    font-size: 1.05rem;
+    line-height: 2.1;
+    color: #666;
+    text-align: justify;
+}
+
+.order-btn {
+    min-width: 250px;
+    height: 52px;
+    border-radius: 14px;
+    font-weight: 700;
+}
+
+@media(max-width:900px) {
+
+    .portfolio-info {
+        padding: 24px;
+    }
+}
+
+@media(max-width:600px) {
+
+    .portfolio-info {
+        padding: 18px;
+    }
+
+    .portfolio-title {
+        font-size: 1.8rem;
+    }
+
+    .order-btn {
+        width: 100%;
+    }
+}

@@ -1,0 +1,31 @@
+@using Marzi.Client.Core.Models.Courses
+
+<MudPaper Class="pa-0 overflow-hidden">
+
+    <img src="@Cover"
+         style="width:100%;
+    height:260px;
+    object-fit:cover;" />
+
+</MudPaper>
+
+@code {
+
+    [Parameter]
+    public required CourseDto Course { get; set; }
+
+    private string Cover
+    {
+        get
+        {
+            if (string.IsNullOrWhiteSpace(Course.CoverImageUrl))
+                return "/images/course-placeholder.jpg";
+
+            if (Course.CoverImageUrl.Contains("example.com"))
+                return "/images/course-placeholder.jpg";
+
+            return Course.CoverImageUrl;
+        }
+    }
+
+}

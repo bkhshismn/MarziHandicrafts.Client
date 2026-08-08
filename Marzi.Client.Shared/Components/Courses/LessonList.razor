@@ -1,0 +1,36 @@
+@using Marzi.Client.Core.Models.Courses
+
+<MudPaper Class="pa-5 mt-5">
+
+    <MudText Typo="Typo.h5">
+
+        سرفصل‌های دوره
+
+    </MudText>
+
+    @foreach(var section in Sections)
+    {
+        <MudExpansionPanels>
+
+            <MudExpansionPanel
+                Text="@section.Title">
+
+                @foreach(var lesson in section.Lessons)
+                {
+                    <LessonItem Lesson="lesson"/>
+                }
+
+            </MudExpansionPanel>
+
+        </MudExpansionPanels>
+    }
+
+</MudPaper>
+
+@code{
+
+    [Parameter]
+    public IEnumerable<CourseSectionDto> Sections { get; set; }
+        = [];
+
+}

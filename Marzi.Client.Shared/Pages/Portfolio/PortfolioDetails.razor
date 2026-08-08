@@ -1,0 +1,131 @@
+@page "/portfolio/{Id:guid}"
+
+@using Marzi.Client.Core.Models.Portfolio
+@using Marzi.Client.Infrastructure.Services
+@using Marzi.Client.Shared.Components.Gallery
+@using Marzi.Client.Shared.Components.Portfolio
+
+@inject PortfolioService PortfolioService
+@inject ISnackbar Snackbar
+
+<PageTitle>نمونه کار</PageTitle>
+
+<MudContainer MaxWidth="MaxWidth.Large"
+              Class="portfolio-page">
+
+    @if (_loading)
+    {
+        <MudSkeleton Height="520px" />
+    }
+    else if (_item is null)
+    {
+        <MudAlert Severity="Severity.Error">
+
+            نمونه کار پیدا نشد.
+
+        </MudAlert>
+    }
+    else
+    {
+        <MudPaper Class="gallery-section"
+                  Elevation="0">
+
+            <ImageGallery Images="_item.Images" />
+
+        </MudPaper>
+
+        <PortfolioInfo Item="_item" />
+
+        <MudDivider Class="section-divider" />
+
+        <MudStack Row="true"
+                  Justify="Justify.SpaceBetween"
+                  AlignItems="AlignItems.Center"
+                  Class="section-header">
+
+            <MudText Typo="Typo.h4">
+
+                آثار مرتبط
+
+            </MudText>
+
+            <MudText Typo="Typo.body2"
+                     Color="Color.Secondary">
+
+                آثار مشابه از همین دسته
+
+            </MudText>
+
+        </MudStack>
+
+        @if (_related.Any())
+        {
+            <MudGrid>
+
+                @foreach (var item in _related)
+                {
+                    <MudItem xs="12"
+                             sm="6"
+                             md="4">
+
+                        <PortfolioCard Item="item" />
+
+                    </MudItem>
+                }
+
+            </MudGrid>
+        }
+        else
+        {
+            <MudAlert Severity="Severity.Info">
+
+                اثر مرتبطی پیدا نشد.
+
+            </MudAlert>
+        }
+    }
+
+</MudContainer>
+
+@code {
+
+    [Parameter]
+    public Guid Id { get; set; }
+
+    private PortfolioItemDto? _item;
+
+    private  List<PortfolioItemDto> _related = [];
+
+    private bool _loading = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            _item =
+                await PortfolioService.GetByIdAsync(Id);
+
+            if (_item is not null)
+            {
+                var items =
+                    await PortfolioService.GetPublishedAsync();
+
+                _related = items
+                    .Where(x =>
+                        x.Id != _item.Id &&
+                        x.Category == _item.Category)
+                    .Take(3)
+                    .ToList();
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add(
+                ex.Message,
+                Severity.Error);
+        }
+
+        _loading = false;
+    }
+
+}

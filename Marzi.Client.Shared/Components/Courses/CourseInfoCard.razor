@@ -1,0 +1,101 @@
+@using Marzi.Client.Core.Models.Courses
+
+<MudPaper Class="pa-5 mt-4">
+
+    <MudText Typo="Typo.h4">
+
+        @Course.Title
+
+    </MudText>
+
+    <MudText Typo="Typo.body1"
+             Class="mt-3">
+
+        @Course.Description
+
+    </MudText>
+
+    <MudDivider Class="my-4" />
+
+    <MudGrid>
+
+        <MudItem xs="6">
+
+            <MudText>
+
+                سطح
+
+            </MudText>
+
+            <MudChip T="string">
+
+                @Course.Level
+
+            </MudChip>
+
+        </MudItem>
+
+        <MudItem xs="6">
+
+            <MudText>
+
+                دسته بندی
+
+            </MudText>
+
+            <MudChip T="string">
+
+                @Course.Category
+
+            </MudChip>
+
+        </MudItem>
+
+        <MudItem xs="6">
+
+            <MudText>
+
+                مدت
+
+            </MudText>
+
+            <MudText>
+
+                @Course.DurationMinutes دقیقه
+
+            </MudText>
+
+        </MudItem>
+
+        <MudItem xs="6">
+
+            @if (Course.IsFree)
+            {
+                <MudChip T="string"
+                         Color="Color.Success">
+
+                    رایگان
+
+                </MudChip>
+            }
+            else
+            {
+                <MudText Typo="Typo.h6">
+
+                    @($"{Course.Price:N0} تومان")
+
+                </MudText>
+            }
+
+        </MudItem>
+
+    </MudGrid>
+
+</MudPaper>
+
+@code {
+
+    [Parameter]
+    public required CourseDto Course { get; set; }
+
+}

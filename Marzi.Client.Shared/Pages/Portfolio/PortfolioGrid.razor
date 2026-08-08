@@ -1,0 +1,26 @@
+@using Marzi.Client.Core.Models.Portfolio
+@using Marzi.Client.Shared.Components.Cards
+
+<MudGrid>
+
+    @foreach (var item in Items)
+    {
+        <MudItem xs="12"
+                 sm="6"
+                 md="4"
+                 lg="3">
+
+            <PortfolioCard Item="item" />
+
+        </MudItem>
+    }
+
+</MudGrid>
+
+@code {
+
+    [Parameter]
+    public IEnumerable<PortfolioItemDto> Items { get; set; }
+        = Enumerable.Empty<PortfolioItemDto>();
+
+}

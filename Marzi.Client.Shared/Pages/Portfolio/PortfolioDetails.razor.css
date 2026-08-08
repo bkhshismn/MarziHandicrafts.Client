@@ -1,0 +1,36 @@
+﻿.portfolio-page {
+    padding-top: 32px;
+    padding-bottom: 64px;
+}
+
+.gallery-section {
+    border-radius: 24px;
+    margin-bottom: 32px;
+    overflow: hidden;
+}
+
+.section-divider {
+    margin-top: 42px;
+    margin-bottom: 42px;
+    opacity: .15;
+}
+
+.section-header {
+    margin-bottom: 24px;
+}
+
+@media(max-width:960px) {
+
+    .portfolio-page {
+        padding-top: 18px;
+    }
+}
+
+@media(max-width:600px) {
+
+    .section-header {
+        flex-direction: column;
+        align-items: flex-start !important;
+        gap: 10px;
+    }
+}

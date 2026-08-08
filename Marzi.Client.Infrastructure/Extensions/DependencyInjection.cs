@@ -21,55 +21,62 @@ public static class DependencyInjection
                 nameof(baseUrl));
         }
 
-        // Token storage
+        // Authentication
         services.AddScoped<ITokenStorage, TokenStorage>();
 
-        // HTTP handlers
+        // Http Handlers
         services.AddTransient<AuthorizationHandler>();
         services.AddTransient<RefreshTokenHandler>();
 
-        // Auth API
-        // عمداً هیچ Authorization/Refresh handler ندارد.
+        // ==========================
+        // Public APIs
+        // ==========================
+
         services
             .AddRefitClient<IAuthApi>()
-            .ConfigureHttpClient(client =>
+            .ConfigureHttpClient(c =>
             {
-                client.BaseAddress = new Uri(baseUrl);
+                c.BaseAddress = new Uri(baseUrl);
             });
 
-        // Courses API
         services
             .AddRefitClient<ICourseApi>()
-            .ConfigureHttpClient(client =>
+            .ConfigureHttpClient(c =>
             {
-                client.BaseAddress = new Uri(baseUrl);
-            })
-            .AddHttpMessageHandler<AuthorizationHandler>()
-            .AddHttpMessageHandler<RefreshTokenHandler>();
+                c.BaseAddress = new Uri(baseUrl);
+            });
 
-        // Portfolio API
         services
             .AddRefitClient<IPortfolioApi>()
-            .ConfigureHttpClient(client =>
+            .ConfigureHttpClient(c =>
             {
-                client.BaseAddress = new Uri(baseUrl);
-            })
-            .AddHttpMessageHandler<AuthorizationHandler>()
-            .AddHttpMessageHandler<RefreshTokenHandler>();
+                c.BaseAddress = new Uri(baseUrl);
+            });
 
-        // Orders API
+        // ==========================
+        // Protected APIs
+        // ==========================
+
         services
             .AddRefitClient<IOrderApi>()
-            .ConfigureHttpClient(client =>
+            .ConfigureHttpClient(c =>
             {
-                client.BaseAddress = new Uri(baseUrl);
+                c.BaseAddress = new Uri(baseUrl);
             })
             .AddHttpMessageHandler<AuthorizationHandler>()
             .AddHttpMessageHandler<RefreshTokenHandler>();
 
-        // Application services
+        // ==========================
+        // Services
+        // ==========================
+
         services.AddScoped<AuthService>();
         services.AddScoped<CourseService>();
+        services.AddScoped<PortfolioService>();
+
+        //services.AddScoped<PortfolioService>();
+        //services.AddScoped<OrderService>();
+
         services.AddScoped<TokenRefreshCoordinator>();
 
         return services;

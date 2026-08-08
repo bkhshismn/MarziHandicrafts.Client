@@ -29,4 +29,9 @@
     <ProjectReference Include="..\Marzi.Client.Infrastructure\Marzi.Client.Infrastructure.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Components\Courses\" />
+    <Folder Include="wwwroot\images\" />
+  </ItemGroup>
+
 </Project>

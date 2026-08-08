@@ -1,6 +1,393 @@
 @page "/portfolio"
-@layout Marzi.Client.Shared.Layouts.MainLayout
-@using MudBlazor
 
-<MudText Typo="Typo.h4" Class="mb-2">نمونه کارها</MudText>
-<MudText Typo="Typo.body1" Color="Color.Secondary">گالری آثار هنری به زودی تکمیل می‌شود.</MudText>
+@layout Marzi.Client.Shared.Layouts.MainLayout
+
+@using Marzi.Client.Core.Models.Portfolio
+@using Marzi.Client.Infrastructure.Services
+
+@inject PortfolioService PortfolioService
+@inject ISnackbar Snackbar
+
+<MudStack Spacing="4">
+
+    <!-- Header -->
+
+    <MudStack Row="true"
+              Justify="Justify.SpaceBetween"
+              AlignItems="AlignItems.Center">
+
+        <div>
+
+            <MudText Typo="Typo.h4">
+                نمونه کارها
+            </MudText>
+
+            <MudText Typo="Typo.body2"
+                     Color="Color.Secondary">
+
+                آثار منتشر شده
+
+            </MudText>
+
+        </div>
+
+        @if (!_loading)
+        {
+            <MudChip T="string"
+                     Color="Color.Primary"
+                     Variant="Variant.Outlined">
+
+                @_filteredItems.Count اثر
+
+            </MudChip>
+        }
+
+    </MudStack>
+
+
+    <!-- Search & Filter -->
+    @if (!_loading && _items.Count > 0)
+    {
+        <MudPaper Class="portfolio-filters pa-4"
+                  Elevation="1">
+
+            <MudGrid>
+
+                <!-- Search -->
+
+                <MudItem xs="12"
+                         md="7">
+
+                    <MudTextField T="string"
+                                  @bind-Value="_searchText"
+                                  @bind-Value:after="ApplyFilters"
+                                  Label="جستجوی نمونه کار"
+                                  Placeholder="عنوان، توضیحات یا دسته‌بندی..."
+                                  Variant="Variant.Outlined"
+                                  Adornment="Adornment.Start"
+                                  AdornmentIcon="@Icons.Material.Filled.Search"
+                                  Clearable="true" />
+
+                </MudItem>
+
+
+                <!-- Category -->
+
+                <MudItem xs="12"
+                         md="5">
+
+                    <MudSelect T="string"
+                               @bind-Value="_selectedCategory"
+                               @bind-Value:after="ApplyFilters"
+                               Label="دسته‌بندی"
+                               Variant="Variant.Outlined">
+
+                        <MudSelectItem T="string"
+                                       Value="@AllCategories">
+
+                            همه دسته‌بندی‌ها
+
+                        </MudSelectItem>
+
+                        @foreach (var category in _categories)
+                        {
+                            <MudSelectItem T="string"
+                                           Value="@category">
+
+                                @category
+
+                            </MudSelectItem>
+                        }
+
+                    </MudSelect>
+
+                </MudItem>
+
+            </MudGrid>
+
+
+            <!-- Active Filters -->
+            @if (HasActiveFilters)
+            {
+                <MudStack Row="true"
+                          AlignItems="AlignItems.Center"
+                          Spacing="1"
+                          Class="mt-3">
+
+                    <MudText Typo="Typo.caption"
+                             Color="Color.Secondary">
+
+                        فیلتر فعال:
+
+                    </MudText>
+
+                    @if (!string.IsNullOrWhiteSpace(_searchText))
+                    {
+                        <MudChip T="string"
+                                 Size="Size.Small"
+                                 OnClose="ClearSearch"
+                                 Closeable="true">
+
+                            @_searchText
+
+                        </MudChip>
+                    }
+
+                    @if (_selectedCategory != AllCategories)
+                    {
+                        <MudChip T="string"
+                                 Size="Size.Small"
+                                 OnClose="ClearCategory"
+                                 Closeable="true">
+
+                            @_selectedCategory
+
+                        </MudChip>
+                    }
+
+                    <MudButton Variant="Variant.Text"
+                               Size="Size.Small"
+                               OnClick="ClearFilters">
+
+                        حذف فیلترها
+
+                    </MudButton>
+
+                </MudStack>
+            }
+
+        </MudPaper>
+    }
+
+
+    <!-- Error -->
+    @if (!string.IsNullOrWhiteSpace(_error))
+    {
+        <MudAlert Severity="Severity.Error">
+
+            @_error
+
+        </MudAlert>
+    }
+
+
+    <!-- Loading -->
+    else if (_loading)
+    {
+    <MudGrid>
+
+        @for (var i = 0; i < 6; i++)
+        {
+            <MudItem xs="12"
+                     sm="6"
+                     md="4">
+
+                <MudSkeleton Height="240px"
+                             Animation="Animation.Wave"
+                             Class="rounded-lg" />
+
+                <MudSkeleton Height="35px"
+                             Width="70%"
+                             Animation="Animation.Wave"
+                             Class="mt-2" />
+
+                <MudSkeleton Height="25px"
+                             Width="90%"
+                             Animation="Animation.Wave" />
+
+            </MudItem>
+        }
+
+    </MudGrid>
+    }
+
+
+    <!-- No Published Works -->
+    else if (_items.Count == 0)
+    {
+    <MudAlert Severity="Severity.Info">
+
+        نمونه کاری منتشر نشده است.
+
+    </MudAlert>
+    }
+
+
+    <!-- No Search Results -->
+    else if (_filteredItems.Count == 0)
+    {
+    <MudPaper Class="pa-8 text-center"
+              Elevation="0">
+
+        <MudIcon Icon="@Icons.Material.Filled.SearchOff"
+                 Size="Size.Large"
+                 Color="Color.Secondary" />
+
+        <MudText Typo="Typo.h6"
+                 Class="mt-3">
+
+            نتیجه‌ای پیدا نشد
+
+        </MudText>
+
+        <MudText Typo="Typo.body2"
+                 Color="Color.Secondary">
+
+            نمونه کاری با معیار جستجوی فعلی پیدا نشد.
+
+        </MudText>
+
+        <MudButton Variant="Variant.Outlined"
+                   Color="Color.Primary"
+                   Class="mt-4"
+                   OnClick="ClearFilters">
+
+            حذف فیلترها
+
+        </MudButton>
+
+    </MudPaper>
+    }
+
+
+    <!-- Portfolio -->
+    else
+    {
+    <PortfolioGrid Items="_filteredItems" />
+    }
+
+</MudStack>
+
+
+@code {
+
+    private const string AllCategories = "همه";
+
+    private IReadOnlyList<PortfolioItemDto> _items = [];
+
+    private IReadOnlyList<PortfolioItemDto> _filteredItems = [];
+
+    private List<string> _categories = [];
+
+    private bool _loading = true;
+
+    private string? _error;
+
+    private string _searchText = string.Empty;
+
+    private string _selectedCategory = AllCategories;
+
+
+    private bool HasActiveFilters =>
+        !string.IsNullOrWhiteSpace(_searchText) ||
+        _selectedCategory != AllCategories;
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            _items =
+                await PortfolioService.GetPublishedAsync();
+
+            BuildCategories();
+
+            ApplyFilters();
+        }
+        catch (Exception ex)
+        {
+            _error = ex.Message;
+
+            Snackbar.Add(
+                ex.Message,
+                Severity.Error);
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+
+
+    private void BuildCategories()
+    {
+        _categories = _items
+            .Select(x => x.Category?.Trim())
+            .Where(x => !string.IsNullOrWhiteSpace(x))
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .OrderBy(x => x)
+            .ToList()!;
+    }
+
+
+    private void ApplyFilters()
+    {
+        IEnumerable<PortfolioItemDto> query = _items;
+
+
+        // Category
+
+        if (_selectedCategory != AllCategories)
+        {
+            query = query.Where(x =>
+                string.Equals(
+                    x.Category?.Trim(),
+                    _selectedCategory,
+                    StringComparison.OrdinalIgnoreCase));
+        }
+
+
+        // Search
+
+        if (!string.IsNullOrWhiteSpace(_searchText))
+        {
+            var search = _searchText.Trim();
+
+            query = query.Where(x =>
+                ContainsIgnoreCase(x.Title, search) ||
+                ContainsIgnoreCase(x.Description, search) ||
+                ContainsIgnoreCase(x.Category, search));
+        }
+
+
+        _filteredItems = query.ToList();
+    }
+
+
+    private static bool ContainsIgnoreCase(
+        string? source,
+        string value)
+    {
+        return !string.IsNullOrWhiteSpace(source) &&
+               source.Contains(
+                   value,
+                   StringComparison.OrdinalIgnoreCase);
+    }
+
+
+    private void ClearSearch()
+    {
+        _searchText = string.Empty;
+
+        ApplyFilters();
+    }
+
+
+    private void ClearCategory()
+    {
+        _selectedCategory = AllCategories;
+
+        ApplyFilters();
+    }
+
+
+    private void ClearFilters()
+    {
+        _searchText = string.Empty;
+
+        _selectedCategory = AllCategories;
+
+        ApplyFilters();
+    }
+
+}

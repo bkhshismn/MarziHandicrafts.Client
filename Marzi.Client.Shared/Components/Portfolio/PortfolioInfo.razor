@@ -1,0 +1,80 @@
+@using Marzi.Client.Core.Models.Portfolio
+@using MudBlazor
+
+@if (Item is null)
+{
+    return;
+}
+
+<MudPaper Class="portfolio-info" Elevation="0">
+
+    <MudChip T="string"
+             Color="Color.Primary"
+             Variant="Variant.Filled"
+             Size="Size.Small"
+             Class="category-chip">
+
+        @(string.IsNullOrWhiteSpace(Item.Category)
+            ? "عمومی"
+            : Item.Category)
+
+    </MudChip>
+
+    <MudText Typo="Typo.h3"
+             Class="portfolio-title">
+
+        @Item.Title
+
+    </MudText>
+
+    <MudText Typo="Typo.body1"
+             Class="portfolio-description">
+
+        @Item.Description
+
+    </MudText>
+
+    <MudDivider Class="my-5" />
+
+    <MudStack Row="true"
+              AlignItems="AlignItems.Center"
+              Justify="Justify.SpaceBetween">
+
+        <MudStack Row="true"
+                  AlignItems="AlignItems.Center"
+                  Spacing="1">
+
+            <MudIcon Icon="@Icons.Material.Filled.CalendarMonth"
+                     Size="Size.Small"
+                     Color="Color.Primary" />
+
+            <MudText Typo="Typo.body2">
+
+                @Item.CreatedAt.ToString("yyyy/MM/dd")
+
+            </MudText>
+
+        </MudStack>
+
+        <MudButton Variant="Variant.Filled"
+                   Color="Color.Primary"
+                   Size="Size.Large"
+                   StartIcon="@Icons.Material.Filled.ShoppingBag"
+                   Href="/orders"
+                   Class="order-btn">
+
+            سفارش ساخت اثر مشابه
+
+        </MudButton>
+
+    </MudStack>
+
+</MudPaper>
+
+@code {
+
+    [Parameter]
+
+    public PortfolioItemDto? Item { get; set; }
+
+}

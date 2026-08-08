@@ -1,6 +1,122 @@
 @page "/courses"
-@layout Marzi.Client.Shared.Layouts.MainLayout
-@using MudBlazor
 
-<MudText Typo="Typo.h4" Class="mb-2">دوره‌های آموزشی</MudText>
-<MudText Typo="Typo.body1" Color="Color.Secondary">به زودی لیست کامل دوره‌ها اینجا نمایش داده می‌شود.</MudText>
+@layout Marzi.Client.Shared.Layouts.MainLayout
+
+@using Marzi.Client.Core.Models.Courses
+@using Marzi.Client.Infrastructure.Services
+
+@inject CourseService CourseService
+@inject ISnackbar Snackbar
+
+<PageTitle>دوره‌های آموزشی</PageTitle>
+
+<MudStack Spacing="3">
+
+    <MudStack Row="true"
+              AlignItems="AlignItems.Center"
+              Justify="Justify.SpaceBetween">
+
+        <div>
+
+            <MudText Typo="Typo.h4">
+                دوره‌های آموزشی
+            </MudText>
+
+            <MudText Typo="Typo.body2"
+                     Color="Color.Secondary">
+
+                تمام دوره‌های منتشر شده
+
+            </MudText>
+
+        </div>
+
+        @if (!_loading)
+        {
+            <MudChip T="string"
+                     Color="Color.Primary"
+                     Variant="Variant.Outlined">
+
+                @_courses.Count دوره
+
+            </MudChip>
+        }
+
+    </MudStack>
+
+    @if (!string.IsNullOrWhiteSpace(_errorMessage))
+    {
+        <MudAlert Severity="Severity.Error"
+                  Dense="true"
+                  Variant="Variant.Filled">
+
+            @_errorMessage
+
+        </MudAlert>
+
+        <MudButton Variant="Variant.Outlined"
+                   Color="Color.Primary"
+                   OnClick="LoadCourses">
+
+            تلاش مجدد
+
+        </MudButton>
+    }
+    else if (_loading)
+    {
+        <CourseLoading />
+    }
+    else if (_courses.Count == 0)
+    {
+        <CourseEmptyState />
+    }
+    else
+    {
+        <CourseGrid Courses="_courses" />
+    }
+
+</MudStack>
+
+@code {
+
+    private IReadOnlyList<CourseDto> _courses = [];
+
+    private bool _loading = true;
+
+    private string? _errorMessage;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadCourses();
+    }
+
+    private async Task LoadCourses()
+    {
+        _loading = true;
+        _errorMessage = null;
+
+        try
+        {
+            _courses =
+                await CourseService.GetPublishedAsync();
+            Console.WriteLine($"Courses Count = {_courses.Count}");
+            foreach (var c in _courses)
+            {
+                Console.WriteLine($"{c.Title} | {c.Category}");
+            }
+        }
+        catch (Exception ex)
+        {
+            _errorMessage = ex.Message;
+
+            Snackbar.Add(
+                ex.Message,
+                Severity.Error);
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+
+}

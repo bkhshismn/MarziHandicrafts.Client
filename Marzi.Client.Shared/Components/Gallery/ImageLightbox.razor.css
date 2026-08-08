@@ -1,0 +1,177 @@
+﻿.lightbox-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: rgba(0,0,0,.92);
+    backdrop-filter: blur(10px);
+    animation: fadeBackdrop .25s ease;
+}
+
+.lightbox-container {
+    position: relative;
+    width: min(92vw,1400px);
+    height: min(92vh,900px);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
+.image-wrapper {
+    flex: 1;
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.lightbox-image {
+    max-width: 100%;
+    max-height: 78vh;
+    object-fit: contain;
+    border-radius: 20px;
+    user-select: none;
+    animation: imageFade .25s ease;
+    box-shadow: 0 25px 60px rgba(0,0,0,.45);
+}
+
+.close-btn {
+    position: absolute;
+    top: 18px;
+    right: 18px;
+    z-index: 50;
+    width: 52px;
+    height: 52px;
+    border-radius: 50%;
+    background: rgba(255,255,255,.08);
+    backdrop-filter: blur(12px);
+    transition: .25s;
+}
+
+    .close-btn:hover {
+        transform: rotate(90deg);
+        background: rgba(255,255,255,.18);
+    }
+
+.counter {
+    position: absolute;
+    top: 28px;
+    left: 24px;
+    color: white;
+    font-weight: 700;
+    padding: 8px 16px;
+    border-radius: 30px;
+    background: rgba(255,255,255,.08);
+    backdrop-filter: blur(10px);
+}
+
+.nav-left,
+.nav-right {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    background: rgba(255,255,255,.08);
+    backdrop-filter: blur(10px);
+    transition: .25s;
+    z-index: 100;
+}
+
+.nav-left {
+    left: 22px;
+}
+
+.nav-right {
+    right: 22px;
+}
+
+    .nav-left:hover,
+    .nav-right:hover {
+        transform: translateY(-50%) scale(1.08);
+        background: rgba(255,255,255,.18);
+    }
+
+.thumb-strip {
+    margin-top: 24px;
+    padding: 14px 18px;
+    border-radius: 20px;
+    background: rgba(255,255,255,.06);
+    backdrop-filter: blur(12px);
+}
+
+.thumb {
+    cursor: pointer;
+    border-radius: 14px;
+    opacity: .45;
+    border: 3px solid transparent;
+    transition: opacity .25s, transform .25s, border-color .25s;
+}
+
+    .thumb:hover {
+        opacity: 1;
+        transform: translateY(-4px);
+    }
+
+.selected {
+    opacity: 1;
+    transform: scale(1.08);
+    border-color: #ffb300;
+}
+
+@keyframes imageFade {
+
+    from {
+        opacity: 0;
+        transform: scale(.96);
+    }
+
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+@keyframes fadeBackdrop {
+
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+@media (max-width:900px) {
+
+    .lightbox-image {
+        max-height: 68vh;
+    }
+
+    .thumb {
+        width: 58px !important;
+        height: 58px !important;
+    }
+
+    .nav-left,
+    .nav-right {
+        width: 48px;
+        height: 48px;
+    }
+}
+
+@media (max-width:600px) {
+
+    .counter {
+        font-size: .8rem;
+    }
+
+    .thumb-strip {
+        padding: 10px;
+    }
+}

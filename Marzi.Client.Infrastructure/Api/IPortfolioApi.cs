@@ -10,4 +10,7 @@ public interface IPortfolioApi
 
     [Get("/api/portfolio/category/{category}")]
     Task<ApiResponse<List<PortfolioItemDto>>> GetByCategoryAsync(string category);
+
+    [Get("/api/portfolio/{id}")]
+    Task<ApiResponse<PortfolioItemDto>> GetByIdAsync(Guid id);
 }
