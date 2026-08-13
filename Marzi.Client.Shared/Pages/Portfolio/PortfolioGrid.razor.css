@@ -1,0 +1,41 @@
+﻿/* =========================================
+   Portfolio Grid
+   ========================================= */
+
+.portfolio-grid {
+    width: 100%;
+    margin: 0;
+}
+
+
+/* =========================================
+   Grid Items
+   ========================================= */
+
+.portfolio-grid-item {
+    display: flex;
+    height: 100%;
+}
+
+    .portfolio-grid-item > * {
+        width: 100%;
+    }
+
+
+/* =========================================
+   Responsive
+   ========================================= */
+
+@media (max-width: 960px) {
+
+    .portfolio-grid {
+        margin-top: 4px;
+    }
+}
+
+@media (max-width: 600px) {
+
+    .portfolio-grid {
+        margin-top: 0;
+    }
+}

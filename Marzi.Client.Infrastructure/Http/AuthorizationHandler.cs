@@ -17,8 +17,29 @@ public sealed class AuthorizationHandler : DelegatingHandler
         HttpRequestMessage request,
         CancellationToken cancellationToken)
     {
-        var token =
-            await _tokenStorage.GetAccessTokenAsync();
+        Console.WriteLine(
+            $"[AUTH] {request.Method} {request.RequestUri}");
+
+        string? token = null;
+
+        try
+        {
+            token =
+                await _tokenStorage.GetAccessTokenAsync();
+        }
+        catch (InvalidOperationException ex)
+        {
+            Console.WriteLine(
+                $"[AUTH] InvalidOperation: {ex.Message}");
+        }
+        catch (Microsoft.JSInterop.JSException ex)
+        {
+            Console.WriteLine(
+                $"[AUTH] JSException: {ex.Message}");
+        }
+
+        Console.WriteLine(
+            $"[AUTH] Token exists: {!string.IsNullOrWhiteSpace(token)}");
 
         if (!string.IsNullOrWhiteSpace(token))
         {
@@ -26,6 +47,14 @@ public sealed class AuthorizationHandler : DelegatingHandler
                 new AuthenticationHeaderValue(
                     "Bearer",
                     token);
+
+            Console.WriteLine(
+                "[AUTH] Bearer token attached.");
+        }
+        else
+        {
+            Console.WriteLine(
+                "[AUTH] No access token.");
         }
 
         return await base.SendAsync(

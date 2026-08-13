@@ -1,0 +1,186 @@
+@page "/courses/{Id:guid}"
+
+@layout Marzi.Client.Shared.Layouts.MainLayout
+
+@using Marzi.Client.Core.Models.Courses
+@using Marzi.Client.Infrastructure.Services
+@using Marzi.Client.Shared.Components.Courses
+
+@inject CourseService CourseService
+@inject ISnackbar Snackbar
+@inject IConfiguration Configuration
+@using Microsoft.Extensions.Configuration
+
+@if (_loading)
+{
+    <div class="course-details-page">
+
+        <MudSkeleton Height="420px"
+                     Animation="Animation.Wave"
+                     Class="course-details-loading" />
+
+    </div>
+}
+else if (_course is null)
+{
+    <div class="course-details-page">
+
+        <MudAlert Severity="Severity.Error">
+
+            دوره پیدا نشد.
+
+        </MudAlert>
+
+    </div>
+}
+else
+{
+    <div class="course-details-page">
+
+        <!-- ========================= -->
+        <!-- Course Hero -->
+        <!-- ========================= -->
+
+        <MudPaper Class="course-hero-section"
+                  Elevation="0">
+
+            <CourseHero Course="_course" />
+
+        </MudPaper>
+
+
+        <!-- ========================= -->
+        <!-- Course Information -->
+        <!-- ========================= -->
+
+        <MudPaper Class="course-info-section"
+                  Elevation="0">
+
+            <CourseInfoCard Course="_course" />
+
+        </MudPaper>
+
+
+        <!-- ========================= -->
+        <!-- Selected Lesson / Player -->
+        <!-- ========================= -->
+
+        @if (_selectedLesson is not null)
+        {
+            <MudPaper Class="course-video-section"
+                      Elevation="0">
+
+                <MudStack Spacing="3">
+
+                    <MudText Typo="Typo.h5">
+                        @_selectedLesson.Title
+                    </MudText>
+
+                    @if (!string.IsNullOrWhiteSpace(
+                        _selectedLesson.Description))
+                    {
+                        <MudText Typo="Typo.body2"
+                                 Color="Color.Secondary">
+
+                            @_selectedLesson.Description
+
+                        </MudText>
+                    }
+
+                    @if (_selectedLesson.IsFreePreview)
+                    {
+                        <MudChip T="string"
+                                 Color="Color.Success"
+                                 Variant="Variant.Outlined"
+                                 Size="Size.Small">
+
+                            پیش‌نمایش رایگان
+
+                        </MudChip>
+                    }
+
+                    @if (_selectedLesson.HasVideo)
+                    {
+                        <VideoPlayer Lesson="_selectedLesson"
+                                     ApiBaseUrl="@ApiBaseUrl" />
+                    }
+                    else
+                    {
+                        <MudAlert Severity="Severity.Info">
+
+                            ویدئوی این درس هنوز آماده نشده است.
+
+                        </MudAlert>
+                    }
+
+                </MudStack>
+
+            </MudPaper>
+        }
+
+
+        <!-- ========================= -->
+        <!-- Lessons -->
+        <!-- ========================= -->
+
+        <MudDivider Class="course-section-divider" />
+
+        <LessonList Sections="_course.Sections"
+                    LessonSelected="OnLessonSelected" />
+
+    </div>
+}
+
+
+@code {
+
+    [Parameter]
+    public Guid Id { get; set; }
+
+
+    private CourseDto? _course;
+
+    private CourseLessonDto? _selectedLesson;
+
+    private bool _loading = true;
+
+
+    private string ApiBaseUrl =>
+        Configuration["Api:BaseUrl"]
+        ?? string.Empty;
+
+
+    protected override async Task OnParametersSetAsync()
+    {
+        _loading = true;
+
+        _course = null;
+        _selectedLesson = null;
+
+        try
+        {
+            _course =
+                await CourseService.GetByIdAsync(Id);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add(
+                ex.Message,
+                Severity.Error);
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+
+
+    private Task OnLessonSelected(
+        CourseLessonDto lesson)
+    {
+        _selectedLesson = lesson;
+
+        return InvokeAsync(StateHasChanged);
+    }
+
+}

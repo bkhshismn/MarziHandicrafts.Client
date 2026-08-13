@@ -1,6 +1,7 @@
 ﻿using System.Security.Claims;
 using Marzi.Client.Core.Authentication;
 using Microsoft.AspNetCore.Components.Authorization;
+using Microsoft.JSInterop;
 
 namespace Marzi.Client.Web.Authentication;
 
@@ -9,39 +10,109 @@ public sealed class CustomAuthenticationStateProvider
       IAuthenticationNotifier
 {
     private readonly ITokenStorage _tokenStorage;
+    private readonly IAuthenticationTokenStore _tokenStore;
 
     private static readonly ClaimsPrincipal Anonymous =
         new(new ClaimsIdentity());
 
+    private bool _initialized;
+
     public CustomAuthenticationStateProvider(
-        ITokenStorage tokenStorage)
+        ITokenStorage tokenStorage,
+        IAuthenticationTokenStore tokenStore)
     {
         _tokenStorage = tokenStorage;
+        _tokenStore = tokenStore;
     }
 
     public override async Task<AuthenticationState>
         GetAuthenticationStateAsync()
     {
-        var accessToken =
-            await _tokenStorage.GetAccessTokenAsync();
-
-        if (string.IsNullOrWhiteSpace(accessToken))
-            return CreateAnonymousState();
-
         try
         {
+            var accessToken =
+                await _tokenStorage.GetAccessTokenAsync();
+
+            if (string.IsNullOrWhiteSpace(accessToken))
+                return CreateAnonymousState();
+
             return CreateAuthenticatedState(accessToken);
+        }
+        catch (InvalidOperationException)
+        {
+            return CreateAnonymousState();
+        }
+        catch (JSException)
+        {
+            return CreateAnonymousState();
         }
         catch
         {
-            await _tokenStorage.ClearAsync();
-
             return CreateAnonymousState();
         }
     }
 
-    public void NotifyAuthenticated(string accessToken)
+    public async Task InitializeAsync()
     {
+        if (_initialized)
+            return;
+
+        try
+        {
+            await _tokenStorage.RestoreAsync();
+
+            var accessToken =
+                await _tokenStorage.GetAccessTokenAsync();
+
+            var refreshToken =
+                await _tokenStorage.GetRefreshTokenAsync();
+
+            if (!string.IsNullOrWhiteSpace(accessToken))
+            {
+                if (!string.IsNullOrWhiteSpace(refreshToken))
+                {
+                    _tokenStore.SetTokens(
+                        accessToken,
+                        refreshToken);
+                }
+                else
+                {
+                    _tokenStore.SetAccessToken(
+                        accessToken);
+                }
+            }
+
+            _initialized = true;
+
+            var state =
+                await GetAuthenticationStateAsync();
+
+            Console.WriteLine(
+                $"[AUTH INIT] IsAuthenticated: {state.User.Identity?.IsAuthenticated}");
+
+            Console.WriteLine(
+                $"[AUTH INIT] IsAdmin: {state.User.IsInRole("Admin")}");
+
+            NotifyAuthenticationStateChanged(
+                Task.FromResult(state));
+        }
+        catch (InvalidOperationException)
+        {
+            // JS هنوز آماده نیست.
+            // در تلاش بعدی دوباره Restore می‌شود.
+            return;
+        }
+        catch (JSException)
+        {
+            return;
+        }
+    }
+
+    public void NotifyAuthenticated(
+        string accessToken)
+    {
+        _tokenStore.SetAccessToken(accessToken);
+
         var state =
             CreateAuthenticatedState(accessToken);
 
@@ -51,35 +122,64 @@ public sealed class CustomAuthenticationStateProvider
 
     public void NotifyLoggedOut()
     {
+        _initialized = true;
+
+        _tokenStore.Clear();
+
         NotifyAuthenticationStateChanged(
-            Task.FromResult(CreateAnonymousState()));
+            Task.FromResult(
+                CreateAnonymousState()));
     }
 
-    public Task RefreshAsync()
+    public async Task RefreshAsync()
     {
-        NotifyAuthenticationStateChanged(
-            GetAuthenticationStateAsync());
+        var state =
+            await GetAuthenticationStateAsync();
 
-        return Task.CompletedTask;
+        NotifyAuthenticationStateChanged(
+            Task.FromResult(state));
     }
 
     private static AuthenticationState
         CreateAuthenticatedState(string accessToken)
     {
         var claims =
-            JwtClaimsParser.ParseClaimsFromJwt(accessToken);
+            JwtClaimsParser.ParseClaimsFromJwt(accessToken)
+                .ToList();
 
-        var identity = new ClaimsIdentity(
-            claims,
-            authenticationType: "jwt");
+        Console.WriteLine(
+            $"[AUTH STATE] Claims count: {claims.Count}");
 
-        return new AuthenticationState(
-            new ClaimsPrincipal(identity));
+        foreach (var claim in claims)
+        {
+            Console.WriteLine(
+                $"[AUTH STATE] {claim.Type} = {claim.Value}");
+        }
+
+        var identity =
+            new ClaimsIdentity(
+                claims,
+                authenticationType: "jwt");
+
+        var principal =
+            new ClaimsPrincipal(identity);
+
+        Console.WriteLine(
+            $"[AUTH STATE] IsAuthenticated: {principal.Identity?.IsAuthenticated}");
+
+        Console.WriteLine(
+            $"[AUTH STATE] IsAdmin: {principal.IsInRole("Admin")}");
+
+        Console.WriteLine(
+            $"[AUTH STATE] IsInstructor: {principal.IsInRole("Instructor")}");
+
+        return new AuthenticationState(principal);
     }
 
     private static AuthenticationState
         CreateAnonymousState()
     {
-        return new AuthenticationState(Anonymous);
+        return new AuthenticationState(
+            Anonymous);
     }
 }

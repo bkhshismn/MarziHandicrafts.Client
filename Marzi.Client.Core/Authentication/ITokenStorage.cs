@@ -3,6 +3,7 @@ namespace Marzi.Client.Core.Authentication;
 public interface ITokenStorage
 {
     Task<string?> GetAccessTokenAsync();
+
     Task<string?> GetRefreshTokenAsync();
 
     Task SaveTokensAsync(
@@ -10,4 +11,6 @@ public interface ITokenStorage
         string refreshToken);
 
     Task ClearAsync();
+
+    Task RestoreAsync();
 }

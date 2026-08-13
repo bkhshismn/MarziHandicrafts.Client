@@ -8,59 +8,103 @@
 @inject PortfolioService PortfolioService
 @inject ISnackbar Snackbar
 
-<PageTitle>نمونه کار</PageTitle>
+@if (_loading)
+{
+    <div class="portfolio-page">
 
-<MudContainer MaxWidth="MaxWidth.Large"
-              Class="portfolio-page">
+        <MudSkeleton Height="520px"
+                     Animation="Animation.Wave"
+                     Class="details-loading" />
 
-    @if (_loading)
-    {
-        <MudSkeleton Height="520px" />
-    }
-    else if (_item is null)
-    {
+    </div>
+}
+else if (_item is null)
+{
+    <div class="portfolio-page">
+
         <MudAlert Severity="Severity.Error">
 
-            نمونه کار پیدا نشد.
+            @(_error ?? "نمونه کار پیدا نشد.")
 
         </MudAlert>
-    }
-    else
-    {
-        <MudPaper Class="gallery-section"
-                  Elevation="0">
 
-            <ImageGallery Images="_item.Images" />
+    </div>
+}
+else
+{
+    <div class="portfolio-page">
 
-        </MudPaper>
+        <MudGrid Spacing="4"
+                 Class="portfolio-details-grid">
 
-        <PortfolioInfo Item="_item" />
+            <MudItem xs="12"
+                     lg="7">
+
+                <MudPaper Class="gallery-section"
+                          Elevation="0">
+
+                    <ImageGallery Images="_item.Images" />
+
+                </MudPaper>
+
+            </MudItem>
+
+            <MudItem xs="12"
+                     lg="5">
+
+                <MudPaper Class="info-section"
+                          Elevation="0">
+
+                    <PortfolioInfo Item="_item" />
+
+                </MudPaper>
+
+            </MudItem>
+
+        </MudGrid>
+
 
         <MudDivider Class="section-divider" />
+
 
         <MudStack Row="true"
                   Justify="Justify.SpaceBetween"
                   AlignItems="AlignItems.Center"
                   Class="section-header">
 
-            <MudText Typo="Typo.h4">
+            <div>
 
-                آثار مرتبط
+                <MudText Typo="Typo.h4">
+                    آثار مرتبط
+                </MudText>
 
-            </MudText>
+                <MudText Typo="Typo.body2"
+                         Color="Color.Secondary">
 
-            <MudText Typo="Typo.body2"
-                     Color="Color.Secondary">
+                    آثار مشابه از همین دسته
 
-                آثار مشابه از همین دسته
+                </MudText>
 
-            </MudText>
+            </div>
+
+            @if (_related.Any())
+            {
+                <MudChip T="string"
+                         Color="Color.Primary"
+                         Variant="Variant.Outlined">
+
+                    @_related.Count اثر
+
+                </MudChip>
+            }
 
         </MudStack>
 
+
         @if (_related.Any())
         {
-            <MudGrid>
+            <MudGrid Spacing="3"
+                     Class="related-grid">
 
                 @foreach (var item in _related)
                 {
@@ -77,15 +121,17 @@
         }
         else
         {
-            <MudAlert Severity="Severity.Info">
+            <MudAlert Severity="Severity.Info"
+                      Class="related-empty">
 
                 اثر مرتبطی پیدا نشد.
 
             </MudAlert>
         }
-    }
 
-</MudContainer>
+    </div>
+}
+
 
 @code {
 
@@ -94,38 +140,57 @@
 
     private PortfolioItemDto? _item;
 
-    private  List<PortfolioItemDto> _related = [];
+    private List<PortfolioItemDto> _related = [];
 
     private bool _loading = true;
 
-    protected override async Task OnInitializedAsync()
+    private string? _error;
+
+
+    protected override async Task OnParametersSetAsync()
     {
+        _loading = true;
+        _error = null;
+
+        _item = null;
+        _related = [];
+
         try
         {
             _item =
                 await PortfolioService.GetByIdAsync(Id);
 
-            if (_item is not null)
+            if (_item is null)
             {
-                var items =
-                    await PortfolioService.GetPublishedAsync();
-
-                _related = items
-                    .Where(x =>
-                        x.Id != _item.Id &&
-                        x.Category == _item.Category)
-                    .Take(3)
-                    .ToList();
+                _error = "نمونه کار پیدا نشد.";
+                return;
             }
+
+            var items =
+                await PortfolioService.GetPublishedAsync();
+
+            _related = items
+                .Where(x =>
+                    x.Id != _item.Id &&
+                    string.Equals(
+                        x.Category,
+                        _item.Category,
+                        StringComparison.OrdinalIgnoreCase))
+                .Take(3)
+                .ToList();
         }
         catch (Exception ex)
         {
+            _error = ex.Message;
+
             Snackbar.Add(
                 ex.Message,
                 Severity.Error);
         }
-
-        _loading = false;
+        finally
+        {
+            _loading = false;
+        }
     }
 
 }

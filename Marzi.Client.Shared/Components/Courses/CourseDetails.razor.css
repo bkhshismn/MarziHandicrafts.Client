@@ -1,0 +1,123 @@
+﻿/* =========================================
+   Course Details
+   ========================================= */
+
+.course-details-page {
+    width: 100%;
+    padding-top: 32px;
+    padding-bottom: 64px;
+}
+
+
+/* =========================================
+   Hero
+   ========================================= */
+
+.course-hero-section {
+    width: 100%;
+    overflow: hidden;
+    border-radius: 24px;
+    margin-bottom: 28px;
+    background: var(--mud-palette-surface);
+}
+
+
+/* =========================================
+   Course Information
+   ========================================= */
+
+.course-info-section {
+    width: 100%;
+    padding: 28px;
+    border-radius: 24px;
+    background: var(--mud-palette-surface);
+}
+
+
+/* =========================================
+   Divider
+   ========================================= */
+
+.course-section-divider {
+    margin-top: 42px;
+    margin-bottom: 36px;
+    opacity: 0.15;
+}
+
+
+/* =========================================
+   Loading
+   ========================================= */
+
+.course-details-loading {
+    width: 100%;
+    border-radius: 24px;
+}
+
+
+/* =========================================
+   Tablet
+   ========================================= */
+
+@media (max-width: 960px) {
+
+    .course-details-page {
+        padding-top: 20px;
+        padding-bottom: 48px;
+    }
+
+    .course-hero-section {
+        border-radius: 20px;
+    }
+
+    .course-info-section {
+        padding: 22px;
+        border-radius: 20px;
+    }
+
+    .course-section-divider {
+        margin-top: 34px;
+        margin-bottom: 30px;
+    }
+}
+
+
+/* =========================================
+   Mobile
+   ========================================= */
+
+@media (max-width: 600px) {
+
+    .course-details-page {
+        padding-top: 12px;
+        padding-bottom: 36px;
+    }
+
+    .course-hero-section {
+        border-radius: 14px;
+        margin-bottom: 20px;
+    }
+
+    .course-info-section {
+        padding: 18px;
+        border-radius: 16px;
+    }
+
+    .course-section-divider {
+        margin-top: 28px;
+        margin-bottom: 24px;
+    }
+}
+
+
+/* =========================================
+   Reduced Motion
+   ========================================= */
+
+@media (prefers-reduced-motion: reduce) {
+
+    .course-hero-section,
+    .course-info-section {
+        transition: none;
+    }
+}

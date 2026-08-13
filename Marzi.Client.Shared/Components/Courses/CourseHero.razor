@@ -1,31 +1,176 @@
 @using Marzi.Client.Core.Models.Courses
+@using MudBlazor
 
-<MudPaper Class="pa-0 overflow-hidden">
+<div class="course-hero">
 
-    <img src="@Cover"
-         style="width:100%;
-    height:260px;
-    object-fit:cover;" />
+    <div class="course-hero-image">
 
-</MudPaper>
+        <img src="@CoverImage"
+             alt="@Course.Title"
+             class="course-cover" />
+
+        <div class="course-hero-overlay"></div>
+
+
+        <div class="course-hero-content">
+
+            <div class="course-hero-badges">
+
+                @if (Course.IsFree)
+                {
+                    <MudChip T="string"
+                             Color="Color.Success"
+                             Variant="Variant.Filled"
+                             Size="Size.Small">
+
+                        رایگان
+
+                    </MudChip>
+                }
+                else
+                {
+                    <MudChip T="string"
+                             Color="Color.Primary"
+                             Variant="Variant.Filled"
+                             Size="Size.Small">
+
+                        @($"{Course.Price:N0} تومان")
+
+                    </MudChip>
+                }
+
+
+                @if (!string.IsNullOrWhiteSpace(Course.Level))
+                {
+                    <MudChip T="string"
+                             Color="Color.Default"
+                             Variant="Variant.Outlined"
+                             Size="Size.Small"
+                             Class="hero-level-chip">
+
+                        @Course.Level
+
+                    </MudChip>
+                }
+
+            </div>
+
+
+            <MudText Typo="Typo.h2"
+                     Class="course-hero-title">
+
+                @Course.Title
+
+            </MudText>
+
+
+            <MudStack Row="true"
+                      AlignItems="AlignItems.Center"
+                      Spacing="3"
+                      Class="course-hero-meta">
+
+                @if (!string.IsNullOrWhiteSpace(Course.Category))
+                {
+                    <MudStack Row="true"
+                              AlignItems="AlignItems.Center"
+                              Spacing="1">
+
+                        <MudIcon Icon="@Icons.Material.Filled.Category"
+                                 Size="Size.Small" />
+
+                        <MudText Typo="Typo.body2">
+
+                            @Course.Category
+
+                        </MudText>
+
+                    </MudStack>
+                }
+
+
+                @if (Course.DurationMinutes > 0)
+                {
+                    <MudStack Row="true"
+                              AlignItems="AlignItems.Center"
+                              Spacing="1">
+
+                        <MudIcon Icon="@Icons.Material.Filled.Schedule"
+                                 Size="Size.Small" />
+
+                        <MudText Typo="Typo.body2">
+
+                            @FormatDuration(Course.DurationMinutes)
+
+                        </MudText>
+
+                    </MudStack>
+                }
+
+
+                @if (Course.Sections.Count > 0)
+                {
+                    <MudStack Row="true"
+                              AlignItems="AlignItems.Center"
+                              Spacing="1">
+
+                        <MudIcon Icon="@Icons.Material.Filled.MenuBook"
+                                 Size="Size.Small" />
+
+                        <MudText Typo="Typo.body2">
+
+                            @($"{Course.Sections.Count} سرفصل")
+
+                        </MudText>
+
+                    </MudStack>
+                }
+
+            </MudStack>
+
+        </div>
+
+    </div>
+
+</div>
+
 
 @code {
 
     [Parameter]
     public required CourseDto Course { get; set; }
 
-    private string Cover
+
+    private string CoverImage
     {
         get
         {
             if (string.IsNullOrWhiteSpace(Course.CoverImageUrl))
                 return "/images/course-placeholder.jpg";
 
-            if (Course.CoverImageUrl.Contains("example.com"))
+            if (Course.CoverImageUrl.Contains(
+                    "example.com",
+                    StringComparison.OrdinalIgnoreCase))
+            {
                 return "/images/course-placeholder.jpg";
+            }
 
             return Course.CoverImageUrl;
         }
+    }
+
+
+    private static string FormatDuration(int minutes)
+    {
+        if (minutes <= 0)
+            return string.Empty;
+
+        var hours = minutes / 60;
+        var remainingMinutes = minutes % 60;
+
+        if (hours > 0)
+            return $"{hours} ساعت و {remainingMinutes} دقیقه";
+
+        return $"{remainingMinutes} دقیقه";
     }
 
 }

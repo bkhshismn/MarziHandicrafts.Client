@@ -7,10 +7,12 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Content Remove="Components\Courses\VideoPlayer.razor" />
     <Content Remove="TopBar.razor" />
   </ItemGroup>
 
   <ItemGroup>
+    <None Include="Components\Courses\VideoPlayer.razor" />
     <None Include="TopBar.razor" />
   </ItemGroup>
 
@@ -30,7 +32,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Components\Courses\" />
+    <Folder Include="Pages\Admin\" />
     <Folder Include="wwwroot\images\" />
   </ItemGroup>
 

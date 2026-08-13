@@ -1,0 +1,214 @@
+@using Marzi.Client.Core.Authentication
+@using Marzi.Client.Core.Models.Courses
+@using Microsoft.JSInterop
+@implements IAsyncDisposable
+
+@inject ITokenStorage TokenStorage
+@inject IJSRuntime JS
+
+@if (Lesson is null)
+{
+    <MudPaper Class="video-player-empty"
+              Elevation="0">
+
+        <MudIcon Icon="@Icons.Material.Filled.VideoLibrary"
+                 Size="Size.Large"
+                 Color="Color.Secondary" />
+
+        <MudText Typo="Typo.body1"
+                 Color="Color.Secondary">
+
+            درسی برای پخش انتخاب نشده است.
+
+        </MudText>
+
+    </MudPaper>
+}
+else if (!Lesson.HasVideo)
+{
+    <MudAlert Severity="Severity.Info">
+
+        برای این درس هنوز ویدئویی قرار نگرفته است.
+
+    </MudAlert>
+}
+else
+{
+    <div class="video-player-wrapper">
+
+        <video @ref="_videoElement"
+               class="video-player"
+               controls
+               playsinline
+               preload="metadata">
+        </video>
+
+        @if (_loading)
+        {
+            <div class="video-player-loading">
+
+                <MudProgressCircular Indeterminate="true"
+                                     Color="Color.Primary" />
+
+                <MudText Typo="Typo.body2">
+
+                    در حال آماده‌سازی ویدئو...
+
+                </MudText>
+
+            </div>
+        }
+
+        @if (!string.IsNullOrWhiteSpace(_error))
+        {
+            <div class="video-player-error">
+
+                <MudIcon Icon="@Icons.Material.Filled.ErrorOutline"
+                         Size="Size.Large"
+                         Color="Color.Error" />
+
+                <MudText Typo="Typo.body2">
+
+                    @_error
+
+                </MudText>
+
+            </div>
+        }
+
+    </div>
+}
+
+@code {
+
+    [Parameter]
+    public required CourseLessonDto Lesson { get; set; }
+
+    [Parameter]
+    public required string ApiBaseUrl { get; set; }
+
+    private ElementReference _videoElement;
+
+    private IJSObjectReference? _module;
+
+    private bool _loading;
+
+    private string? _error;
+
+    private Guid? _initializedEpisodeId;
+
+
+    protected override async Task OnAfterRenderAsync(
+        bool firstRender)
+    {
+        if (Lesson is null ||
+            !Lesson.HasVideo ||
+            Lesson.EpisodeId is null)
+        {
+            return;
+        }
+
+        if (string.Equals(
+                Lesson.VideoStatus,
+                "Failed",
+                StringComparison.OrdinalIgnoreCase))
+        {
+            _error = "پردازش ویدئوی این درس با خطا مواجه شده است.";
+            _loading = false;
+            return;
+        }
+
+        if (!string.Equals(
+                Lesson.VideoStatus,
+                "Ready",
+                StringComparison.OrdinalIgnoreCase))
+        {
+            _loading = false;
+            return;
+        }
+
+        if (_initializedEpisodeId == Lesson.EpisodeId)
+            return;
+
+        _initializedEpisodeId = Lesson.EpisodeId;
+
+        await InitializePlayerAsync();
+    }
+
+
+    private async Task InitializePlayerAsync()
+    {
+        try
+        {
+            _loading = true;
+            _error = null;
+
+            await InvokeAsync(StateHasChanged);
+
+            var token =
+                await TokenStorage.GetAccessTokenAsync();
+
+            if (string.IsNullOrWhiteSpace(token))
+            {
+                _error = "برای پخش این ویدئو باید وارد حساب کاربری شوید.";
+                return;
+            }
+
+            _module ??=
+                await JS.InvokeAsync<IJSObjectReference>(
+                    "import",
+                    "./_content/Marzi.Client.Shared/js/hlsPlayer.js");
+
+            var playlistUrl =
+                $"{ApiBaseUrl.TrimEnd('/')}" +
+                $"/api/admin/lessons/{Lesson.Id}/video/" +
+                $"{Lesson.EpisodeId}/stream/master.m3u8";
+
+            await _module.InvokeVoidAsync(
+                "initialize",
+                _videoElement,
+                playlistUrl,
+                token);
+        }
+        catch (JSException ex)
+        {
+            _error =
+                "پخش‌کننده ویدئو بارگذاری نشد.";
+
+            Console.WriteLine(ex);
+        }
+        catch (Exception ex)
+        {
+            _error = ex.Message;
+
+            Console.WriteLine(ex);
+        }
+        finally
+        {
+            _loading = false;
+
+            await InvokeAsync(StateHasChanged);
+        }
+    }
+
+
+    public async ValueTask DisposeAsync()
+    {
+        try
+        {
+            if (_module is not null)
+            {
+                await _module.InvokeVoidAsync(
+                    "dispose",
+                    _videoElement);
+
+                await _module.DisposeAsync();
+            }
+        }
+        catch
+        {
+            // Component may already be disposed.
+        }
+    }
+
+}

@@ -1,6 +1,7 @@
 ﻿using Marzi.Client.Core.Authentication;
 using Marzi.Client.Infrastructure.Authentication;
 using Marzi.Client.Infrastructure.Services;
+using Microsoft.JSInterop;
 using System.Net;
 using System.Net.Http.Headers;
 
@@ -10,12 +11,12 @@ public sealed class RefreshTokenHandler : DelegatingHandler
 {
     private readonly AuthService _authService;
     private readonly ITokenStorage _tokenStorage;
-
     private readonly TokenRefreshCoordinator _coordinator;
+
     public RefreshTokenHandler(
-    AuthService authService,
-    ITokenStorage tokenStorage,
-    TokenRefreshCoordinator coordinator)
+        AuthService authService,
+        ITokenStorage tokenStorage,
+        TokenRefreshCoordinator coordinator)
     {
         _authService = authService;
         _tokenStorage = tokenStorage;
@@ -27,39 +28,127 @@ public sealed class RefreshTokenHandler : DelegatingHandler
         CancellationToken cancellationToken)
     {
         var response =
-            await base.SendAsync(request, cancellationToken);
+            await base.SendAsync(
+                request,
+                cancellationToken);
 
         if (response.StatusCode != HttpStatusCode.Unauthorized)
             return response;
 
-        // درخواست Auth را وارد چرخه Refresh نکن.
+        // درخواست‌های authentication نباید وارد refresh شوند.
         if (IsAuthRequest(request))
             return response;
 
-        await _coordinator.Lock.WaitAsync(cancellationToken);
+        string? currentToken;
+
         try
         {
-            // ممکن است request دیگری قبل از ما
-            // token را refresh کرده باشد.
-            var currentToken =
+            currentToken =
                 await _tokenStorage.GetAccessTokenAsync();
+        }
+        catch (InvalidOperationException)
+        {
+            // localStorage/JS هنوز در دسترس نیست.
+            return response;
+        }
+        catch (JSException)
+        {
+            // JS interop هنوز آماده نیست.
+            return response;
+        }
 
-            var requestToken =
-                request.Headers.Authorization?.Parameter;
+        if (string.IsNullOrWhiteSpace(currentToken))
+            return response;
 
-            if (string.Equals(
+        var requestToken =
+            request.Headers.Authorization?.Parameter;
+
+        // اگر این درخواست اصلاً با token ارسال نشده،
+        // در این مرحله refresh نکن.
+        if (string.IsNullOrWhiteSpace(requestToken))
+            return response;
+
+        await _coordinator.Lock.WaitAsync(
+            cancellationToken);
+
+        try
+        {
+            // ممکن است درخواست دیگری قبل از ما
+            // token را refresh کرده باشد.
+            try
+            {
+                currentToken =
+                    await _tokenStorage.GetAccessTokenAsync();
+            }
+            catch (InvalidOperationException)
+            {
+                return response;
+            }
+            catch (JSException)
+            {
+                return response;
+            }
+
+            if (string.IsNullOrWhiteSpace(currentToken))
+                return response;
+
+            // اگر token فعلی با token درخواست متفاوت است،
+            // یعنی احتمالاً درخواست دیگری قبلاً refresh کرده.
+            if (!string.Equals(
                     currentToken,
                     requestToken,
                     StringComparison.Ordinal))
             {
-                var refreshed =
+                var retryRequest =
+                    await CloneRequestAsync(
+                        request,
+                        cancellationToken);
+
+                retryRequest.Headers.Authorization =
+                    new AuthenticationHeaderValue(
+                        "Bearer",
+                        currentToken);
+
+                response.Dispose();
+
+                return await base.SendAsync(
+                    retryRequest,
+                    cancellationToken);
+            }
+
+            // فقط وقتی همان token قبلی هنوز فعال است،
+            // refresh را انجام بده.
+            bool refreshed;
+
+            try
+            {
+                refreshed =
                     await _authService.RefreshAsync();
+            }
+            catch (InvalidOperationException)
+            {
+                return response;
+            }
+            catch (JSException)
+            {
+                return response;
+            }
 
-                if (!refreshed)
-                    return response;
+            if (!refreshed)
+                return response;
 
+            try
+            {
                 currentToken =
                     await _tokenStorage.GetAccessTokenAsync();
+            }
+            catch (InvalidOperationException)
+            {
+                return response;
+            }
+            catch (JSException)
+            {
+                return response;
             }
 
             if (string.IsNullOrWhiteSpace(currentToken))
@@ -67,18 +156,18 @@ public sealed class RefreshTokenHandler : DelegatingHandler
 
             response.Dispose();
 
-            var retryRequest =
+            var retry =
                 await CloneRequestAsync(
                     request,
                     cancellationToken);
 
-            retryRequest.Headers.Authorization =
+            retry.Headers.Authorization =
                 new AuthenticationHeaderValue(
                     "Bearer",
                     currentToken);
 
             return await base.SendAsync(
-                retryRequest,
+                retry,
                 cancellationToken);
         }
         finally
@@ -91,7 +180,8 @@ public sealed class RefreshTokenHandler : DelegatingHandler
         HttpRequestMessage request)
     {
         var path =
-            request.RequestUri?.AbsolutePath ?? string.Empty;
+            request.RequestUri?.AbsolutePath
+            ?? string.Empty;
 
         return path.StartsWith(
             "/api/auth/",

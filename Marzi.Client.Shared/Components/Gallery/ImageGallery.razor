@@ -3,7 +3,8 @@
 
 @if (OrderedImages.Count == 0)
 {
-    <MudPaper Class="gallery-empty">
+    <MudPaper Class="gallery-empty"
+              Elevation="0">
 
         <MudImage Src="/images/course-placeholder.jpg"
                   Fluid="true" />
@@ -13,6 +14,8 @@
 else
 {
     <div class="gallery-container">
+
+        <!-- Main Image -->
 
         <div class="main-image-wrapper"
              @onclick="OpenLightbox">
@@ -30,15 +33,15 @@ else
                          Size="Size.Large" />
 
                 <MudText Typo="Typo.subtitle2">
-
                     مشاهده در اندازه بزرگ
-
                 </MudText>
 
             </div>
 
         </div>
 
+
+        <!-- Thumbnail Strip -->
         @if (OrderedImages.Count > 1)
         {
             <MudStack Row="true"
@@ -47,7 +50,7 @@ else
 
                 @for (var i = 0; i < OrderedImages.Count; i++)
                 {
-                    var index = i;                 // ← این خط خیلی مهم است
+                    var index = i;
                     var image = OrderedImages[i];
 
                     <div class="@ThumbClass(index)"
@@ -57,11 +60,15 @@ else
                                   Width="90"
                                   Height="90"
                                   ObjectFit="ObjectFit.Cover" />
+
                     </div>
                 }
 
             </MudStack>
         }
+
+
+        <!-- Fullscreen Lightbox -->
 
         <ImageLightbox Visible="_lightboxOpen"
                        VisibleChanged="OnLightboxChanged"
@@ -72,7 +79,9 @@ else
     </div>
 }
 
+
 @code {
+
     [Parameter]
     public List<PortfolioImageDto> Images { get; set; } = [];
 
@@ -83,6 +92,7 @@ else
     private int _selectedIndex;
 
     private bool _lightboxOpen;
+
 
     protected override void OnParametersSet()
     {
@@ -97,15 +107,23 @@ else
             return;
         }
 
-        if (_selectedIndex >= OrderedImages.Count)
+        if (_selectedIndex < 0 ||
+            _selectedIndex >= OrderedImages.Count)
+        {
             _selectedIndex = 0;
+        }
 
         CurrentImage = OrderedImages[_selectedIndex];
     }
+
+
     private void Select(int index)
     {
-        if (index < 0 || index >= OrderedImages.Count)
+        if (index < 0 ||
+            index >= OrderedImages.Count)
+        {
             return;
+        }
 
         _selectedIndex = index;
 
@@ -113,6 +131,7 @@ else
 
         StateHasChanged();
     }
+
 
     private void OpenLightbox()
     {
@@ -122,6 +141,7 @@ else
         _lightboxOpen = true;
     }
 
+
     private async Task OnLightboxChanged(bool value)
     {
         _lightboxOpen = value;
@@ -129,10 +149,14 @@ else
         await InvokeAsync(StateHasChanged);
     }
 
+
     private async Task OnSelectedChanged(int index)
     {
-        if (index < 0 || index >= OrderedImages.Count)
+        if (index < 0 ||
+            index >= OrderedImages.Count)
+        {
             return;
+        }
 
         _selectedIndex = index;
 
@@ -141,12 +165,12 @@ else
         await InvokeAsync(StateHasChanged);
     }
 
+
     private string ThumbClass(int index)
     {
-        if (index == _selectedIndex)
-            return "thumb selected";
-
-        return "thumb";
+        return index == _selectedIndex
+            ? "thumb selected"
+            : "thumb";
     }
 
 }

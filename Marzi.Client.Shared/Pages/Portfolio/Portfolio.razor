@@ -125,8 +125,8 @@
                     {
                         <MudChip T="string"
                                  Size="Size.Small"
-                                 OnClose="ClearSearch"
-                                 Closeable="true">
+                                 Closeable="true"
+                                 OnClose="ClearSearch">
 
                             @_searchText
 
@@ -137,8 +137,8 @@
                     {
                         <MudChip T="string"
                                  Size="Size.Small"
-                                 OnClose="ClearCategory"
-                                 Closeable="true">
+                                 Closeable="true"
+                                 OnClose="ClearCategory">
 
                             @_selectedCategory
 
@@ -160,7 +160,7 @@
     }
 
 
-    <!-- Error -->
+    <!-- Page State -->
     @if (!string.IsNullOrWhiteSpace(_error))
     {
         <MudAlert Severity="Severity.Error">
@@ -169,91 +169,87 @@
 
         </MudAlert>
     }
-
-
-    <!-- Loading -->
     else if (_loading)
     {
-    <MudGrid>
+        <!-- Loading -->
 
-        @for (var i = 0; i < 6; i++)
-        {
-            <MudItem xs="12"
-                     sm="6"
-                     md="4">
+        <MudGrid>
 
-                <MudSkeleton Height="240px"
-                             Animation="Animation.Wave"
-                             Class="rounded-lg" />
+            @for (var i = 0; i < 6; i++)
+            {
+                <MudItem xs="12"
+                         sm="6"
+                         md="4">
 
-                <MudSkeleton Height="35px"
-                             Width="70%"
-                             Animation="Animation.Wave"
-                             Class="mt-2" />
+                    <MudSkeleton Height="240px"
+                                 Animation="Animation.Wave"
+                                 Class="rounded-lg" />
 
-                <MudSkeleton Height="25px"
-                             Width="90%"
-                             Animation="Animation.Wave" />
+                    <MudSkeleton Height="35px"
+                                 Width="70%"
+                                 Animation="Animation.Wave"
+                                 Class="mt-2" />
 
-            </MudItem>
-        }
+                    <MudSkeleton Height="25px"
+                                 Width="90%"
+                                 Animation="Animation.Wave" />
 
-    </MudGrid>
+                </MudItem>
+            }
+
+        </MudGrid>
     }
-
-
-    <!-- No Published Works -->
     else if (_items.Count == 0)
     {
-    <MudAlert Severity="Severity.Info">
+        <!-- No Published Works -->
 
-        نمونه کاری منتشر نشده است.
+        <MudAlert Severity="Severity.Info">
 
-    </MudAlert>
+            نمونه کاری منتشر نشده است.
+
+        </MudAlert>
     }
-
-
-    <!-- No Search Results -->
     else if (_filteredItems.Count == 0)
     {
-    <MudPaper Class="pa-8 text-center"
-              Elevation="0">
+        <!-- No Search Results -->
 
-        <MudIcon Icon="@Icons.Material.Filled.SearchOff"
-                 Size="Size.Large"
-                 Color="Color.Secondary" />
+        <MudPaper Class="pa-8 text-center"
+                  Elevation="0">
 
-        <MudText Typo="Typo.h6"
-                 Class="mt-3">
+            <MudIcon Icon="@Icons.Material.Filled.SearchOff"
+                     Size="Size.Large"
+                     Color="Color.Secondary" />
 
-            نتیجه‌ای پیدا نشد
+            <MudText Typo="Typo.h6"
+                     Class="mt-3">
 
-        </MudText>
+                نتیجه‌ای پیدا نشد
 
-        <MudText Typo="Typo.body2"
-                 Color="Color.Secondary">
+            </MudText>
 
-            نمونه کاری با معیار جستجوی فعلی پیدا نشد.
+            <MudText Typo="Typo.body2"
+                     Color="Color.Secondary">
 
-        </MudText>
+                نمونه کاری با معیار جستجوی فعلی پیدا نشد.
 
-        <MudButton Variant="Variant.Outlined"
-                   Color="Color.Primary"
-                   Class="mt-4"
-                   OnClick="ClearFilters">
+            </MudText>
 
-            حذف فیلترها
+            <MudButton Variant="Variant.Outlined"
+                       Color="Color.Primary"
+                       Class="mt-4"
+                       OnClick="ClearFilters">
 
-        </MudButton>
+                حذف فیلترها
 
-    </MudPaper>
+            </MudButton>
+
+        </MudPaper>
     }
-
-
-    <!-- Portfolio -->
     else
     {
-    <PortfolioGrid Items="_filteredItems" />
+        <!-- Portfolio -->
+
+        <PortfolioGrid Items="_filteredItems" />
     }
 
 </MudStack>

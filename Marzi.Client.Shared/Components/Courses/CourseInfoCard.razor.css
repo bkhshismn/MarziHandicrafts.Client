@@ -1,0 +1,116 @@
+﻿.course-card {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    border-radius: 20px;
+    transition: transform .25s ease, box-shadow .25s ease;
+}
+
+    .course-card:hover {
+        transform: translateY(-5px);
+        box-shadow: var(--mud-elevation-8);
+    }
+
+
+/* =========================================
+   Cover
+   ========================================= */
+
+.course-card-cover {
+    position: relative;
+    overflow: hidden;
+}
+
+    .course-card-cover .mud-card-media {
+        transition: transform .35s ease;
+    }
+
+.course-card:hover .course-card-cover .mud-card-media {
+    transform: scale(1.04);
+}
+
+.course-card-overlay {
+    position: absolute;
+    top: 14px;
+    left: 14px;
+    z-index: 2;
+}
+
+
+/* =========================================
+   Content
+   ========================================= */
+
+.course-card-title {
+    font-weight: 800;
+    line-height: 1.5;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.course-card-description {
+    line-height: 1.8;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.course-card-meta {
+    min-height: 28px;
+}
+
+.course-card-actions {
+    margin-top: auto;
+    padding: 0 16px 16px;
+}
+
+    .course-card-actions .mud-button-root {
+        min-height: 46px;
+        border-radius: 12px;
+        font-weight: 700;
+    }
+
+
+/* =========================================
+   Mobile
+   ========================================= */
+
+@media (max-width: 600px) {
+
+    .course-card {
+        border-radius: 16px;
+    }
+
+    .course-card-title {
+        font-size: 1.05rem;
+    }
+
+    .course-card-description {
+        font-size: .9rem;
+    }
+}
+
+
+/* =========================================
+   Reduced Motion
+   ========================================= */
+
+@media (prefers-reduced-motion: reduce) {
+
+    .course-card,
+    .course-card-cover .mud-card-media {
+        transition: none;
+    }
+
+        .course-card:hover {
+            transform: none;
+        }
+
+            .course-card:hover .course-card-cover .mud-card-media {
+                transform: none;
+            }
+}

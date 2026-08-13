@@ -25,6 +25,10 @@ builder.Services.AddScoped<ILocalStorage, LocalStorage>();
 
 builder.Services.AddInfrastructure(apiBaseUrl);
 
+// ========================================
+// Authentication / Authorization
+// ========================================
+
 builder.Services.AddAuthorizationCore();
 
 builder.Services.AddScoped<CustomAuthenticationStateProvider>();
@@ -34,6 +38,13 @@ builder.Services.AddScoped<AuthenticationStateProvider>(
 
 builder.Services.AddScoped<IAuthenticationNotifier>(
     sp => sp.GetRequiredService<CustomAuthenticationStateProvider>());
+
+// مهم: CascadingAuthenticationState را به DI اضافه می‌کند
+builder.Services.AddCascadingAuthenticationState();
+
+// ========================================
+// Build
+// ========================================
 
 var app = builder.Build();
 

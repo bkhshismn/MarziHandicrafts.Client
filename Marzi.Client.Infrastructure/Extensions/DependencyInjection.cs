@@ -21,12 +21,25 @@ public static class DependencyInjection
                 nameof(baseUrl));
         }
 
+
+
+        // ==========================
         // Authentication
+        // ==========================
+
         services.AddScoped<ITokenStorage, TokenStorage>();
 
+        services.AddScoped<
+            IAuthenticationTokenStore,
+            AuthenticationTokenStore>();
+
+        // ==========================
         // Http Handlers
+        // ==========================
+
         services.AddTransient<AuthorizationHandler>();
         services.AddTransient<RefreshTokenHandler>();
+
 
         // ==========================
         // Public APIs
@@ -40,11 +53,11 @@ public static class DependencyInjection
             });
 
         services
-            .AddRefitClient<ICourseApi>()
-            .ConfigureHttpClient(c =>
-            {
-                c.BaseAddress = new Uri(baseUrl);
-            });
+             .AddRefitClient<ICourseApi>()
+             .ConfigureHttpClient(c =>
+             {
+                 c.BaseAddress = new Uri(baseUrl);
+             });
 
         services
             .AddRefitClient<IPortfolioApi>()
@@ -52,6 +65,7 @@ public static class DependencyInjection
             {
                 c.BaseAddress = new Uri(baseUrl);
             });
+
 
         // ==========================
         // Protected APIs
@@ -66,6 +80,17 @@ public static class DependencyInjection
             .AddHttpMessageHandler<AuthorizationHandler>()
             .AddHttpMessageHandler<RefreshTokenHandler>();
 
+
+        // Course Episodes
+        services
+            .AddRefitClient<ICourseEpisodeApi>()
+            .ConfigureHttpClient(c =>
+            {
+                c.BaseAddress = new Uri(baseUrl);
+            })
+            .AddHttpMessageHandler<AuthorizationHandler>()
+            .AddHttpMessageHandler<RefreshTokenHandler>();
+
         // ==========================
         // Services
         // ==========================
@@ -73,11 +98,15 @@ public static class DependencyInjection
         services.AddScoped<AuthService>();
         services.AddScoped<CourseService>();
         services.AddScoped<PortfolioService>();
+        services.AddScoped<CourseEpisodeService>();
 
-        //services.AddScoped<PortfolioService>();
-        //services.AddScoped<OrderService>();
+
+        // ==========================
+        // Token Refresh
+        // ==========================
 
         services.AddScoped<TokenRefreshCoordinator>();
+
 
         return services;
     }

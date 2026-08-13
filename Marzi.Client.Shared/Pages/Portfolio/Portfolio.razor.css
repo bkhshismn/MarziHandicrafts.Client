@@ -1,0 +1,78 @@
+﻿/* =========================================
+   Portfolio Page
+   ========================================= */
+
+.portfolio-filters {
+    border-radius: 18px;
+    background: var(--mud-palette-surface);
+    transition: box-shadow 0.25s ease, transform 0.25s ease;
+}
+
+    .portfolio-filters:hover {
+        box-shadow: var(--mud-elevation-4);
+    }
+
+
+    /* =========================================
+   Search Fields
+   ========================================= */
+
+    .portfolio-filters .mud-input-control {
+        width: 100%;
+    }
+
+    .portfolio-filters .mud-input {
+        text-align: right;
+    }
+
+
+    /* =========================================
+   Active Filter Chips
+   ========================================= */
+
+    .portfolio-filters .mud-chip {
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+        .portfolio-filters .mud-chip:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--mud-elevation-2);
+        }
+
+
+    /* =========================================
+   Empty Search State
+   ========================================= */
+
+    .portfolio-filters + .mud-paper {
+        border-radius: 20px;
+    }
+
+
+/* =========================================
+   Skeleton
+   ========================================= */
+
+.mud-skeleton {
+    border-radius: 12px;
+}
+
+
+/* =========================================
+   Responsive
+   ========================================= */
+
+@media (max-width: 768px) {
+
+    .portfolio-filters {
+        padding: 14px !important;
+        border-radius: 14px;
+    }
+}
+
+@media (max-width: 600px) {
+
+    .portfolio-filters {
+        margin-top: 4px;
+    }
+}

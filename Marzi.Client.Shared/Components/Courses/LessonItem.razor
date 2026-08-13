@@ -1,35 +1,196 @@
 @using Marzi.Client.Core.Models.Courses
 @using MudBlazor
 
-<MudList T="CourseLessonDto" Dense="true">
+<MudListItem T="CourseLessonDto"
+             Value="Lesson"
+             Class="lesson-item">
 
-    <MudListItem T="CourseLessonDto" Value="Lesson">
+    <div class="lesson-click-area"
+         @onclick="HandleClick">
 
-        <MudText>
+        <div class="lesson-content">
 
-            @Lesson.Title
+            <!-- Icon -->
 
-        </MudText>
+            <div class="lesson-icon">
 
-        <MudSpacer />
+                @if (Lesson.IsFreePreview && Lesson.HasVideo)
+                {
+                    <MudIcon Icon="@Icons.Material.Filled.PlayCircle"
+                             Color="Color.Success"
+                             Size="Size.Medium" />
+                }
+                else if (Lesson.HasVideo)
+                {
+                    <MudIcon Icon="@Icons.Material.Filled.PlayCircleOutline"
+                             Color="Color.Primary"
+                             Size="Size.Medium" />
+                }
+                else
+                {
+                    <MudIcon Icon="@Icons.Material.Filled.Lock"
+                             Color="Color.Secondary"
+                             Size="Size.Medium" />
+                }
 
-        @if (Lesson.IsFreePreview)
-        {
-            <MudChip T="string"
-                     Color="Color.Success">
+            </div>
 
-                پیش نمایش
 
-            </MudChip>
-        }
+            <!-- Details -->
 
-    </MudListItem>
+            <div class="lesson-details">
 
-</MudList>
+                <MudText Typo="Typo.body1"
+                         Class="lesson-title">
+
+                    @Lesson.Title
+
+                </MudText>
+
+                @if (!string.IsNullOrWhiteSpace(
+                    Lesson.Description))
+                {
+                    <MudText Typo="Typo.caption"
+                             Color="Color.Secondary"
+                             Class="lesson-description">
+
+                        @Lesson.Description
+
+                    </MudText>
+                }
+
+            </div>
+
+
+            <!-- Meta -->
+
+            <div class="lesson-meta">
+
+                @if (Lesson.IsFreePreview && Lesson.HasVideo)
+                {
+                    <MudChip T="string"
+                             Color="Color.Success"
+                             Size="Size.Small"
+                             Variant="Variant.Outlined">
+
+                        پیش‌نمایش
+
+                    </MudChip>
+                }
+                else if (Lesson.HasVideo)
+                {
+                    @if (IsReady)
+                    {
+                        <MudChip T="string"
+                                 Color="Color.Primary"
+                                 Size="Size.Small"
+                                 Variant="Variant.Outlined">
+
+                            آماده پخش
+
+                        </MudChip>
+                    }
+                    else if (IsProcessing)
+                    {
+                        <MudChip T="string"
+                                 Color="Color.Warning"
+                                 Size="Size.Small"
+                                 Variant="Variant.Outlined">
+
+                            در حال آماده‌سازی
+
+                        </MudChip>
+                    }
+                    else if (IsFailed)
+                    {
+                        <MudChip T="string"
+                                 Color="Color.Error"
+                                 Size="Size.Small"
+                                 Variant="Variant.Outlined">
+
+                            خطا در پردازش
+
+                        </MudChip>
+                    }
+                }
+
+
+                @if (Lesson.DurationSeconds > 0)
+                {
+                    <MudText Typo="Typo.caption"
+                             Color="Color.Secondary">
+
+                        @FormatDuration(
+                            Lesson.DurationSeconds)
+
+                    </MudText>
+                }
+
+            </div>
+
+        </div>
+
+    </div>
+
+</MudListItem>
+
 
 @code {
 
     [Parameter]
     public required CourseLessonDto Lesson { get; set; }
+
+
+    [Parameter]
+    public EventCallback<CourseLessonDto> LessonSelected { get; set; }
+
+
+    private bool IsReady =>
+        string.Equals(
+            Lesson.VideoStatus,
+            "Ready",
+            StringComparison.OrdinalIgnoreCase);
+
+
+    private bool IsProcessing =>
+        string.Equals(
+            Lesson.VideoStatus,
+            "Pending",
+            StringComparison.OrdinalIgnoreCase)
+        ||
+        string.Equals(
+            Lesson.VideoStatus,
+            "Processing",
+            StringComparison.OrdinalIgnoreCase);
+
+
+    private bool IsFailed =>
+        string.Equals(
+            Lesson.VideoStatus,
+            "Failed",
+            StringComparison.OrdinalIgnoreCase);
+
+
+    private async Task HandleClick()
+    {
+        await LessonSelected.InvokeAsync(Lesson);
+    }
+
+
+    private static string FormatDuration(int seconds)
+    {
+        if (seconds <= 0)
+            return string.Empty;
+
+        var time =
+            TimeSpan.FromSeconds(seconds);
+
+        if (time.TotalHours >= 1)
+        {
+            return $"{(int)time.TotalHours}:{time.Minutes:00}:{time.Seconds:00}";
+        }
+
+        return $"{time.Minutes}:{time.Seconds:00}";
+    }
 
 }

@@ -1,36 +1,79 @@
 @using Marzi.Client.Core.Models.Courses
+@using MudBlazor
 
-<MudPaper Class="pa-5 mt-5">
+@if (Sections.Any())
+{
+    <div class="lesson-list">
 
-    <MudText Typo="Typo.h5">
+        <MudText Typo="Typo.h5"
+                 Class="lesson-list-title">
 
-        سرفصل‌های دوره
+            سرفصل‌های دوره
 
-    </MudText>
+        </MudText>
 
-    @foreach(var section in Sections)
-    {
-        <MudExpansionPanels>
+        <MudExpansionPanels MultiExpansion="true">
 
-            <MudExpansionPanel
-                Text="@section.Title">
+            @foreach (var section in Sections.OrderBy(x => x.OrderIndex))
+            {
+                <MudExpansionPanel Text="@section.Title">
 
-                @foreach(var lesson in section.Lessons)
-                {
-                    <LessonItem Lesson="lesson"/>
-                }
+                    @if (section.Lessons.Any())
+                    {
+                        <MudList T="CourseLessonDto"
+                                 Dense="true">
 
-            </MudExpansionPanel>
+                            @foreach (var lesson in section.Lessons.OrderBy(x => x.OrderIndex))
+                            {
+                                <LessonItem Lesson="lesson"
+                                            LessonSelected="OnLessonSelected" />
+                            }
+
+                        </MudList>
+                    }
+                    else
+                    {
+                        <MudText Typo="Typo.body2"
+                                 Color="Color.Secondary"
+                                 Class="pa-4">
+
+                            در این سرفصل هنوز درسی قرار نگرفته است.
+
+                        </MudText>
+                    }
+
+                </MudExpansionPanel>
+            }
 
         </MudExpansionPanels>
-    }
 
-</MudPaper>
+    </div>
+}
+else
+{
+    <MudAlert Severity="Severity.Info">
 
-@code{
+        هنوز سرفصلی برای این دوره ثبت نشده است.
+
+    </MudAlert>
+}
+
+
+@code {
 
     [Parameter]
     public IEnumerable<CourseSectionDto> Sections { get; set; }
-        = [];
+        = Enumerable.Empty<CourseSectionDto>();
+
+
+    [Parameter]
+    public EventCallback<CourseLessonDto> LessonSelected { get; set; }
+
+
+    private async Task OnLessonSelected(
+        CourseLessonDto lesson)
+    {
+        await LessonSelected.InvokeAsync(lesson);
+    }
 
 }
