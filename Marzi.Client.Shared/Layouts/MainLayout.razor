@@ -1,17 +1,29 @@
 @inherits LayoutComponentBase
 @using MudBlazor
 @using Marzi.Client.Shared.Components.Navigation
+@using Marzi.Client.Infrastructure.Services
+
+@inject AuthService AuthService
+@inject NavigationManager Navigation
 
 <MudThemeProvider Theme="@Marzi.Client.Shared.Theme.AppTheme.Default" />
 <MudDialogProvider />
 <MudSnackbarProvider />
 
 <MudRTLProvider RightToLeft="true">
+
     <MudAppBar Elevation="1" Color="Color.Primary">
-        <MudText Typo="Typo.h6" Class="mx-2">Marzi Handicrafts</MudText>
+        <MudText Typo="Typo.h6" Class="mx-2">
+            Marzi Handicrafts
+        </MudText>
+
         <MudSpacer />
-        <MudIconButton Icon="@Icons.Material.Filled.Notifications" Color="Color.Inherit" />
+
+        <MudIconButton
+            Icon="@Icons.Material.Filled.Notifications"
+            Color="Color.Inherit" />
     </MudAppBar>
+
 
     <MudMainContent>
         <div class="pa-4 pb-10">
@@ -19,5 +31,46 @@
         </div>
     </MudMainContent>
 
+
+    <div class="d-flex justify-center pa-2">
+
+        <AuthorizeView>
+            <Authorized>
+
+                <MudButton
+                    Variant="Variant.Text"
+                    Color="Color.Error"
+                    StartIcon="@Icons.Material.Filled.Logout"
+                    OnClick="LogoutAsync">
+
+                    خروج
+
+                </MudButton>
+
+            </Authorized>
+        </AuthorizeView>
+
+    </div>
+
+
     <BottomNavigation />
+
 </MudRTLProvider>
+
+
+@code {
+
+    private async Task LogoutAsync()
+    {
+        try
+        {
+            await AuthService.LogoutAsync();
+        }
+        finally
+        {
+            Navigation.NavigateTo(
+                "/login",
+                forceLoad: true);
+        }
+    }
+}

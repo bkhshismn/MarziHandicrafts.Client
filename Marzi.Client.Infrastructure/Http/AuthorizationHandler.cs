@@ -20,23 +20,8 @@ public sealed class AuthorizationHandler : DelegatingHandler
         Console.WriteLine(
             $"[AUTH] {request.Method} {request.RequestUri}");
 
-        string? token = null;
-
-        try
-        {
-            token =
-                await _tokenStorage.GetAccessTokenAsync();
-        }
-        catch (InvalidOperationException ex)
-        {
-            Console.WriteLine(
-                $"[AUTH] InvalidOperation: {ex.Message}");
-        }
-        catch (Microsoft.JSInterop.JSException ex)
-        {
-            Console.WriteLine(
-                $"[AUTH] JSException: {ex.Message}");
-        }
+        var token =
+            await _tokenStorage.GetAccessTokenAsync();
 
         Console.WriteLine(
             $"[AUTH] Token exists: {!string.IsNullOrWhiteSpace(token)}");
@@ -57,8 +42,38 @@ public sealed class AuthorizationHandler : DelegatingHandler
                 "[AUTH] No access token.");
         }
 
-        return await base.SendAsync(
-            request,
-            cancellationToken);
+        var response =
+            await base.SendAsync(
+                request,
+                cancellationToken);
+
+        Console.WriteLine(
+            $"[AUTH] Response: {(int)response.StatusCode} {response.StatusCode}");
+
+        // فقط برای خطاهای API، Body را لاگ می‌کنیم.
+        if (!response.IsSuccessStatusCode)
+        {
+            try
+            {
+                var body =
+                    await response.Content.ReadAsStringAsync(
+                        cancellationToken);
+
+                Console.WriteLine(
+                    "[AUTH] ===== ERROR RESPONSE BODY =====");
+
+                Console.WriteLine(body);
+
+                Console.WriteLine(
+                    "[AUTH] =================================");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(
+                    $"[AUTH] Could not read error body: {ex.Message}");
+            }
+        }
+
+        return response;
     }
 }

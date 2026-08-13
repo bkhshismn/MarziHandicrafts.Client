@@ -9,7 +9,6 @@ public interface ICourseEpisodeApi
     [Post("/api/admin/lessons/{lessonId}/video")]
     Task<ApiResponse<CourseEpisodeDto>> UploadAsync(
         Guid lessonId,
-        [Header("Authorization")] string authorization,
         [AliasAs("Title")] string title,
         [AliasAs("Description")] string description,
         [AliasAs("Order")] int order,
@@ -18,12 +17,10 @@ public interface ICourseEpisodeApi
 
     [Get("/api/lessons/{lessonId}/episodes")]
     Task<ApiResponse<List<CourseEpisodeDto>>> GetByLessonIdAsync(
-        Guid lessonId,
-        [Header("Authorization")] string authorization);
+        Guid lessonId);
 
     [Get("/api/admin/lessons/{lessonId}/video/{episodeId}/status")]
     Task<ApiResponse<CourseEpisodeDto>> GetStatusAsync(
         Guid lessonId,
-        Guid episodeId,
-        [Header("Authorization")] string authorization);
+        Guid episodeId);
 }

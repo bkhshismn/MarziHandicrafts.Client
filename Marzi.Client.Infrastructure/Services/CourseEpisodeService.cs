@@ -18,10 +18,6 @@ public sealed class CourseEpisodeService
         _tokenStorage = tokenStorage;
     }
 
-    // =========================================================
-    // Upload Video
-    // =========================================================
-
     public async Task<CourseEpisodeDto> UploadAsync(
         Guid lessonId,
         string title,
@@ -45,8 +41,7 @@ public sealed class CourseEpisodeService
             await _tokenStorage.GetAccessTokenAsync();
 
         Console.WriteLine(
-            $"[EPISODE UPLOAD] AccessToken exists: " +
-            $"{!string.IsNullOrWhiteSpace(accessToken)}");
+            $"[EPISODE UPLOAD] AccessToken exists: {!string.IsNullOrWhiteSpace(accessToken)}");
 
         if (string.IsNullOrWhiteSpace(accessToken))
         {
@@ -54,8 +49,32 @@ public sealed class CourseEpisodeService
                 "توکن ورود پیدا نشد. لطفاً دوباره وارد شوید.");
         }
 
-        var authorization =
-            $"Bearer {accessToken}";
+        Console.WriteLine(
+            $"[EPISODE UPLOAD] LessonId: {lessonId}");
+
+        Console.WriteLine(
+            $"[EPISODE UPLOAD] Title: {title}");
+
+        Console.WriteLine(
+            $"[EPISODE UPLOAD] Description length: {description?.Length ?? 0}");
+
+        Console.WriteLine(
+            $"[EPISODE UPLOAD] Order: {order}");
+
+        Console.WriteLine(
+            $"[EPISODE UPLOAD] IsFree: {isFree}");
+
+        Console.WriteLine(
+            $"[EPISODE UPLOAD] FileName: {fileName}");
+
+        Console.WriteLine(
+            $"[EPISODE UPLOAD] ContentType: {contentType}");
+
+        if (stream.CanSeek)
+        {
+            Console.WriteLine(
+                $"[EPISODE UPLOAD] Stream Length: {stream.Length}");
+        }
 
         var filePart =
             new StreamPart(
@@ -73,7 +92,6 @@ public sealed class CourseEpisodeService
             var response =
                 await _api.UploadAsync(
                     lessonId,
-                    authorization,
                     title,
                     description,
                     order,
@@ -81,16 +99,65 @@ public sealed class CourseEpisodeService
                     filePart);
 
             Console.WriteLine(
-                $"[EPISODE UPLOAD] Status: " +
-                $"{(int)response.StatusCode} " +
-                $"{response.StatusCode}");
+                $"[EPISODE UPLOAD] Status: {(int)response.StatusCode} {response.StatusCode}");
 
-            if (!response.IsSuccessStatusCode ||
-                response.Content is null)
+            Console.WriteLine(
+                $"[EPISODE UPLOAD] Has Content: {response.Content is not null}");
+
+            if (response.Content is not null)
             {
+                Console.WriteLine(
+                    $"[EPISODE UPLOAD] Id: {response.Content.Id}");
+
+                Console.WriteLine(
+                    $"[EPISODE UPLOAD] Title: {response.Content.Title}");
+
+                Console.WriteLine(
+                    $"[EPISODE UPLOAD] VideoUrl: {response.Content.VideoUrl}");
+
+                Console.WriteLine(
+                    $"[EPISODE UPLOAD] Status: {response.Content.Status}");
+
+                Console.WriteLine(
+                    $"[EPISODE UPLOAD] DurationSeconds: {response.Content.DurationSeconds}");
+
+                Console.WriteLine(
+                    $"[EPISODE UPLOAD] Order: {response.Content.Order}");
+
+                Console.WriteLine(
+                    $"[EPISODE UPLOAD] IsFree: {response.Content.IsFree}");
+            }
+
+            if (!response.IsSuccessStatusCode)
+            {
+                Console.WriteLine(
+                    $"[EPISODE UPLOAD] Request failed.");
+
+                if (response.Error is not null)
+                {
+                    Console.WriteLine(
+                        $"[EPISODE UPLOAD] Error type: {response.Error.GetType().FullName}");
+
+                    Console.WriteLine(
+                        $"[EPISODE UPLOAD] Error: {response.Error}");
+
+                    if (response.Error is ApiException apiException)
+                    {
+                        Console.WriteLine(
+                            $"[EPISODE UPLOAD] Headers: {apiException.Headers}");
+                    }
+                }
+
                 throw new InvalidOperationException(
                     $"آپلود ویدئو ناموفق بود. " +
-                    $"کد وضعیت: {(int)response.StatusCode}");
+                    $"کد وضعیت: {(int)response.StatusCode} " +
+                    $"{response.StatusCode}");
+            }
+
+            if (response.Content is null)
+            {
+                throw new InvalidOperationException(
+                    "سرور پاسخ موفق برگرداند ولی اطلاعات ویدئو خالی است.");
             }
 
             Console.WriteLine(
@@ -101,46 +168,31 @@ public sealed class CourseEpisodeService
         catch (ApiException ex)
         {
             Console.WriteLine(
-                $"[EPISODE UPLOAD] API ERROR: " +
-                $"{(int)ex.StatusCode} {ex.StatusCode}");
+                $"[EPISODE UPLOAD] ApiException Status: {ex.StatusCode}");
+
+            Console.WriteLine(
+                $"[EPISODE UPLOAD] ApiException: {ex}");
 
             throw new InvalidOperationException(
                 $"آپلود ویدئو ناموفق بود. " +
-                $"کد وضعیت: {(int)ex.StatusCode}",
+                $"کد وضعیت: {ex.StatusCode}",
                 ex);
         }
     }
 
-
-    // =========================================================
-    // Get Episodes By Lesson
-    // =========================================================
-
     public async Task<IReadOnlyList<CourseEpisodeDto>>
         GetByLessonIdAsync(Guid lessonId)
     {
-        var accessToken =
-            await _tokenStorage.GetAccessTokenAsync();
-
-        Console.WriteLine(
-            $"[EPISODES] AccessToken exists: " +
-            $"{!string.IsNullOrWhiteSpace(accessToken)}");
-
-        if (string.IsNullOrWhiteSpace(accessToken))
-        {
-            throw new InvalidOperationException(
-                "توکن ورود پیدا نشد. لطفاً دوباره وارد شوید.");
-        }
-
-        var authorization =
-            $"Bearer {accessToken}";
-
         try
         {
             var response =
-                await _api.GetByLessonIdAsync(
-                    lessonId,
-                    authorization);
+                await _api.GetByLessonIdAsync(lessonId);
+
+            Console.WriteLine(
+                $"[EPISODE LIST] Status: {(int)response.StatusCode} {response.StatusCode}");
+
+            Console.WriteLine(
+                $"[EPISODE LIST] Has Content: {response.Content is not null}");
 
             if (!response.IsSuccessStatusCode ||
                 response.Content is null)
@@ -150,66 +202,94 @@ public sealed class CourseEpisodeService
                     $"کد وضعیت: {(int)response.StatusCode}");
             }
 
+            Console.WriteLine(
+                $"[EPISODE LIST] Count: {response.Content.Count}");
+
             return response.Content;
         }
         catch (ApiException ex)
         {
             throw new InvalidOperationException(
                 $"دریافت ویدئوهای درس ناموفق بود. " +
-                $"کد وضعیت: {(int)ex.StatusCode}",
+                $"کد وضعیت: {ex.StatusCode}",
                 ex);
         }
     }
 
-
-    // =========================================================
-    // Get Processing Status
-    // =========================================================
-
-    public async Task<CourseEpisodeDto>
-        GetStatusAsync(
-            Guid lessonId,
-            Guid episodeId)
+    public async Task<CourseEpisodeDto> GetStatusAsync(
+    Guid lessonId,
+    Guid episodeId)
     {
-        var accessToken =
-            await _tokenStorage.GetAccessTokenAsync();
-
-        Console.WriteLine(
-            $"[EPISODE STATUS] AccessToken exists: " +
-            $"{!string.IsNullOrWhiteSpace(accessToken)}");
-
-        if (string.IsNullOrWhiteSpace(accessToken))
-        {
-            throw new InvalidOperationException(
-                "توکن ورود پیدا نشد. لطفاً دوباره وارد شوید.");
-        }
-
-        var authorization =
-            $"Bearer {accessToken}";
-
         try
         {
+            Console.WriteLine(
+                $"[EPISODE STATUS] GET /api/admin/lessons/{lessonId}/video/{episodeId}/status");
+
             var response =
                 await _api.GetStatusAsync(
                     lessonId,
-                    episodeId,
-                    authorization);
+                    episodeId);
 
-            if (!response.IsSuccessStatusCode ||
-                response.Content is null)
+            Console.WriteLine(
+                $"[EPISODE STATUS] HTTP: {(int)response.StatusCode} {response.StatusCode}");
+
+            Console.WriteLine(
+                $"[EPISODE STATUS] Content null: {response.Content is null}");
+
+            Console.WriteLine(
+                $"[EPISODE STATUS] Error null: {response.Error is null}");
+
+            if (response.Content is not null)
             {
-                throw new InvalidOperationException(
-                    $"وضعیت پردازش ویدئو دریافت نشد. " +
-                    $"کد وضعیت: {(int)response.StatusCode}");
+                Console.WriteLine(
+                    $"[EPISODE STATUS] Id: {response.Content.Id}");
+
+                Console.WriteLine(
+                    $"[EPISODE STATUS] Title: {response.Content.Title}");
+
+                Console.WriteLine(
+                    $"[EPISODE STATUS] Status: {response.Content.Status}");
+
+                Console.WriteLine(
+                    $"[EPISODE STATUS] VideoUrl: {response.Content.VideoUrl}");
+
+                Console.WriteLine(
+                    $"[EPISODE STATUS] Duration: {response.Content.DurationSeconds}");
+
+                return response.Content;
             }
 
-            return response.Content;
+            if (response.Error is not null)
+            {
+                Console.WriteLine(
+                    $"[EPISODE STATUS] Error type: {response.Error.GetType().FullName}");
+
+                Console.WriteLine(
+                    $"[EPISODE STATUS] Error: {response.Error}");
+
+                if (response.Error is ApiException apiException)
+                {
+                    Console.WriteLine(
+                        $"[EPISODE STATUS] ApiException Status: {apiException.StatusCode}");
+
+                    Console.WriteLine(
+                        $"[EPISODE STATUS] ApiException Headers: {apiException.Headers}");
+                }
+            }
+
+            throw new InvalidOperationException(
+                $"سرور وضعیت ویدئو را با موفقیت برگرداند، " +
+                $"اما اطلاعات قابل خواندن نبودند. " +
+                $"HTTP: {(int)response.StatusCode} {response.StatusCode}");
         }
         catch (ApiException ex)
         {
+            Console.WriteLine(
+                $"[EPISODE STATUS] ApiException: {ex}");
+
             throw new InvalidOperationException(
                 $"دریافت وضعیت ویدئو ناموفق بود. " +
-                $"کد وضعیت: {(int)ex.StatusCode}",
+                $"کد وضعیت: {(int)ex.StatusCode} {ex.StatusCode}",
                 ex);
         }
     }

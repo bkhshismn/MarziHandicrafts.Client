@@ -390,27 +390,39 @@
         return $"{bytes / (1024d * 1024d * 1024d):0.##} GB";
     }
     private async Task PollStatusAsync(
-    Guid episodeId,
-    CancellationToken cancellationToken)
+     Guid episodeId,
+     CancellationToken cancellationToken)
     {
+        const int maxConsecutiveErrors = 5;
+
+        var consecutiveErrors = 0;
+
         while (!cancellationToken.IsCancellationRequested)
         {
-            await Task.Delay(
-                TimeSpan.FromSeconds(2),
-                cancellationToken);
-
             try
             {
+                await Task.Delay(
+                    TimeSpan.FromSeconds(2),
+                    cancellationToken);
+
                 var status =
                     await CourseEpisodeService.GetStatusAsync(
                         Lesson.Id,
                         episodeId);
 
+                consecutiveErrors = 0;
+
                 _uploadedEpisode = status;
                 _processingStatus = status.Status;
+                _error = null;
 
                 await InvokeAsync(
                     StateHasChanged);
+
+                Console.WriteLine(
+                    $"[VIDEO POLL] Status={status.Status}, " +
+                    $"VideoUrl={status.VideoUrl}, " +
+                    $"Duration={status.DurationSeconds}");
 
                 if (string.Equals(
                         status.Status,
@@ -439,15 +451,30 @@
                     return;
                 }
             }
+            catch (OperationCanceledException)
+            {
+                return;
+            }
             catch (Exception ex)
             {
-                _error =
-                    $"دریافت وضعیت ویدئو ناموفق بود: {ex.Message}";
+                consecutiveErrors++;
+
+                Console.WriteLine(
+                    $"[VIDEO POLL ERROR] {ex.Message}");
+
+                if (consecutiveErrors >= maxConsecutiveErrors)
+                {
+                    _error =
+                        $"دریافت وضعیت ویدئو ناموفق بود: {ex.Message}";
+
+                    await InvokeAsync(
+                        StateHasChanged);
+
+                    return;
+                }
 
                 await InvokeAsync(
                     StateHasChanged);
-
-                return;
             }
         }
     }

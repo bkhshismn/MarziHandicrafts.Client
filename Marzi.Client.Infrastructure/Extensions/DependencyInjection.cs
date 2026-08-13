@@ -21,30 +21,22 @@ public static class DependencyInjection
                 nameof(baseUrl));
         }
 
-
-
         // ==========================
         // Authentication
         // ==========================
-
         services.AddScoped<ITokenStorage, TokenStorage>();
-
-        services.AddScoped<
-            IAuthenticationTokenStore,
-            AuthenticationTokenStore>();
+        services.AddScoped<IAuthenticationTokenStore, AuthenticationTokenStore>();
 
         // ==========================
-        // Http Handlers
+        // Handlers
         // ==========================
-
-        services.AddTransient<AuthorizationHandler>();
-        services.AddTransient<RefreshTokenHandler>();
-
+        // مهم: Scoped تا همان TokenStorage مدار را بگیرد
+        services.AddScoped<AuthorizationHandler>();
+        services.AddScoped<RefreshTokenHandler>();
 
         // ==========================
-        // Public APIs
+        // Public APIs (بدون Auth)
         // ==========================
-
         services
             .AddRefitClient<IAuthApi>()
             .ConfigureHttpClient(c =>
@@ -53,11 +45,11 @@ public static class DependencyInjection
             });
 
         services
-             .AddRefitClient<ICourseApi>()
-             .ConfigureHttpClient(c =>
-             {
-                 c.BaseAddress = new Uri(baseUrl);
-             });
+            .AddRefitClient<ICourseApi>()
+            .ConfigureHttpClient(c =>
+            {
+                c.BaseAddress = new Uri(baseUrl);
+            });
 
         services
             .AddRefitClient<IPortfolioApi>()
@@ -66,47 +58,47 @@ public static class DependencyInjection
                 c.BaseAddress = new Uri(baseUrl);
             });
 
-
         // ==========================
-        // Protected APIs
+        // Protected APIs — Scoped Refit Client
         // ==========================
+        // این روش در Blazor Server باعث می‌شود
+        // Handler و TokenStorage از همان scope مدار باشند.
 
-        services
-            .AddRefitClient<IOrderApi>()
-            .ConfigureHttpClient(c =>
+        services.AddScoped<IOrderApi>(sp =>
+        {
+            var authHandler = sp.GetRequiredService<AuthorizationHandler>();
+            authHandler.InnerHandler = new HttpClientHandler();
+
+            var httpClient = new HttpClient(authHandler)
             {
-                c.BaseAddress = new Uri(baseUrl);
-            })
-            .AddHttpMessageHandler<AuthorizationHandler>()
-            .AddHttpMessageHandler<RefreshTokenHandler>();
+                BaseAddress = new Uri(baseUrl)
+            };
 
+            return RestService.For<IOrderApi>(httpClient);
+        });
 
-        // Course Episodes
-        services
-            .AddRefitClient<ICourseEpisodeApi>()
-            .ConfigureHttpClient(c =>
+        services.AddScoped<ICourseEpisodeApi>(sp =>
+        {
+            var authHandler = sp.GetRequiredService<AuthorizationHandler>();
+            authHandler.InnerHandler = new HttpClientHandler();
+
+            var httpClient = new HttpClient(authHandler)
             {
-                c.BaseAddress = new Uri(baseUrl);
-            })
-            .AddHttpMessageHandler<AuthorizationHandler>()
-            .AddHttpMessageHandler<RefreshTokenHandler>();
+                BaseAddress = new Uri(baseUrl),
+                Timeout = TimeSpan.FromMinutes(30)
+            };
+
+            return RestService.For<ICourseEpisodeApi>(httpClient);
+        });
 
         // ==========================
         // Services
         // ==========================
-
         services.AddScoped<AuthService>();
         services.AddScoped<CourseService>();
         services.AddScoped<PortfolioService>();
         services.AddScoped<CourseEpisodeService>();
-
-
-        // ==========================
-        // Token Refresh
-        // ==========================
-
         services.AddScoped<TokenRefreshCoordinator>();
-
 
         return services;
     }
