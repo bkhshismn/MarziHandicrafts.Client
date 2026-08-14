@@ -1,39 +1,28 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk.Razor">
 
-  <PropertyGroup>
-    <TargetFramework>net9.0</TargetFramework>
-    <Nullable>enable</Nullable>
-    <ImplicitUsings>enable</ImplicitUsings>
-  </PropertyGroup>
+	<PropertyGroup>
+		<TargetFramework>net9.0</TargetFramework>
+		<Nullable>enable</Nullable>
+		<ImplicitUsings>enable</ImplicitUsings>
+	</PropertyGroup>
 
-  <ItemGroup>
-    <Content Remove="Components\Courses\VideoPlayer.razor" />
-    <Content Remove="TopBar.razor" />
-  </ItemGroup>
+	<ItemGroup>
+		<SupportedPlatform Include="browser" />
+	</ItemGroup>
 
-  <ItemGroup>
-    <None Include="Components\Courses\VideoPlayer.razor" />
-    <None Include="TopBar.razor" />
-  </ItemGroup>
+	<ItemGroup>
+		<PackageReference Include="Microsoft.AspNetCore.Components.Web" Version="9.0.18" />
+		<PackageReference Include="MudBlazor" Version="9.7.0" />
+	</ItemGroup>
 
+	<ItemGroup>
+		<ProjectReference Include="..\Marzi.Client.Core\Marzi.Client.Core.csproj" />
+		<ProjectReference Include="..\Marzi.Client.Infrastructure\Marzi.Client.Infrastructure.csproj" />
+	</ItemGroup>
 
-  <ItemGroup>
-    <SupportedPlatform Include="browser" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <PackageReference Include="Microsoft.AspNetCore.Components.Web" Version="9.0.18" />
-    <PackageReference Include="MudBlazor" Version="9.7.0" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <ProjectReference Include="..\Marzi.Client.Core\Marzi.Client.Core.csproj" />
-    <ProjectReference Include="..\Marzi.Client.Infrastructure\Marzi.Client.Infrastructure.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="Pages\Admin\" />
-    <Folder Include="wwwroot\images\" />
-  </ItemGroup>
+	<ItemGroup>
+		<Folder Include="Pages\Admin\" />
+		<Folder Include="wwwroot\images\" />
+	</ItemGroup>
 
 </Project>

@@ -87,15 +87,41 @@ else
     [Parameter]
     public required string ApiBaseUrl { get; set; }
 
+
     private ElementReference _videoElement;
 
     private IJSObjectReference? _module;
 
     private bool _loading;
 
+    private bool _initializing;
+
     private string? _error;
 
     private Guid? _initializedEpisodeId;
+
+    private Guid? _currentEpisodeId;
+
+
+    protected override void OnParametersSet()
+    {
+        var episodeId = Lesson?.EpisodeId;
+
+        /*
+         * اگر درس یا Episode عوض شده باشد،
+         * Player باید دوباره initialize شود.
+         */
+        if (_currentEpisodeId != episodeId)
+        {
+            _currentEpisodeId = episodeId;
+
+            _initializedEpisodeId = null;
+
+            _error = null;
+
+            _loading = false;
+        }
+    }
 
 
     protected override async Task OnAfterRenderAsync(
@@ -108,15 +134,22 @@ else
             return;
         }
 
+
         if (string.Equals(
                 Lesson.VideoStatus,
                 "Failed",
                 StringComparison.OrdinalIgnoreCase))
         {
-            _error = "پردازش ویدئوی این درس با خطا مواجه شده است.";
+            _error =
+                "پردازش ویدئوی این درس با خطا مواجه شده است.";
+
             _loading = false;
+
+            await InvokeAsync(StateHasChanged);
+
             return;
         }
+
 
         if (!string.Equals(
                 Lesson.VideoStatus,
@@ -124,13 +157,29 @@ else
                 StringComparison.OrdinalIgnoreCase))
         {
             _loading = false;
+
             return;
         }
 
-        if (_initializedEpisodeId == Lesson.EpisodeId)
-            return;
 
-        _initializedEpisodeId = Lesson.EpisodeId;
+        /*
+         * اگر همین Episode قبلاً با موفقیت initialize شده،
+         * دوباره Player را ایجاد نکن.
+         */
+        if (_initializedEpisodeId == Lesson.EpisodeId)
+        {
+            return;
+        }
+
+
+        /*
+         * جلوگیری از اجرای همزمان چند Initialize.
+         */
+        if (_initializing)
+        {
+            return;
+        }
+
 
         await InitializePlayerAsync();
     }
@@ -138,48 +187,159 @@ else
 
     private async Task InitializePlayerAsync()
     {
+        if (Lesson is null ||
+            !Lesson.HasVideo ||
+            Lesson.EpisodeId is null)
+        {
+            return;
+        }
+
+
+        if (_initializing)
+        {
+            return;
+        }
+
+
+        _initializing = true;
+
         try
         {
             _loading = true;
+
             _error = null;
 
             await InvokeAsync(StateHasChanged);
 
-            var token =
-                await TokenStorage.GetAccessTokenAsync();
 
+            /*
+             * ممکن است Component قبل از Login اجرا شده باشد.
+             *
+             * بنابراین به جای اینکه همان لحظه شکست بخوریم،
+             * چند بار برای دریافت Token تلاش می‌کنیم.
+             */
+            string? token = null;
+
+            const int maxAttempts = 20;
+
+            const int delayMilliseconds = 250;
+
+
+            for (var attempt = 1;
+                 attempt <= maxAttempts;
+                 attempt++)
+            {
+                token =
+                    await TokenStorage.GetAccessTokenAsync();
+
+
+                if (!string.IsNullOrWhiteSpace(token))
+                {
+                    Console.WriteLine(
+                        $"[VIDEO PLAYER] Access token ready. Attempt: {attempt}");
+
+                    break;
+                }
+
+
+                Console.WriteLine(
+                    $"[VIDEO PLAYER] Access token not ready. Attempt: {attempt}/{maxAttempts}");
+
+
+                if (attempt < maxAttempts)
+                {
+                    await Task.Delay(
+                        delayMilliseconds);
+                }
+            }
+
+
+            /*
+             * اگر بعد از حدود 5 ثانیه هنوز Token نداشتیم،
+             * دیگر تلاش نمی‌کنیم.
+             */
             if (string.IsNullOrWhiteSpace(token))
             {
-                _error = "برای پخش این ویدئو باید وارد حساب کاربری شوید.";
+                _error =
+                    "دسترسی پخش ویدئو آماده نشد. لطفاً دوباره وارد حساب کاربری شوید.";
+
+                Console.WriteLine(
+                    "[VIDEO PLAYER] Access token unavailable.");
+
                 return;
             }
 
+
+            /*
+             * ماژول JS را فقط یک بار Load می‌کنیم.
+             */
             _module ??=
                 await JS.InvokeAsync<IJSObjectReference>(
                     "import",
                     "./_content/Marzi.Client.Shared/js/hlsPlayer.js");
+
 
             var playlistUrl =
                 $"{ApiBaseUrl.TrimEnd('/')}" +
                 $"/api/admin/lessons/{Lesson.Id}/video/" +
                 $"{Lesson.EpisodeId}/stream/master.m3u8";
 
+
+            Console.WriteLine(
+                $"[VIDEO PLAYER] LessonId: {Lesson.Id}");
+
+            Console.WriteLine(
+                $"[VIDEO PLAYER] EpisodeId: {Lesson.EpisodeId}");
+
+            Console.WriteLine(
+                $"[VIDEO PLAYER] VideoStatus: {Lesson.VideoStatus}");
+
+            Console.WriteLine(
+                $"[VIDEO PLAYER] Playlist URL: {playlistUrl}");
+
+            Console.WriteLine(
+                $"[VIDEO PLAYER] Token exists: {!string.IsNullOrWhiteSpace(token)}");
+
+
+            /*
+             * اینجا Player را با Token معتبر initialize می‌کنیم.
+             */
             await _module.InvokeVoidAsync(
                 "initialize",
                 _videoElement,
                 playlistUrl,
                 token);
+
+
+            /*
+             * خیلی مهم:
+             * فقط بعد از اینکه initialize با موفقیت انجام شد،
+             * Episode را initialized علامت می‌زنیم.
+             */
+            _initializedEpisodeId =
+                Lesson.EpisodeId;
+
+
+            Console.WriteLine(
+                $"[VIDEO PLAYER] Initialized successfully. EpisodeId: {Lesson.EpisodeId}");
         }
         catch (JSException ex)
         {
             _error =
                 "پخش‌کننده ویدئو بارگذاری نشد.";
 
+            Console.WriteLine(
+                "[VIDEO PLAYER] JS error:");
+
             Console.WriteLine(ex);
         }
         catch (Exception ex)
         {
-            _error = ex.Message;
+            _error =
+                ex.Message;
+
+            Console.WriteLine(
+                "[VIDEO PLAYER] Error:");
 
             Console.WriteLine(ex);
         }
@@ -187,7 +347,10 @@ else
         {
             _loading = false;
 
-            await InvokeAsync(StateHasChanged);
+            _initializing = false;
+
+            await InvokeAsync(
+                StateHasChanged);
         }
     }
 
@@ -203,11 +366,16 @@ else
                     _videoElement);
 
                 await _module.DisposeAsync();
+
+                _module = null;
             }
         }
         catch
         {
-            // Component may already be disposed.
+            /*
+             * Component ممکن است قبل از Dispose شدن
+             * JavaScript module از بین رفته باشد.
+             */
         }
     }
 

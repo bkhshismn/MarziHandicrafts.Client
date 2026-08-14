@@ -335,8 +335,7 @@
         _selectedFile.ContentType);
 
             _uploadedEpisode = result;
-            _processingStatus = result.Status;
-
+            _processingStatus = result.Status.ToString();
             _uploading = false;
 
             _selectedFile = null;
@@ -413,7 +412,7 @@
                 consecutiveErrors = 0;
 
                 _uploadedEpisode = status;
-                _processingStatus = status.Status;
+                _processingStatus = status.Status.ToString();
                 _error = null;
 
                 await InvokeAsync(
@@ -424,10 +423,7 @@
                     $"VideoUrl={status.VideoUrl}, " +
                     $"Duration={status.DurationSeconds}");
 
-                if (string.Equals(
-                        status.Status,
-                        "Ready",
-                        StringComparison.OrdinalIgnoreCase))
+                if (status.Status == VideoProcessingStatus.Ready)
                 {
                     Snackbar.Add(
                         "پردازش ویدئو با موفقیت انجام شد و ویدئو آماده پخش است.",
@@ -436,10 +432,7 @@
                     return;
                 }
 
-                if (string.Equals(
-                        status.Status,
-                        "Failed",
-                        StringComparison.OrdinalIgnoreCase))
+                if (status.Status == VideoProcessingStatus.Failed)
                 {
                     _error =
                         "پردازش ویدئو با خطا مواجه شد.";

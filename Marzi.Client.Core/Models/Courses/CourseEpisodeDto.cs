@@ -1,5 +1,13 @@
 ﻿namespace Marzi.Client.Core.Models.Courses;
 
+public enum VideoProcessingStatus
+{
+    Pending = 0,
+    Processing = 1,
+    Ready = 2,
+    Failed = 3
+}
+
 public sealed class CourseEpisodeDto
 {
     public Guid Id { get; set; }
@@ -16,5 +24,5 @@ public sealed class CourseEpisodeDto
 
     public bool IsFree { get; set; }
 
-    public string Status { get; set; } = string.Empty;
+    public VideoProcessingStatus Status { get; set; }
 }
