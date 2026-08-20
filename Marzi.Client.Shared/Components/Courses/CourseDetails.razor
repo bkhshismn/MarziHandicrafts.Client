@@ -5,11 +5,11 @@
 @using Marzi.Client.Core.Models.Courses
 @using Marzi.Client.Infrastructure.Services
 @using Marzi.Client.Shared.Components.Courses
+@using Microsoft.Extensions.Configuration
 
 @inject CourseService CourseService
 @inject ISnackbar Snackbar
 @inject IConfiguration Configuration
-@using Microsoft.Extensions.Configuration
 
 @if (_loading)
 {
@@ -26,9 +26,7 @@ else if (_course is null)
     <div class="course-details-page">
 
         <MudAlert Severity="Severity.Error">
-
             دوره پیدا نشد.
-
         </MudAlert>
 
     </div>
@@ -64,7 +62,6 @@ else
         <!-- ========================= -->
         <!-- Selected Lesson / Player -->
         <!-- ========================= -->
-
         @if (_selectedLesson is not null)
         {
             <MudPaper Class="course-video-section"
@@ -161,6 +158,25 @@ else
         {
             _course =
                 await CourseService.GetByIdAsync(Id);
+
+            // =========================================
+            // انتخاب خودکار اولین درس دارای ویدئوی آماده
+            // =========================================
+
+            _selectedLesson =
+                _course.Sections?
+                    .OrderBy(x => x.OrderIndex)
+                    .SelectMany(x =>
+                        x.Lessons?
+                            .OrderBy(l => l.OrderIndex)
+                        ?? Enumerable.Empty<CourseLessonDto>())
+                    .FirstOrDefault(x =>
+                        x.HasVideo &&
+                        x.EpisodeId.HasValue &&
+                        string.Equals(
+                            x.VideoStatus,
+                            "Ready",
+                            StringComparison.OrdinalIgnoreCase));
         }
         catch (Exception ex)
         {
