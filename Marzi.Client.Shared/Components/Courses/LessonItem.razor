@@ -14,7 +14,13 @@
 
             <div class="lesson-icon">
 
-                @if (Lesson.IsFreePreview && Lesson.HasVideo)
+                @if (Completed)
+                {
+                    <MudIcon Icon="@Icons.Material.Filled.CheckCircle"
+                             Color="Color.Success"
+                             Size="Size.Medium" />
+                }
+                else if (Lesson.IsFreePreview && Lesson.HasVideo)
                 {
                     <MudIcon Icon="@Icons.Material.Filled.PlayCircle"
                              Color="Color.Success"
@@ -47,8 +53,7 @@
 
                 </MudText>
 
-                @if (!string.IsNullOrWhiteSpace(
-                    Lesson.Description))
+                @if (!string.IsNullOrWhiteSpace(Lesson.Description))
                 {
                     <MudText Typo="Typo.caption"
                              Color="Color.Secondary"
@@ -66,7 +71,18 @@
 
             <div class="lesson-meta">
 
-                @if (Lesson.IsFreePreview && Lesson.HasVideo)
+                @if (Completed)
+                {
+                    <MudChip T="string"
+                             Color="Color.Success"
+                             Size="Size.Small"
+                             Variant="Variant.Outlined">
+
+                        تکمیل شده
+
+                    </MudChip>
+                }
+                else if (Lesson.IsFreePreview && Lesson.HasVideo)
                 {
                     <MudChip T="string"
                              Color="Color.Success"
@@ -120,8 +136,7 @@
                     <MudText Typo="Typo.caption"
                              Color="Color.Secondary">
 
-                        @FormatDuration(
-                            Lesson.DurationSeconds)
+                        @FormatDuration(Lesson.DurationSeconds)
 
                     </MudText>
                 }
@@ -140,9 +155,11 @@
     [Parameter]
     public required CourseLessonDto Lesson { get; set; }
 
-
     [Parameter]
     public EventCallback<CourseLessonDto> LessonSelected { get; set; }
+
+    [Parameter]
+    public bool Completed { get; set; }
 
 
     private bool IsReady =>
@@ -182,8 +199,7 @@
         if (seconds <= 0)
             return string.Empty;
 
-        var time =
-            TimeSpan.FromSeconds(seconds);
+        var time = TimeSpan.FromSeconds(seconds);
 
         if (time.TotalHours >= 1)
         {

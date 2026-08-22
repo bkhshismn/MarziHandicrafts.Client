@@ -90,6 +90,65 @@ public static class DependencyInjection
 
             return RestService.For<ICourseEpisodeApi>(httpClient);
         });
+        // ==========================
+        // Protected APIs — Scoped Refit Client
+        // ==========================
+
+        services.AddScoped<IOrderApi>(sp =>
+        {
+            var authHandler =
+                sp.GetRequiredService<AuthorizationHandler>();
+
+            authHandler.InnerHandler =
+                new HttpClientHandler();
+
+            var httpClient =
+                new HttpClient(authHandler)
+                {
+                    BaseAddress = new Uri(baseUrl)
+                };
+
+            return RestService.For<IOrderApi>(httpClient);
+        });
+
+
+        services.AddScoped<ICourseEpisodeApi>(sp =>
+        {
+            var authHandler =
+                sp.GetRequiredService<AuthorizationHandler>();
+
+            authHandler.InnerHandler =
+                new HttpClientHandler();
+
+            var httpClient =
+                new HttpClient(authHandler)
+                {
+                    BaseAddress = new Uri(baseUrl),
+                    Timeout = TimeSpan.FromMinutes(30)
+                };
+
+            return RestService.For<ICourseEpisodeApi>(httpClient);
+        });
+
+
+        services.AddScoped<ICourseLessonProgressApi>(sp =>
+        {
+            var authHandler =
+                sp.GetRequiredService<AuthorizationHandler>();
+
+            authHandler.InnerHandler =
+                new HttpClientHandler();
+
+            var httpClient =
+                new HttpClient(authHandler)
+                {
+                    BaseAddress = new Uri(baseUrl)
+                };
+
+            return RestService.For<ICourseLessonProgressApi>(
+                httpClient);
+        });
+
 
         // ==========================
         // Services
@@ -99,6 +158,7 @@ public static class DependencyInjection
         services.AddScoped<PortfolioService>();
         services.AddScoped<CourseEpisodeService>();
         services.AddScoped<TokenRefreshCoordinator>();
+        services.AddScoped<CourseLessonProgressService>();
 
         return services;
     }
