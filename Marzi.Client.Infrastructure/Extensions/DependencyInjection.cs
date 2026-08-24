@@ -156,6 +156,7 @@ public static class DependencyInjection
         services.AddScoped<AuthService>();
         services.AddScoped<CourseService>();
         services.AddScoped<PortfolioService>();
+        services.AddScoped<OrderService>();
         services.AddScoped<CourseEpisodeService>();
         services.AddScoped<TokenRefreshCoordinator>();
         services.AddScoped<CourseLessonProgressService>();

@@ -1,13 +1,16 @@
 ﻿@inherits LayoutComponentBase
+
 @using MudBlazor
 @using Marzi.Client.Shared.Components.Navigation
 @using Marzi.Client.Shared.Theme
-
-<MudThemeProvider Theme="@AppTheme.Default" />
-<MudDialogProvider />
-<MudSnackbarProvider />
+@using Microsoft.AspNetCore.Components.Authorization
 
 <MudRTLProvider RightToLeft="true">
+
+    <MudThemeProvider Theme="@AppTheme.Default" />
+    <MudPopoverProvider />
+    <MudDialogProvider />
+    <MudSnackbarProvider />
 
     <MudLayout>
 
@@ -61,6 +64,7 @@
 
         </MudAppBar>
 
+
         <MudMainContent>
 
             <main class="main-content">
@@ -68,6 +72,7 @@
             </main>
 
         </MudMainContent>
+
 
         <div class="mobile-bottom-navigation">
             <BottomNavigation />

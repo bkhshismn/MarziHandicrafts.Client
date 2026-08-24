@@ -14,13 +14,9 @@ public sealed class OrderDto
 
 public sealed class CreateOrderRequest
 {
-    public Guid UserId { get; set; }
     public string Type { get; set; } = string.Empty;
+
     public string Description { get; set; } = string.Empty;
+
     public string? ImageUrl { get; set; }
-
-    // بهتر است بعداً Backend خودش مقدار اولیه را تعیین کند.
-    public string Status { get; set; } = "New";
-
-    public decimal? EstimatedPrice { get; set; }
 }

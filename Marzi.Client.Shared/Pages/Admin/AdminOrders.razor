@@ -1,0 +1,530 @@
+@page "/admin/orders"
+
+@using Microsoft.AspNetCore.Components.Authorization
+@using Marzi.Client.Core.Models.Orders
+@using Marzi.Client.Infrastructure.Services
+@using Marzi.Client.Shared.Layouts
+@using MudBlazor
+
+@layout MainLayout
+
+
+<MudPopoverProvider />
+
+@inject OrderService OrderService
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject ISnackbar Snackbar
+@inject IDialogService DialogService
+
+<MudContainer MaxWidth="MaxWidth.False"
+              Class="py-6">
+
+    <MudStack Spacing="4">
+
+        <MudStack Row="true"
+                  AlignItems="AlignItems.Center"
+                  Justify="Justify.SpaceBetween">
+
+            <div>
+                <MudText Typo="Typo.h4">
+                    مدیریت سفارش‌ها
+                </MudText>
+
+                <MudText Typo="Typo.body1"
+                         Color="Color.Secondary"
+                         Class="mt-1">
+                    سفارش‌های ثبت‌شده توسط مشتریان را مشاهده و بررسی کنید.
+                </MudText>
+            </div>
+
+            @if (!_loading)
+            {
+                <MudChip T="string"
+                         Color="Color.Primary"
+                         Variant="Variant.Outlined">
+                    @($"{_orders.Count} سفارش")
+                </MudChip>
+            }
+
+        </MudStack>
+
+
+        @if (_loading)
+        {
+            <MudGrid>
+
+                @for (var i = 0; i < 6; i++)
+                {
+                    <MudItem xs="12"
+                             sm="6"
+                             lg="4">
+
+                        <MudCard Elevation="2">
+
+                            <MudSkeleton Height="220px"
+                                         Animation="Animation.Wave" />
+
+                            <MudCardContent>
+
+                                <MudSkeleton Width="45%"
+                                             Height="28px"
+                                             Class="mb-3" />
+
+                                <MudSkeleton Width="100%"
+                                             Height="18px"
+                                             Class="mb-2" />
+
+                                <MudSkeleton Width="80%"
+                                             Height="18px"
+                                             Class="mb-2" />
+
+                                <MudSkeleton Width="60%"
+                                             Height="18px" />
+
+                            </MudCardContent>
+
+                        </MudCard>
+
+                    </MudItem>
+                }
+
+            </MudGrid>
+        }
+        else if (!string.IsNullOrWhiteSpace(_errorMessage))
+        {
+            <MudAlert Severity="Severity.Error"
+                      Variant="Variant.Filled">
+
+                @_errorMessage
+
+            </MudAlert>
+
+            <MudButton Variant="Variant.Outlined"
+                       Color="Color.Primary"
+                       StartIcon="@Icons.Material.Filled.Refresh"
+                       OnClick="LoadOrders">
+
+                تلاش مجدد
+
+            </MudButton>
+        }
+        else if (_orders.Count == 0)
+        {
+            <MudPaper Elevation="1"
+                      Class="pa-8">
+
+                <MudStack AlignItems="AlignItems.Center"
+                          Spacing="2">
+
+                    <MudIcon Icon="@Icons.Material.Filled.ShoppingBag"
+                             Size="Size.Large"
+                             Color="Color.Secondary" />
+
+                    <MudText Typo="Typo.h6">
+
+                        هنوز سفارشی ثبت نشده است.
+
+                    </MudText>
+
+                    <MudText Typo="Typo.body2"
+                             Color="Color.Secondary">
+
+                        وقتی مشتری سفارشی ثبت کند، سفارش در این قسمت نمایش داده می‌شود.
+
+                    </MudText>
+
+                </MudStack>
+
+            </MudPaper>
+        }
+        else
+        {
+            <MudGrid>
+
+                @foreach (var order in _orders)
+                {
+                    <MudItem xs="12"
+                             sm="6"
+                             lg="4">
+
+                        <MudCard Elevation="2"
+                                 Class="h-100">
+
+                            @if (!string.IsNullOrWhiteSpace(order.ImageUrl))
+                            {
+                                <MudCardMedia Image="@order.ImageUrl"
+                                              Height="220" />
+                            }
+                            else
+                            {
+                                <MudPaper Height="220px"
+                                          Class="d-flex align-center justify-center">
+
+                                    <MudIcon Icon="@Icons.Material.Filled.Image"
+                                             Size="Size.Large"
+                                             Color="Color.Secondary" />
+
+                                </MudPaper>
+                            }
+
+                            <MudCardContent>
+
+                                <MudStack Spacing="2">
+
+                                    <MudStack Row="true"
+                                              AlignItems="AlignItems.Center"
+                                              Justify="Justify.SpaceBetween">
+
+                                        <MudText Typo="Typo.h6">
+
+                                            @GetTypeText(order.Type)
+
+                                        </MudText>
+
+                                        <MudChip T="string"
+                                                 Size="Size.Small"
+                                                 Color="@GetStatusColor(order.Status)"
+                                                 Variant="Variant.Filled">
+
+                                            @GetStatusText(order.Status)
+
+                                        </MudChip>
+
+                                    </MudStack>
+
+
+                                    <MudText Typo="Typo.body2">
+
+                                        @order.Description
+
+                                    </MudText>
+
+
+                                    <MudDivider Class="my-1" />
+
+
+                                    <MudStack Row="true"
+                                              AlignItems="AlignItems.Center"
+                                              Spacing="1">
+
+                                        <MudIcon Icon="@Icons.Material.Filled.Person"
+                                                 Size="Size.Small"
+                                                 Color="Color.Secondary" />
+
+                                        <MudText Typo="Typo.body2"
+                                                 Color="Color.Secondary">
+
+                                            شناسه مشتری:
+
+                                        </MudText>
+
+                                    </MudStack>
+
+                                    <MudText Typo="Typo.caption">
+
+                                        @order.UserId
+
+                                    </MudText>
+
+
+                                    <MudStack Row="true"
+                                              AlignItems="AlignItems.Center"
+                                              Spacing="1">
+
+                                        <MudIcon Icon="@Icons.Material.Filled.Schedule"
+                                                 Size="Size.Small"
+                                                 Color="Color.Secondary" />
+
+                                        <MudText Typo="Typo.body2"
+                                                 Color="Color.Secondary">
+
+                                            ثبت شده در:
+
+                                        </MudText>
+
+                                        <MudText Typo="Typo.body2">
+
+                                            @order.CreatedAt.ToString("yyyy/MM/dd HH:mm")
+
+                                        </MudText>
+
+                                    </MudStack>
+
+
+                                    @if (order.EstimatedPrice.HasValue)
+                                    {
+                                        <MudStack Row="true"
+                                                  AlignItems="AlignItems.Center"
+                                                  Spacing="1">
+
+                                            <MudIcon Icon="@Icons.Material.Filled.Payments"
+                                                     Size="Size.Small"
+                                                     Color="Color.Success" />
+
+                                            <MudText Typo="Typo.body2">
+
+                                                قیمت:
+
+                                                @order.EstimatedPrice.Value.ToString("N0")
+
+                                                تومان
+
+                                            </MudText>
+
+                                        </MudStack>
+                                    }
+                                    else
+                                    {
+                                        <MudStack Row="true"
+                                                  AlignItems="AlignItems.Center"
+                                                  Spacing="1">
+
+                                            <MudIcon Icon="@Icons.Material.Filled.Payments"
+                                                     Size="Size.Small"
+                                                     Color="Color.Warning" />
+
+                                            <MudText Typo="Typo.body2"
+                                                     Color="Color.Warning">
+
+                                                قیمت هنوز تعیین نشده
+
+                                            </MudText>
+
+                                        </MudStack>
+                                    }
+
+                                </MudStack>
+
+                            </MudCardContent>
+
+
+                            <MudCardActions Class="px-4 pb-4">
+
+                                <MudButton Variant="Variant.Outlined"
+                                           Color="Color.Primary"
+                                           FullWidth="true"
+                                           StartIcon="@Icons.Material.Filled.Visibility"
+                                           OnClick="@(() => ShowOrderInfo(order))">
+
+                                    مشاهده سفارش
+
+                                </MudButton>
+
+                            </MudCardActions>
+
+                        </MudCard>
+
+                    </MudItem>
+                }
+
+            </MudGrid>
+        }
+
+    </MudStack>
+
+</MudContainer>
+
+
+@code {
+
+    private IReadOnlyList<OrderDto> _orders = [];
+
+    private bool _loading = true;
+
+    private string? _errorMessage;
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadOrders();
+    }
+
+
+    private async Task LoadOrders()
+    {
+        _loading = true;
+        _errorMessage = null;
+
+        try
+        {
+            var state =
+                await AuthenticationStateProvider
+                    .GetAuthenticationStateAsync();
+
+            var user = state.User;
+
+            if (user.Identity?.IsAuthenticated != true)
+            {
+                _errorMessage =
+                    "برای مشاهده سفارش‌ها باید وارد حساب کاربری شوید.";
+
+                return;
+            }
+
+            if (!user.IsInRole("Admin"))
+            {
+                _errorMessage =
+                    "شما دسترسی مشاهده سفارش‌های مدیریت را ندارید.";
+
+                return;
+            }
+
+            _orders =
+                await OrderService.GetAllForAdminAsync();
+
+            Console.WriteLine(
+                $"[ADMIN ORDERS] Loaded {_orders.Count} orders.");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(
+                $"[ADMIN ORDERS] Load failed: {ex}");
+
+            _errorMessage =
+                "دریافت سفارش‌ها با خطا مواجه شد.";
+
+            Snackbar.Add(
+                "دریافت سفارش‌ها با خطا مواجه شد.",
+                Severity.Error);
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+
+
+    private async Task ShowOrderInfo(OrderDto order)
+    {
+        Console.WriteLine(
+            $"[ADMIN ORDERS] SHOW CLICKED: {order.Id}");
+
+        var parameters =
+            new DialogParameters
+            {
+                ["Order"] = order
+            };
+
+        var options =
+            new DialogOptions
+            {
+                MaxWidth = MaxWidth.Medium,
+                FullWidth = true,
+                CloseOnEscapeKey = true
+            };
+
+        var dialog =
+            await DialogService.ShowAsync<OrderDetailsDialog>(
+                "مدیریت سفارش",
+                parameters,
+                options);
+
+        var result =
+            await dialog.Result;
+
+        if (result is null ||
+            result.Canceled)
+        {
+            return;
+        }
+
+        if (result.Data is OrderDto updatedOrder)
+        {
+            var index =
+                _orders
+                    .Select((item, i) => new
+                    {
+                        item,
+                        i
+                    })
+                    .FirstOrDefault(x =>
+                        x.item.Id == updatedOrder.Id)
+                    ?.i ?? -1;
+
+            if (index >= 0)
+            {
+                var updatedOrders =
+                    _orders.ToList();
+
+                updatedOrders[index] =
+                    updatedOrder;
+
+                _orders =
+                    updatedOrders;
+            }
+
+            await InvokeAsync(
+                StateHasChanged);
+        }
+    }
+
+
+    private static string GetTypeText(
+        string type)
+    {
+        return type switch
+        {
+            "مجسمه" => "مجسمه",
+            "چهره" => "چهره",
+            "سفارشی" => "سفارش سفارشی",
+
+            "custom" => "سفارشی",
+            "statue" => "مجسمه",
+            "painting" => "نقاشی",
+
+            _ => type
+        };
+    }
+
+
+    private static Color GetStatusColor(
+        string status)
+    {
+        return status switch
+        {
+            "Pending" =>
+                Color.Warning,
+
+            "InProgress" =>
+                Color.Info,
+
+            "Completed" =>
+                Color.Success,
+
+            "Cancelled" =>
+                Color.Error,
+
+            "New" =>
+                Color.Warning,
+
+            _ =>
+                Color.Default
+        };
+    }
+
+
+    private static string GetStatusText(
+        string status)
+    {
+        return status switch
+        {
+            "Pending" =>
+                "جدید",
+
+            "InProgress" =>
+                "در حال ساخت",
+
+            "Completed" =>
+                "تکمیل شده",
+
+            "Cancelled" =>
+                "لغو شده",
+
+            "New" =>
+                "جدید",
+
+            _ =>
+                status
+        };
+    }
+}
