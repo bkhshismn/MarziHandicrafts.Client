@@ -21,6 +21,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
+		<Folder Include="Layouts\" />
 		<Folder Include="Pages\Admin\" />
 		<Folder Include="wwwroot\images\" />
 	</ItemGroup>

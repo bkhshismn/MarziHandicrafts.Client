@@ -48,7 +48,23 @@ public sealed class CourseEpisodeService
             throw new InvalidOperationException(
                 "توکن ورود پیدا نشد. لطفاً دوباره وارد شوید.");
         }
+        if (string.IsNullOrWhiteSpace(title))
+        {
+            throw new InvalidOperationException(
+                "عنوان ویدئو را وارد کنید.");
+        }
 
+        if (string.IsNullOrWhiteSpace(description))
+        {
+            throw new InvalidOperationException(
+                "توضیحات ویدئو را وارد کنید.");
+        }
+
+        if (order < 1)
+        {
+            throw new InvalidOperationException(
+                "ترتیب ویدئو باید حداقل ۱ باشد.");
+        }
         Console.WriteLine(
             $"[EPISODE UPLOAD] LessonId: {lessonId}");
 

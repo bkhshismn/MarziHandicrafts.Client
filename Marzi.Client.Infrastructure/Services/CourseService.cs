@@ -12,6 +12,10 @@ public sealed class CourseService
         _api = api;
     }
 
+    // ============================================================
+    // Courses
+    // ============================================================
+
     public async Task<IReadOnlyList<CourseDto>> GetPublishedAsync()
     {
         try
@@ -37,7 +41,8 @@ public sealed class CourseService
 
     public async Task<CourseDto> GetByIdAsync(Guid id)
     {
-        var response = await _api.GetByIdAsync(id);
+        var response =
+            await _api.GetByIdAsync(id);
 
         if (!response.IsSuccessStatusCode ||
             response.Content is null)
@@ -48,15 +53,105 @@ public sealed class CourseService
 
         return response.Content;
     }
+
     public async Task<IReadOnlyList<CourseDto>> GetAllAsync()
     {
-        var response = await _api.GetAllAsync();
+        var response =
+            await _api.GetAllAsync();
 
         if (!response.IsSuccessStatusCode ||
             response.Content is null)
         {
             throw new InvalidOperationException(
                 "دریافت دوره‌ها با خطا مواجه شد.");
+        }
+
+        return response.Content;
+    }
+
+
+    // ============================================================
+    // Admin - Sections
+    // ============================================================
+
+    public async Task<IReadOnlyList<CourseSectionDto>>
+        GetSectionsAsync(Guid courseId)
+    {
+        var response =
+            await _api.GetSectionsAsync(courseId);
+
+        if (!response.IsSuccessStatusCode ||
+            response.Content is null)
+        {
+            throw new InvalidOperationException(
+                "دریافت بخش‌های دوره با خطا مواجه شد.");
+        }
+
+        return response.Content
+            .OrderBy(section => section.OrderIndex)
+            .ToList();
+    }
+
+
+    public async Task<CourseSectionDto>
+        CreateSectionAsync(
+            Guid courseId,
+            CourseSectionCreateRequest request)
+    {
+        var response =
+            await _api.CreateSectionAsync(
+                courseId,
+                request);
+
+        if (!response.IsSuccessStatusCode ||
+            response.Content is null)
+        {
+            throw new InvalidOperationException(
+                "ایجاد بخش دوره با خطا مواجه شد.");
+        }
+
+        return response.Content;
+    }
+
+
+    // ============================================================
+    // Admin - Lessons
+    // ============================================================
+
+    public async Task<IReadOnlyList<CourseLessonDto>>
+        GetLessonsAsync(Guid sectionId)
+    {
+        var response =
+            await _api.GetLessonsAsync(sectionId);
+
+        if (!response.IsSuccessStatusCode ||
+            response.Content is null)
+        {
+            throw new InvalidOperationException(
+                "دریافت درس‌های بخش با خطا مواجه شد.");
+        }
+
+        return response.Content
+            .OrderBy(lesson => lesson.OrderIndex)
+            .ToList();
+    }
+
+
+    public async Task<CourseLessonDto>
+        CreateLessonAsync(
+            Guid sectionId,
+            CourseLessonCreateRequest request)
+    {
+        var response =
+            await _api.CreateLessonAsync(
+                sectionId,
+                request);
+
+        if (!response.IsSuccessStatusCode ||
+            response.Content is null)
+        {
+            throw new InvalidOperationException(
+                "ایجاد درس با خطا مواجه شد.");
         }
 
         return response.Content;

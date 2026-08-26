@@ -31,7 +31,6 @@
                             @foreach (var lesson in section.Lessons.OrderBy(x => x.OrderIndex))
                             {
                                 <LessonItem Lesson="lesson"
-                                            Completed="@IsCompleted(lesson.Id)"
                                             LessonSelected="OnLessonSelected" />
                             }
 

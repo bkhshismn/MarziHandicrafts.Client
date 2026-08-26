@@ -1,6 +1,4 @@
-@page "/orders"
-
-@layout Marzi.Client.Shared.Layouts.MainLayout
+﻿@page "/orders"
 
 @using System.Security.Claims
 @using Marzi.Client.Core.Models.Orders
@@ -14,14 +12,14 @@
 <MudContainer MaxWidth="MaxWidth.Large" Class="py-6">
 
     <MudText Typo="Typo.h4" Class="mb-2">
-        سفارش ساخت اثر
+        Ø³ÙØ§Ø±Ø´ Ø³Ø§Ø®Øª Ø§Ø«Ø±
     </MudText>
 
     <MudText Typo="Typo.body1"
              Color="Color.Secondary"
              Class="mb-6">
 
-        مشخصات اثری که می‌خواهید برای شما ساخته شود را ثبت کنید.
+        Ù…Ø´Ø®ØµØ§Øª Ø§Ø«Ø±ÛŒ Ú©Ù‡ Ù…ÛŒâ€ŒØ®ÙˆØ§Ù‡ÛŒØ¯ Ø¨Ø±Ø§ÛŒ Ø´Ù…Ø§ Ø³Ø§Ø®ØªÙ‡ Ø´ÙˆØ¯ Ø±Ø§ Ø«Ø¨Øª Ú©Ù†ÛŒØ¯.
 
     </MudText>
 
@@ -31,7 +29,7 @@
         <MudAlert Severity="Severity.Info"
                   Variant="Variant.Outlined">
 
-            برای ثبت سفارش ابتدا وارد حساب کاربری خود شوید.
+            Ø¨Ø±Ø§ÛŒ Ø«Ø¨Øª Ø³ÙØ§Ø±Ø´ Ø§Ø¨ØªØ¯Ø§ ÙˆØ§Ø±Ø¯ Ø­Ø³Ø§Ø¨ Ú©Ø§Ø±Ø¨Ø±ÛŒ Ø®ÙˆØ¯ Ø´ÙˆÛŒØ¯.
 
         </MudAlert>
     }
@@ -52,7 +50,7 @@
                         <MudText Typo="Typo.h6"
                                  Class="mb-4">
 
-                            ثبت سفارش جدید
+                            Ø«Ø¨Øª Ø³ÙØ§Ø±Ø´ Ø¬Ø¯ÛŒØ¯
 
                         </MudText>
 
@@ -63,26 +61,26 @@
 
                             <MudSelect T="string"
                                        @bind-Value="_request.Type"
-                                       Label="نوع اثر"
+                                       Label="Ù†ÙˆØ¹ Ø§Ø«Ø±"
                                        Variant="Variant.Outlined"
                                        Required="true"
-                                       RequiredError="نوع اثر را انتخاب کنید."
+                                       RequiredError="Ù†ÙˆØ¹ Ø§Ø«Ø± Ø±Ø§ Ø§Ù†ØªØ®Ø§Ø¨ Ú©Ù†ÛŒØ¯."
                                        Class="mb-4">
 
-                                <MudSelectItem Value="@("مجسمه")">
-                                    مجسمه
+                                <MudSelectItem Value="@("Ù…Ø¬Ø³Ù…Ù‡")">
+                                    Ù…Ø¬Ø³Ù…Ù‡
                                 </MudSelectItem>
 
-                                <MudSelectItem Value="@("چهره")">
-                                    چهره
+                                <MudSelectItem Value="@("Ú†Ù‡Ø±Ù‡")">
+                                    Ú†Ù‡Ø±Ù‡
                                 </MudSelectItem>
 
-                                <MudSelectItem Value="@("سفارشی")">
-                                    سفارش سفارشی
+                                <MudSelectItem Value="@("Ø³ÙØ§Ø±Ø´ÛŒ")">
+                                    Ø³ÙØ§Ø±Ø´ Ø³ÙØ§Ø±Ø´ÛŒ
                                 </MudSelectItem>
 
-                                <MudSelectItem Value="@("سایر")">
-                                    سایر
+                                <MudSelectItem Value="@("Ø³Ø§ÛŒØ±")">
+                                    Ø³Ø§ÛŒØ±
                                 </MudSelectItem>
 
                             </MudSelect>
@@ -92,12 +90,12 @@
 
                             <MudTextField T="string"
                                           @bind-Value="_request.Description"
-                                          Label="توضیحات سفارش"
-                                          Placeholder="مثلاً اندازه، سبک، جزئیات چهره یا هر توضیحی که درباره سفارش دارید..."
+                                          Label="ØªÙˆØ¶ÛŒØ­Ø§Øª Ø³ÙØ§Ø±Ø´"
+                                          Placeholder="Ù…Ø«Ù„Ø§Ù‹ Ø§Ù†Ø¯Ø§Ø²Ù‡ØŒ Ø³Ø¨Ú©ØŒ Ø¬Ø²Ø¦ÛŒØ§Øª Ú†Ù‡Ø±Ù‡ ÛŒØ§ Ù‡Ø± ØªÙˆØ¶ÛŒØ­ÛŒ Ú©Ù‡ Ø¯Ø±Ø¨Ø§Ø±Ù‡ Ø³ÙØ§Ø±Ø´ Ø¯Ø§Ø±ÛŒØ¯..."
                                           Variant="Variant.Outlined"
                                           Lines="5"
                                           Required="true"
-                                          RequiredError="توضیحات سفارش را وارد کنید."
+                                          RequiredError="ØªÙˆØ¶ÛŒØ­Ø§Øª Ø³ÙØ§Ø±Ø´ Ø±Ø§ ÙˆØ§Ø±Ø¯ Ú©Ù†ÛŒØ¯."
                                           Class="mb-4" />
 
 
@@ -105,7 +103,7 @@
 
                             <MudTextField T="string"
                                           @bind-Value="_request.ImageUrl"
-                                          Label="لینک تصویر مرجع"
+                                          Label="Ù„ÛŒÙ†Ú© ØªØµÙˆÛŒØ± Ù…Ø±Ø¬Ø¹"
                                           Placeholder="https://..."
                                           Variant="Variant.Outlined"
                                           Class="mb-4" />
@@ -129,8 +127,8 @@
                                           Variant="Variant.Outlined"
                                           Class="mb-4">
 
-                                    سفارش شما با موفقیت ثبت شد و پس از بررسی،
-                                    قیمت پیشنهادی اعلام خواهد شد.
+                                    Ø³ÙØ§Ø±Ø´ Ø´Ù…Ø§ Ø¨Ø§ Ù…ÙˆÙÙ‚ÛŒØª Ø«Ø¨Øª Ø´Ø¯ Ùˆ Ù¾Ø³ Ø§Ø² Ø¨Ø±Ø±Ø³ÛŒØŒ
+                                    Ù‚ÛŒÙ…Øª Ù¾ÛŒØ´Ù†Ù‡Ø§Ø¯ÛŒ Ø§Ø¹Ù„Ø§Ù… Ø®ÙˆØ§Ù‡Ø¯ Ø´Ø¯.
 
                                 </MudAlert>
                             }
@@ -149,11 +147,11 @@
                                                          Size="Size.Small"
                                                          Class="me-2" />
 
-                                    <span>در حال ثبت...</span>
+                                    <span>Ø¯Ø± Ø­Ø§Ù„ Ø«Ø¨Øª...</span>
                                 }
                                 else
                                 {
-                                    <span>ثبت سفارش</span>
+                                    <span>Ø«Ø¨Øª Ø³ÙØ§Ø±Ø´</span>
                                 }
 
                             </MudButton>
@@ -180,7 +178,7 @@
                         <MudText Typo="Typo.h6"
                                  Class="mb-4">
 
-                            سفارش‌های من
+                            Ø³ÙØ§Ø±Ø´â€ŒÙ‡Ø§ÛŒ Ù…Ù†
 
                         </MudText>
 
@@ -200,7 +198,7 @@
                                      Color="Color.Secondary"
                                      Class="pa-4">
 
-                                هنوز سفارشی ثبت نکرده‌اید.
+                                Ù‡Ù†ÙˆØ² Ø³ÙØ§Ø±Ø´ÛŒ Ø«Ø¨Øª Ù†Ú©Ø±Ø¯Ù‡â€ŒØ§ÛŒØ¯.
 
                             </MudText>
                         }
@@ -244,9 +242,9 @@
                                             <MudText Typo="Typo.caption"
                                                      Color="Color.Secondary">
 
-                                                قیمت پیشنهادی:
+                                                Ù‚ÛŒÙ…Øª Ù¾ÛŒØ´Ù†Ù‡Ø§Ø¯ÛŒ:
                                                 @order.EstimatedPrice.Value.ToString("N0")
-                                                تومان
+                                                ØªÙˆÙ…Ø§Ù†
 
                                             </MudText>
                                         }
@@ -255,7 +253,7 @@
                                             <MudText Typo="Typo.caption"
                                                      Color="Color.Secondary">
 
-                                                قیمت پس از بررسی سفارش اعلام می‌شود.
+                                                Ù‚ÛŒÙ…Øª Ù¾Ø³ Ø§Ø² Ø¨Ø±Ø±Ø³ÛŒ Ø³ÙØ§Ø±Ø´ Ø§Ø¹Ù„Ø§Ù… Ù…ÛŒâ€ŒØ´ÙˆØ¯.
 
                                             </MudText>
                                         }
@@ -265,7 +263,7 @@
                                                  Color="Color.Secondary"
                                                  Class="d-block mt-1">
 
-                                            ثبت شده در:
+                                            Ø«Ø¨Øª Ø´Ø¯Ù‡ Ø¯Ø±:
                                             @(order.CreatedAt.ToLocalTime()
                                                 .ToString("yyyy/MM/dd HH:mm"))
 
@@ -409,15 +407,15 @@
             if (user.Identity?.IsAuthenticated != true)
             {
                 _submitError =
-                    "برای ثبت سفارش باید وارد حساب کاربری شوید.";
+                    "Ø¨Ø±Ø§ÛŒ Ø«Ø¨Øª Ø³ÙØ§Ø±Ø´ Ø¨Ø§ÛŒØ¯ ÙˆØ§Ø±Ø¯ Ø­Ø³Ø§Ø¨ Ú©Ø§Ø±Ø¨Ø±ÛŒ Ø´ÙˆÛŒØ¯.";
 
                 return;
             }
 
 
             // ====================================================
-            // مهم:
-            // UserId، Status و Price از Client ارسال نمی‌شوند.
+            // Ù…Ù‡Ù…:
+            // UserIdØŒ Status Ùˆ Price Ø§Ø² Client Ø§Ø±Ø³Ø§Ù„ Ù†Ù…ÛŒâ€ŒØ´ÙˆÙ†Ø¯.
             //
             // Backend:
             // UserId = JWT
@@ -451,7 +449,7 @@
                 $"[ORDERS] Create failed: {ex}");
 
             _submitError =
-                "ثبت سفارش انجام نشد. لطفاً دوباره تلاش کنید.";
+                "Ø«Ø¨Øª Ø³ÙØ§Ø±Ø´ Ø§Ù†Ø¬Ø§Ù… Ù†Ø´Ø¯. Ù„Ø·ÙØ§Ù‹ Ø¯ÙˆØ¨Ø§Ø±Ù‡ ØªÙ„Ø§Ø´ Ú©Ù†ÛŒØ¯.";
         }
         finally
         {
@@ -547,28 +545,29 @@
         return status?.ToLowerInvariant() switch
         {
             "new" =>
-                "جدید",
+                "Ø¬Ø¯ÛŒØ¯",
 
             "pending" =>
-                "در انتظار بررسی",
+                "Ø¯Ø± Ø§Ù†ØªØ¸Ø§Ø± Ø¨Ø±Ø±Ø³ÛŒ",
 
             "processing" =>
-                "در حال انجام",
+                "Ø¯Ø± Ø­Ø§Ù„ Ø§Ù†Ø¬Ø§Ù…",
 
             "completed" =>
-                "تکمیل شده",
+                "ØªÚ©Ù…ÛŒÙ„ Ø´Ø¯Ù‡",
 
             "done" =>
-                "تکمیل شده",
+                "ØªÚ©Ù…ÛŒÙ„ Ø´Ø¯Ù‡",
 
             "cancelled" =>
-                "لغو شده",
+                "Ù„ØºÙˆ Ø´Ø¯Ù‡",
 
             "canceled" =>
-                "لغو شده",
+                "Ù„ØºÙˆ Ø´Ø¯Ù‡",
 
             _ =>
-                status ?? "نامشخص"
+                status ?? "Ù†Ø§Ù…Ø´Ø®Øµ"
         };
     }
 }
+

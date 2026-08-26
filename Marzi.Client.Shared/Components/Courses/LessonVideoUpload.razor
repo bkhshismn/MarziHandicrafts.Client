@@ -46,6 +46,8 @@
                       Label="توضیحات"
                       Variant="Variant.Outlined"
                       Lines="3"
+                      Required="true"
+                      RequiredError="توضیحات ویدئو را وارد کنید."
                       Disabled="_uploading" />
 
 
@@ -239,33 +241,27 @@
     [Parameter]
     public required CourseLessonDto Lesson { get; set; }
 
+    [Parameter]
+    public EventCallback<CourseEpisodeDto> OnUploaded { get; set; }
 
     private IBrowserFile? _selectedFile;
-
     private string _title = string.Empty;
-
     private string _description = string.Empty;
-
     private int _order;
-
     private bool _isFree;
-
     private bool _uploading;
-
     private string? _error;
 
+    private CourseEpisodeDto? _uploadedEpisode;
+    private CancellationTokenSource? _statusCts;
+    private string? _processingStatus;
 
     private bool CanUpload =>
         !_uploading &&
         _selectedFile is not null &&
-        !string.IsNullOrWhiteSpace(_title);
+        !string.IsNullOrWhiteSpace(_title) &&
+        !string.IsNullOrWhiteSpace(_description);
 
-
-    private CourseEpisodeDto? _uploadedEpisode;
-
-    private CancellationTokenSource? _statusCts;
-
-    private string? _processingStatus;
     protected override void OnParametersSet()
     {
         if (string.IsNullOrWhiteSpace(_title))
@@ -277,13 +273,10 @@
         _isFree = Lesson.IsFreePreview;
     }
 
-
     private void OnFileSelected(InputFileChangeEventArgs e)
     {
         _error = null;
-
-        _selectedFile =
-            e.File;
+        _selectedFile = e.File;
 
         if (_selectedFile is not null &&
             string.IsNullOrWhiteSpace(_title))
@@ -292,27 +285,41 @@
         }
     }
 
-
     private void ClearFile()
     {
         _selectedFile = null;
         _error = null;
     }
 
-
     private async Task Upload()
     {
-        if (!CanUpload ||
-            _selectedFile is null)
+        _error = null;
+
+        if (string.IsNullOrWhiteSpace(_title))
         {
+            _error = "عنوان ویدئو را وارد کنید.";
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(_description))
+        {
+            _error = "توضیحات ویدئو را وارد کنید.";
+            return;
+        }
+
+        if (_selectedFile is null)
+        {
+            _error = "فایل ویدئو را انتخاب کنید.";
+            return;
+        }
+
+        if (_order < 1)
+        {
+            _error = "ترتیب ویدئو باید حداقل ۱ باشد.";
             return;
         }
 
         _uploading = true;
-        _error = null;
-        _uploadedEpisode = null;
-        _processingStatus = null;
-
         _statusCts?.Cancel();
         _statusCts?.Dispose();
         _statusCts = new CancellationTokenSource();
@@ -321,79 +328,57 @@
         {
             await using var stream =
                 _selectedFile.OpenReadStream(
-                    maxAllowedSize: 2L * 1024 * 1024 * 1024);
+                    maxAllowedSize: 2_000_000_000);
 
-            var result =
-    await CourseEpisodeService.UploadAsync(
-        Lesson.Id,
-        _title.Trim(),
-        _description.Trim(),
-        _order,
-        _isFree,
-        stream,
-        _selectedFile.Name,
-        _selectedFile.ContentType);
+            var episode =
+                await CourseEpisodeService.UploadAsync(
+                    Lesson.Id,
+                    _title,
+                    _description,
+                    _order,
+                    _isFree,
+                    stream,
+                    _selectedFile.Name,
+                    _selectedFile.ContentType);
 
-            _uploadedEpisode = result;
-            _processingStatus = result.Status.ToString();
-            _uploading = false;
+            _uploadedEpisode = episode;
+            _processingStatus = episode.Status.ToString();
+
+            await OnUploaded.InvokeAsync(episode);
+
+            Snackbar.Add(
+                "ویدئو با موفقیت آپلود شد و پردازش آن شروع شد.",
+                Severity.Success);
 
             _selectedFile = null;
 
-            Snackbar.Add(
-                "ویدئو با موفقیت آپلود شد و برای پردازش قرار گرفت.",
-                Severity.Success);
-
-            await OnUploaded.InvokeAsync(result);
-
-            await PollStatusAsync(
-                result.Id,
+            _ = PollStatusAsync(
+                episode.Id,
                 _statusCts.Token);
-        }
-        catch (OperationCanceledException)
-        {
-            // لغو پردازش وضعیت
         }
         catch (Exception ex)
         {
-            _error = ex.Message;
+            Console.WriteLine(
+                $"[VIDEO UPLOAD ERROR] {ex}");
+
+            _error =
+                ex.Message;
 
             Snackbar.Add(
-                ex.Message,
+                _error,
                 Severity.Error);
         }
         finally
         {
             _uploading = false;
-
-            await InvokeAsync(
-                StateHasChanged);
         }
     }
 
-    [Parameter]
-    public EventCallback<CourseEpisodeDto> OnUploaded { get; set; }
-
-
-    private static string FormatFileSize(long bytes)
-    {
-        if (bytes < 1024)
-            return $"{bytes} B";
-
-        if (bytes < 1024 * 1024)
-            return $"{bytes / 1024d:0.##} KB";
-
-        if (bytes < 1024L * 1024L * 1024L)
-            return $"{bytes / (1024d * 1024d):0.##} MB";
-
-        return $"{bytes / (1024d * 1024d * 1024d):0.##} GB";
-    }
     private async Task PollStatusAsync(
-     Guid episodeId,
-     CancellationToken cancellationToken)
+        Guid episodeId,
+        CancellationToken cancellationToken)
     {
         const int maxConsecutiveErrors = 5;
-
         var consecutiveErrors = 0;
 
         while (!cancellationToken.IsCancellationRequested)
@@ -415,8 +400,7 @@
                 _processingStatus = status.Status.ToString();
                 _error = null;
 
-                await InvokeAsync(
-                    StateHasChanged);
+                await InvokeAsync(StateHasChanged);
 
                 Console.WriteLine(
                     $"[VIDEO POLL] Status={status.Status}, " +
@@ -465,16 +449,27 @@
 
                     return;
                 }
-
-                await InvokeAsync(
-                    StateHasChanged);
             }
         }
     }
+
+    private static string FormatFileSize(long bytes)
+    {
+        if (bytes < 1024)
+            return $"{bytes} B";
+
+        if (bytes < 1024 * 1024)
+            return $"{bytes / 1024d:0.##} KB";
+
+        if (bytes < 1024L * 1024L * 1024L)
+            return $"{bytes / (1024d * 1024d):0.##} MB";
+
+        return $"{bytes / (1024d * 1024d * 1024d):0.##} GB";
+    }
+
     public void Dispose()
     {
         _statusCts?.Cancel();
         _statusCts?.Dispose();
     }
-
 }

@@ -1,10 +1,12 @@
-@page "/admin/courses"
+﻿@page "/admin/courses"
 
 @using Microsoft.AspNetCore.Components.Authorization
 @using Marzi.Client.Core.Models.Courses
+@using Marzi.Client.Core.Models.Orders
+@using Marzi.Client.Infrastructure.Api
 @using Marzi.Client.Infrastructure.Services
 @using Marzi.Client.Shared.Components.Courses
-@layout Marzi.Client.Shared.Layouts.MainLayout
+@using MudBlazor
 
 @inject CourseService CourseService
 @inject ISnackbar Snackbar
@@ -27,13 +29,13 @@
                     <div>
 
                         <MudText Typo="Typo.h4">
-                            مدیریت دوره‌ها
+                            Ù…Ø¯ÛŒØ±ÛŒØª Ø¯ÙˆØ±Ù‡â€ŒÙ‡Ø§
                         </MudText>
 
                         <MudText Typo="Typo.body2"
                                  Color="Color.Secondary">
 
-                            مدیریت دوره‌ها، فصل‌ها، درس‌ها و ویدئوهای آموزشی
+                            Ù…Ø¯ÛŒØ±ÛŒØª Ø¯ÙˆØ±Ù‡â€ŒÙ‡Ø§ØŒ ÙØµÙ„â€ŒÙ‡Ø§ØŒ Ø¯Ø±Ø³â€ŒÙ‡Ø§ Ùˆ ÙˆÛŒØ¯Ø¦ÙˆÙ‡Ø§ÛŒ Ø¢Ù…ÙˆØ²Ø´ÛŒ
 
                         </MudText>
 
@@ -45,7 +47,7 @@
                                  Color="Color.Primary"
                                  Variant="Variant.Outlined">
 
-                            @_courses.Count دوره
+                            @_courses.Count Ø¯ÙˆØ±Ù‡
 
                         </MudChip>
                     }
@@ -68,7 +70,7 @@
                                Color="Color.Primary"
                                OnClick="LoadCourses">
 
-                        تلاش مجدد
+                        ØªÙ„Ø§Ø´ Ù…Ø¬Ø¯Ø¯
 
                     </MudButton>
                 }
@@ -91,7 +93,7 @@
                 {
                     <MudAlert Severity="Severity.Info">
 
-                        هنوز دوره‌ای برای مدیریت وجود ندارد.
+                        Ù‡Ù†ÙˆØ² Ø¯ÙˆØ±Ù‡â€ŒØ§ÛŒ Ø¨Ø±Ø§ÛŒ Ù…Ø¯ÛŒØ±ÛŒØª ÙˆØ¬ÙˆØ¯ Ù†Ø¯Ø§Ø±Ø¯.
 
                     </MudAlert>
                 }
@@ -111,7 +113,7 @@
                                 <MudText Typo="Typo.h6"
                                          Class="mb-3">
 
-                                    دوره‌ها
+                                    Ø¯ÙˆØ±Ù‡â€ŒÙ‡Ø§
 
                                 </MudText>
 
@@ -169,14 +171,14 @@
                                     <MudText Typo="Typo.h6"
                                              Class="mt-3">
 
-                                        یک دوره را انتخاب کنید
+                                        ÛŒÚ© Ø¯ÙˆØ±Ù‡ Ø±Ø§ Ø§Ù†ØªØ®Ø§Ø¨ Ú©Ù†ÛŒØ¯
 
                                     </MudText>
 
                                     <MudText Typo="Typo.body2"
                                              Color="Color.Secondary">
 
-                                        برای مدیریت درس‌ها و آپلود ویدئو، ابتدا یک دوره را انتخاب کنید.
+                                        Ø¨Ø±Ø§ÛŒ Ù…Ø¯ÛŒØ±ÛŒØª Ø¯Ø±Ø³â€ŒÙ‡Ø§ Ùˆ Ø¢Ù¾Ù„ÙˆØ¯ ÙˆÛŒØ¯Ø¦ÙˆØŒ Ø§Ø¨ØªØ¯Ø§ ÛŒÚ© Ø¯ÙˆØ±Ù‡ Ø±Ø§ Ø§Ù†ØªØ®Ø§Ø¨ Ú©Ù†ÛŒØ¯.
 
                                     </MudText>
 
@@ -205,31 +207,83 @@
                                                          Color="Color.Secondary">
 
                                                     @_selectedCourse.Category
-                                                    ·
+                                                    Â·
                                                     @_selectedCourse.Level
 
                                                 </MudText>
 
                                             </div>
 
-                                            @if (_selectedCourse.IsPublished)
-                                            {
-                                                <MudChip T="string"
-                                                         Color="Color.Success">
+                                            <MudStack Row="true"
+                                                      AlignItems="AlignItems.Center"
+                                                      Spacing="2">
 
-                                                    منتشر شده
+                                                @if (_selectedCourse.IsPublished)
+                                                {
+                                                    <MudChip T="string"
+                                                             Color="Color.Success">
+
+                                                        Ù…Ù†ØªØ´Ø± Ø´Ø¯Ù‡
+
+                                                    </MudChip>
+                                                }
+                                                else
+                                                {
+                                                    <MudChip T="string"
+                                                             Color="Color.Warning">
+
+                                                        Ù…Ù†ØªØ´Ø± Ù†Ø´Ø¯Ù‡
+
+                                                    </MudChip>
+                                                }
+
+                                                <MudChip T="string"
+                                                         Color="Color.Primary"
+                                                         Variant="Variant.Outlined">
+
+                                                    @_selectedCourse.Sections.Count Ø¨Ø®Ø´
 
                                                 </MudChip>
-                                            }
-                                            else
-                                            {
-                                                <MudChip T="string"
-                                                         Color="Color.Warning">
 
-                                                    منتشر نشده
+                                            </MudStack>
 
-                                                </MudChip>
-                                            }
+                                        </MudStack>
+
+                                    </MudPaper>
+
+
+                                    <!-- Sections Header -->
+
+                                    <MudPaper Class="pa-4"
+                                              Elevation="1">
+
+                                        <MudStack Row="true"
+                                                  AlignItems="AlignItems.Center"
+                                                  Justify="Justify.SpaceBetween">
+
+                                            <div>
+
+                                                <MudText Typo="Typo.h6">
+                                                    Ø³Ø±ÙØµÙ„â€ŒÙ‡Ø§
+                                                </MudText>
+
+                                                <MudText Typo="Typo.body2"
+                                                         Color="Color.Secondary">
+
+                                                    Ø¨Ø®Ø´â€ŒÙ‡Ø§ÛŒ Ø¢Ù…ÙˆØ²Ø´ÛŒ Ø§ÛŒÙ† Ø¯ÙˆØ±Ù‡ Ø±Ø§ Ù…Ø¯ÛŒØ±ÛŒØª Ú©Ù†ÛŒØ¯.
+
+                                                </MudText>
+
+                                            </div>
+
+                                            <MudButton Variant="Variant.Filled"
+                                                       Color="Color.Primary"
+                                                       StartIcon="@Icons.Material.Filled.Add"
+                                                       OnClick="OpenAddSection">
+
+                                                Ø§ÙØ²ÙˆØ¯Ù† Ø³Ø±ÙØµÙ„
+
+                                            </MudButton>
 
                                         </MudStack>
 
@@ -237,11 +291,23 @@
 
 
                                     <!-- Sections -->
-                                    @if (!_selectedCourse.Sections.Any())
+                                    @if (_sectionsLoading)
+                                    {
+                                        <MudStack Spacing="2">
+
+                                            <MudSkeleton Height="70px"
+                                                         Animation="Animation.Wave" />
+
+                                            <MudSkeleton Height="70px"
+                                                         Animation="Animation.Wave" />
+
+                                        </MudStack>
+                                    }
+                                    else if (_sections.Count == 0)
                                     {
                                         <MudAlert Severity="Severity.Info">
 
-                                            این دوره هنوز هیچ سرفصلی ندارد.
+                                            Ø§ÛŒÙ† Ø¯ÙˆØ±Ù‡ Ù‡Ù†ÙˆØ² Ù‡ÛŒÚ† Ø³Ø±ÙØµÙ„ÛŒ Ù†Ø¯Ø§Ø±Ø¯.
 
                                         </MudAlert>
                                     }
@@ -250,111 +316,186 @@
                                         <MudExpansionPanels MultiExpansion="true">
 
                                             @foreach (
-                                                var section in _selectedCourse.Sections
+                                                var section in _sections
                                                     .OrderBy(x => x.OrderIndex))
                                             {
-                                                <MudExpansionPanel Text="@section.Title">
+                                                <MudExpansionPanel>
 
-                                                    @if (!section.Lessons.Any())
-                                                    {
-                                                        <MudText Typo="Typo.body2"
-                                                                 Color="Color.Secondary"
-                                                                 Class="pa-3">
+                                                    <TitleContent>
 
-                                                            این سرفصل هنوز درسی ندارد.
+                                                        <MudStack Row="true"
+                                                                  AlignItems="AlignItems.Center"
+                                                                  Justify="Justify.SpaceBetween"
+                                                                  Style="width:100%;">
 
-                                                        </MudText>
-                                                    }
-                                                    else
-                                                    {
-                                                        <MudStack Spacing="2">
+                                                            <MudStack Row="true"
+                                                                      AlignItems="AlignItems.Center"
+                                                                      Spacing="2">
 
-                                                            @foreach (
-                                                                var lesson in section.Lessons
-                                                                    .OrderBy(x => x.OrderIndex))
+                                                                <MudAvatar Color="Color.Primary"
+                                                                           Size="Size.Small">
+
+                                                                    @section.OrderIndex
+
+                                                                </MudAvatar>
+
+                                                                <MudText Typo="Typo.body1">
+                                                                    @section.Title
+                                                                </MudText>
+
+                                                            </MudStack>
+
+                                                            <MudChip T="string"
+                                                                     Size="Size.Small"
+                                                                     Variant="Variant.Outlined">
+
+                                                                @section.Lessons.Count Ø¯Ø±Ø³
+
+                                                            </MudChip>
+
+                                                        </MudStack>
+
+                                                    </TitleContent>
+
+
+                                                    <!-- Section Content -->
+
+                                                    <ChildContent>
+
+                                                        <MudStack Spacing="3">
+
+                                                            <MudStack Row="true"
+                                                                      AlignItems="AlignItems.Center"
+                                                                      Justify="Justify.SpaceBetween">
+
+                                                                <MudText Typo="Typo.subtitle2">
+
+                                                                    Ø¯Ø±Ø³â€ŒÙ‡Ø§ÛŒ Ø§ÛŒÙ† Ø³Ø±ÙØµÙ„
+
+                                                                </MudText>
+
+                                                                <MudButton Variant="Variant.Outlined"
+                                                                           Color="Color.Primary"
+                                                                           Size="Size.Small"
+                                                                           StartIcon="@Icons.Material.Filled.Add"
+                                                                           OnClick="@(() => OpenAddLesson(section))">
+
+                                                                    Ø§ÙØ²ÙˆØ¯Ù† Ø¯Ø±Ø³
+
+                                                                </MudButton>
+
+                                                            </MudStack>
+
+
+                                                            @if (_loadingLessonsForSectionId == section.Id)
                                                             {
-                                                                <MudPaper Class="lesson-admin-card pa-3"
-                                                                          Elevation="0">
+                                                                <MudSkeleton Height="60px"
+                                                                             Animation="Animation.Wave" />
+                                                            }
+                                                            else if (!section.Lessons.Any())
+                                                            {
+                                                                <MudText Typo="Typo.body2"
+                                                                         Color="Color.Secondary"
+                                                                         Class="pa-3">
 
-                                                                    <MudStack Spacing="2">
+                                                                    Ø§ÛŒÙ† Ø³Ø±ÙØµÙ„ Ù‡Ù†ÙˆØ² Ø¯Ø±Ø³ÛŒ Ù†Ø¯Ø§Ø±Ø¯.
 
-                                                                        <!-- Lesson -->
+                                                                </MudText>
+                                                            }
+                                                            else
+                                                            {
+                                                                <MudStack Spacing="2">
 
-                                                                        <MudStack Row="true"
-                                                                                  AlignItems="AlignItems.Center"
-                                                                                  Justify="Justify.SpaceBetween">
+                                                                    @foreach (
+                                                                        var lesson in section.Lessons
+                                                                            .OrderBy(x => x.OrderIndex))
+                                                                    {
+                                                                        <MudPaper Class="lesson-admin-card pa-3"
+                                                                                  Elevation="0">
 
-                                                                            <MudStack Row="true"
-                                                                                      AlignItems="AlignItems.Center"
-                                                                                      Spacing="2">
+                                                                            <MudStack Spacing="2">
 
-                                                                                <MudAvatar Color="Color.Primary"
-                                                                                           Size="Size.Small">
+                                                                                <!-- Lesson -->
 
-                                                                                    @lesson.OrderIndex
+                                                                                <MudStack Row="true"
+                                                                                          AlignItems="AlignItems.Center"
+                                                                                          Justify="Justify.SpaceBetween">
 
-                                                                                </MudAvatar>
+                                                                                    <MudStack Row="true"
+                                                                                              AlignItems="AlignItems.Center"
+                                                                                              Spacing="2">
 
-                                                                                <div>
+                                                                                        <MudAvatar Color="Color.Primary"
+                                                                                                   Size="Size.Small">
 
-                                                                                    <MudText Typo="Typo.body1">
+                                                                                            @lesson.OrderIndex
 
-                                                                                        @lesson.Title
+                                                                                        </MudAvatar>
 
-                                                                                    </MudText>
+                                                                                        <div>
 
-                                                                                    @if (!string.IsNullOrWhiteSpace(
-                                                                                        lesson.Description))
+                                                                                            <MudText Typo="Typo.body1">
+
+                                                                                                @lesson.Title
+
+                                                                                            </MudText>
+
+                                                                                            @if (!string.IsNullOrWhiteSpace(
+                                                                                                lesson.Description))
+                                                                                            {
+                                                                                                <MudText Typo="Typo.caption"
+                                                                                                         Color="Color.Secondary">
+
+                                                                                                    @lesson.Description
+
+                                                                                                </MudText>
+                                                                                            }
+
+                                                                                        </div>
+
+                                                                                    </MudStack>
+
+
+                                                                                    @if (lesson.HasVideo)
                                                                                     {
-                                                                                        <MudText Typo="Typo.caption"
-                                                                                                 Color="Color.Secondary">
+                                                                                        <MudChip T="string"
+                                                                                                 Color="Color.Success"
+                                                                                                 Size="Size.Small">
 
-                                                                                            @lesson.Description
+                                                                                            ÙˆÛŒØ¯Ø¦Ùˆ Ø¯Ø§Ø±Ø¯
 
-                                                                                        </MudText>
+                                                                                        </MudChip>
+                                                                                    }
+                                                                                    else
+                                                                                    {
+                                                                                        <MudChip T="string"
+                                                                                                 Color="Color.Default"
+                                                                                                 Size="Size.Small">
+
+                                                                                            Ø¨Ø¯ÙˆÙ† ÙˆÛŒØ¯Ø¦Ùˆ
+
+                                                                                        </MudChip>
                                                                                     }
 
-                                                                                </div>
+                                                                                </MudStack>
+
+
+                                                                                <!-- Upload -->
+
+                                                                                <LessonVideoUpload Lesson="lesson"
+                                                                                                   OnUploaded="OnVideoUploaded" />
 
                                                                             </MudStack>
 
+                                                                        </MudPaper>
+                                                                    }
 
-                                                                            @if (lesson.HasVideo)
-                                                                            {
-                                                                                <MudChip T="string"
-                                                                                         Color="Color.Success"
-                                                                                         Size="Size.Small">
-
-                                                                                    ویدئو دارد
-
-                                                                                </MudChip>
-                                                                            }
-                                                                            else
-                                                                            {
-                                                                                <MudChip T="string"
-                                                                                         Color="Color.Default"
-                                                                                         Size="Size.Small">
-
-                                                                                    بدون ویدئو
-
-                                                                                </MudChip>
-                                                                            }
-
-                                                                        </MudStack>
-
-
-                                                                        <!-- Upload -->
-
-                                                                        <LessonVideoUpload Lesson="lesson"
-                                                                                           OnUploaded="OnVideoUploaded" />
-
-                                                                    </MudStack>
-
-                                                                </MudPaper>
+                                                                </MudStack>
                                                             }
 
                                                         </MudStack>
-                                                    }
+
+                                                    </ChildContent>
 
                                                 </MudExpansionPanel>
                                             }
@@ -392,7 +533,7 @@
                 <MudText Typo="Typo.h5"
                          Class="mt-4">
 
-                    دسترسی غیرمجاز
+                    Ø¯Ø³ØªØ±Ø³ÛŒ ØºÛŒØ±Ù…Ø¬Ø§Ø²
 
                 </MudText>
 
@@ -400,7 +541,7 @@
                          Color="Color.Secondary"
                          Class="mt-2">
 
-                    شما اجازه دسترسی به پنل مدیریت دوره‌ها را ندارید.
+                    Ø´Ù…Ø§ Ø§Ø¬Ø§Ø²Ù‡ Ø¯Ø³ØªØ±Ø³ÛŒ Ø¨Ù‡ Ù¾Ù†Ù„ Ù…Ø¯ÛŒØ±ÛŒØª Ø¯ÙˆØ±Ù‡â€ŒÙ‡Ø§ Ø±Ø§ Ù†Ø¯Ø§Ø±ÛŒØ¯.
 
                 </MudText>
 
@@ -409,7 +550,7 @@
                            Color="Color.Primary"
                            Class="mt-4">
 
-                    بازگشت
+                    Ø¨Ø§Ø²Ú¯Ø´Øª
 
                 </MudButton>
 
@@ -422,7 +563,191 @@
 </AuthorizeView>
 
 
+<!-- ============================================================ -->
+<!-- Add Section Dialog -->
+<!-- ============================================================ -->
+
+<MudDialog @bind-Visible="_showSectionDialog">
+
+    <TitleContent>
+        Ø§ÙØ²ÙˆØ¯Ù† Ø³Ø±ÙØµÙ„
+    </TitleContent>
+
+    <DialogContent>
+
+        <MudStack Spacing="3">
+
+            <MudTextField @bind-Value="_sectionTitle"
+                          Label="Ø¹Ù†ÙˆØ§Ù† Ø³Ø±ÙØµÙ„"
+                          Variant="Variant.Outlined"
+                          FullWidth="true"
+                          Required="true" />
+
+            <MudNumericField T="int"
+                             @bind-Value="_sectionOrder"
+                             Label="ØªØ±ØªÛŒØ¨"
+                             Variant="Variant.Outlined"
+                             Min="1"
+                             FullWidth="true" />
+
+            @if (!string.IsNullOrWhiteSpace(_dialogError))
+            {
+                <MudAlert Severity="Severity.Error"
+                          Variant="Variant.Outlined">
+
+                    @_dialogError
+
+                </MudAlert>
+            }
+
+        </MudStack>
+
+    </DialogContent>
+
+    <DialogActions>
+
+        <MudButton Variant="Variant.Text"
+                   OnClick="CloseSectionDialog"
+                   Disabled="_dialogSaving">
+
+            Ø§Ù†ØµØ±Ø§Ù
+
+        </MudButton>
+
+        <MudButton Variant="Variant.Filled"
+                   Color="Color.Primary"
+                   StartIcon="@Icons.Material.Filled.Save"
+                   OnClick="CreateSection"
+                   Disabled="_dialogSaving">
+
+            @if (_dialogSaving)
+            {
+                <MudProgressCircular Size="Size.Small"
+                                     Indeterminate="true"
+                                     Class="mr-2" />
+            }
+
+            Ø°Ø®ÛŒØ±Ù‡ Ø³Ø±ÙØµÙ„
+
+        </MudButton>
+
+    </DialogActions>
+
+</MudDialog>
+
+
+<!-- ============================================================ -->
+<!-- Add Lesson Dialog -->
+<!-- ============================================================ -->
+
+<MudDialog @bind-Visible="_showLessonDialog">
+
+    <TitleContent>
+        Ø§ÙØ²ÙˆØ¯Ù† Ø¯Ø±Ø³
+    </TitleContent>
+
+    <DialogContent>
+
+        <MudStack Spacing="3">
+
+            @if (_selectedSectionForLesson is not null)
+            {
+                <MudAlert Severity="Severity.Info"
+                          Variant="Variant.Outlined">
+
+                    Ø³Ø±ÙØµÙ„:
+                    <strong>
+                        @_selectedSectionForLesson.Title
+                    </strong>
+
+                </MudAlert>
+            }
+
+            <MudTextField @bind-Value="_lessonTitle"
+                          Label="Ø¹Ù†ÙˆØ§Ù† Ø¯Ø±Ø³"
+                          Variant="Variant.Outlined"
+                          FullWidth="true"
+                          Required="true" />
+
+            <MudTextField @bind-Value="_lessonDescription"
+                          Label="ØªÙˆØ¶ÛŒØ­Ø§Øª"
+                          Variant="Variant.Outlined"
+                          Lines="3"
+                          FullWidth="true" />
+
+            <MudNumericField T="int"
+                             @bind-Value="_lessonDuration"
+                             Label="Ù…Ø¯Øª Ø¯Ø±Ø³ Ø¨Ù‡ Ø«Ø§Ù†ÛŒÙ‡"
+                             Variant="Variant.Outlined"
+                             Min="0"
+                             FullWidth="true" />
+
+            <MudNumericField T="int"
+                             @bind-Value="_lessonOrder"
+                             Label="ØªØ±ØªÛŒØ¨"
+                             Variant="Variant.Outlined"
+                             Min="1"
+                             FullWidth="true" />
+
+            <MudSwitch T="bool"
+                       @bind-Value="_lessonIsFreePreview"
+                       Color="Color.Primary">
+
+                Ù¾ÛŒØ´â€ŒÙ†Ù…Ø§ÛŒØ´ Ø±Ø§ÛŒÚ¯Ø§Ù†
+
+            </MudSwitch>
+
+            @if (!string.IsNullOrWhiteSpace(_dialogError))
+            {
+                <MudAlert Severity="Severity.Error"
+                          Variant="Variant.Outlined">
+
+                    @_dialogError
+
+                </MudAlert>
+            }
+
+        </MudStack>
+
+    </DialogContent>
+
+    <DialogActions>
+
+        <MudButton Variant="Variant.Text"
+                   OnClick="CloseLessonDialog"
+                   Disabled="_dialogSaving">
+
+            Ø§Ù†ØµØ±Ø§Ù
+
+        </MudButton>
+
+        <MudButton Variant="Variant.Filled"
+                   Color="Color.Primary"
+                   StartIcon="@Icons.Material.Filled.Save"
+                   OnClick="CreateLesson"
+                   Disabled="_dialogSaving">
+
+            @if (_dialogSaving)
+            {
+                <MudProgressCircular Size="Size.Small"
+                                     Indeterminate="true"
+                                     Class="mr-2" />
+            }
+
+            Ø°Ø®ÛŒØ±Ù‡ Ø¯Ø±Ø³
+
+        </MudButton>
+
+    </DialogActions>
+
+</MudDialog>
+
+
 @code {
+
+    // ============================================================
+    // Courses
+    // ============================================================
 
     private IReadOnlyList<CourseDto> _courses = [];
 
@@ -433,6 +758,55 @@
     private string? _errorMessage;
 
 
+    // ============================================================
+    // Sections
+    // ============================================================
+
+    private IReadOnlyList<CourseSectionDto> _sections = [];
+
+    private bool _sectionsLoading;
+
+    private bool _showSectionDialog;
+
+    private string _sectionTitle = string.Empty;
+
+    private int _sectionOrder = 1;
+
+
+    // ============================================================
+    // Lessons
+    // ============================================================
+
+    private CourseSectionDto? _selectedSectionForLesson;
+
+    private Guid? _loadingLessonsForSectionId;
+
+    private bool _showLessonDialog;
+
+    private string _lessonTitle = string.Empty;
+
+    private string? _lessonDescription;
+
+    private int _lessonDuration;
+
+    private int _lessonOrder = 1;
+
+    private bool _lessonIsFreePreview;
+
+
+    // ============================================================
+    // Dialog State
+    // ============================================================
+
+    private bool _dialogSaving;
+
+    private string? _dialogError;
+
+
+    // ============================================================
+    // Initialization
+    // ============================================================
+
     protected override async Task OnInitializedAsync()
     {
         await DebugAuthentication();
@@ -440,6 +814,10 @@
         await LoadCourses();
     }
 
+
+    // ============================================================
+    // Authentication Debug
+    // ============================================================
 
     private async Task DebugAuthentication()
     {
@@ -486,6 +864,10 @@
     }
 
 
+    // ============================================================
+    // Load Courses
+    // ============================================================
+
     private async Task LoadCourses()
     {
         _loading = true;
@@ -498,9 +880,17 @@
 
             if (_selectedCourse is not null)
             {
+                var selectedId =
+                    _selectedCourse.Id;
+
                 _selectedCourse =
                     _courses.FirstOrDefault(
-                        x => x.Id == _selectedCourse.Id);
+                        x => x.Id == selectedId);
+
+                if (_selectedCourse is not null)
+                {
+                    await LoadSections();
+                }
             }
         }
         catch (Exception ex)
@@ -518,20 +908,303 @@
     }
 
 
-    private void SelectCourse(CourseDto course)
+    // ============================================================
+    // Select Course
+    // ============================================================
+
+    private async Task SelectCourse(CourseDto course)
     {
         _selectedCourse = course;
+
+        _sections = [];
+
+        await LoadSections();
     }
 
+
+    // ============================================================
+    // Load Sections
+    // ============================================================
+
+    private async Task LoadSections()
+    {
+        if (_selectedCourse is null)
+            return;
+
+        _sectionsLoading = true;
+
+        try
+        {
+            _sections =
+                await CourseService.GetSectionsAsync(
+                    _selectedCourse.Id);
+
+            foreach (var section in _sections)
+            {
+                section.Lessons = [];
+            }
+
+            _selectedCourse.Sections =
+                _sections.ToList();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add(
+                ex.Message,
+                Severity.Error);
+        }
+        finally
+        {
+            _sectionsLoading = false;
+        }
+    }
+
+
+    // ============================================================
+    // Load Lessons
+    // ============================================================
+
+    private async Task LoadLessons(
+        CourseSectionDto section)
+    {
+        _loadingLessonsForSectionId =
+            section.Id;
+
+        try
+        {
+            var lessons =
+                await CourseService.GetLessonsAsync(
+                    section.Id);
+
+            section.Lessons =
+                lessons.ToList();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add(
+                ex.Message,
+                Severity.Error);
+        }
+        finally
+        {
+            _loadingLessonsForSectionId = null;
+        }
+    }
+
+
+    // ============================================================
+    // Section Dialog
+    // ============================================================
+
+    private void OpenAddSection()
+    {
+        if (_selectedCourse is null)
+            return;
+
+        _sectionTitle = string.Empty;
+
+        _sectionOrder =
+            _sections.Count == 0
+                ? 1
+                : _sections.Max(x => x.OrderIndex) + 1;
+
+        _dialogError = null;
+
+        _showSectionDialog = true;
+    }
+
+
+    private void CloseSectionDialog()
+    {
+        if (_dialogSaving)
+            return;
+
+        _showSectionDialog = false;
+
+        _dialogError = null;
+    }
+
+
+    private async Task CreateSection()
+    {
+        if (_selectedCourse is null)
+            return;
+
+        if (string.IsNullOrWhiteSpace(_sectionTitle))
+        {
+            _dialogError =
+                "Ø¹Ù†ÙˆØ§Ù† Ø³Ø±ÙØµÙ„ Ø±Ø§ ÙˆØ§Ø±Ø¯ Ú©Ù†ÛŒØ¯.";
+
+            return;
+        }
+
+        _dialogSaving = true;
+        _dialogError = null;
+
+        try
+        {
+            var request =
+                new CourseSectionCreateRequest
+                {
+                    Title = _sectionTitle.Trim(),
+                    OrderIndex = _sectionOrder
+                };
+
+            await CourseService.CreateSectionAsync(
+                _selectedCourse.Id,
+                request);
+
+            _showSectionDialog = false;
+
+            Snackbar.Add(
+                "Ø³Ø±ÙØµÙ„ Ø¨Ø§ Ù…ÙˆÙÙ‚ÛŒØª Ø§ÛŒØ¬Ø§Ø¯ Ø´Ø¯.",
+                Severity.Success);
+
+            await LoadSections();
+        }
+        catch (Exception ex)
+        {
+            _dialogError = ex.Message;
+
+            Snackbar.Add(
+                ex.Message,
+                Severity.Error);
+        }
+        finally
+        {
+            _dialogSaving = false;
+        }
+    }
+
+
+    // ============================================================
+    // Lesson Dialog
+    // ============================================================
+
+    private void OpenAddLesson(
+        CourseSectionDto section)
+    {
+        _selectedSectionForLesson =
+            section;
+
+        _lessonTitle = string.Empty;
+
+        _lessonDescription = null;
+
+        _lessonDuration = 0;
+
+        _lessonOrder =
+            section.Lessons.Count == 0
+                ? 1
+                : section.Lessons.Max(
+                    x => x.OrderIndex) + 1;
+
+        _lessonIsFreePreview = false;
+
+        _dialogError = null;
+
+        _showLessonDialog = true;
+    }
+
+
+    private void CloseLessonDialog()
+    {
+        if (_dialogSaving)
+            return;
+
+        _showLessonDialog = false;
+
+        _selectedSectionForLesson = null;
+
+        _dialogError = null;
+    }
+
+
+    private async Task CreateLesson()
+    {
+        if (_selectedSectionForLesson is null)
+            return;
+
+        if (string.IsNullOrWhiteSpace(_lessonTitle))
+        {
+            _dialogError =
+                "Ø¹Ù†ÙˆØ§Ù† Ø¯Ø±Ø³ Ø±Ø§ ÙˆØ§Ø±Ø¯ Ú©Ù†ÛŒØ¯.";
+
+            return;
+        }
+
+        _dialogSaving = true;
+        _dialogError = null;
+
+        try
+        {
+            var request =
+                new CourseLessonCreateRequest
+                {
+                    Title =
+                        _lessonTitle.Trim(),
+
+                    Description =
+                        string.IsNullOrWhiteSpace(
+                            _lessonDescription)
+                            ? null
+                            : _lessonDescription.Trim(),
+
+                    DurationSeconds =
+                        _lessonDuration,
+
+                    IsFreePreview =
+                        _lessonIsFreePreview,
+
+                    OrderIndex =
+                        _lessonOrder
+                };
+
+            await CourseService.CreateLessonAsync(
+                _selectedSectionForLesson.Id,
+                request);
+
+            var section =
+                _selectedSectionForLesson;
+
+            _showLessonDialog = false;
+
+            _selectedSectionForLesson = null;
+
+            Snackbar.Add(
+                "Ø¯Ø±Ø³ Ø¨Ø§ Ù…ÙˆÙÙ‚ÛŒØª Ø§ÛŒØ¬Ø§Ø¯ Ø´Ø¯.",
+                Severity.Success);
+
+            await LoadLessons(section);
+        }
+        catch (Exception ex)
+        {
+            _dialogError = ex.Message;
+
+            Snackbar.Add(
+                ex.Message,
+                Severity.Error);
+        }
+        finally
+        {
+            _dialogSaving = false;
+        }
+    }
+
+
+    // ============================================================
+    // Video Uploaded
+    // ============================================================
 
     private Task OnVideoUploaded(
         CourseEpisodeDto episode)
     {
         Snackbar.Add(
-            $"ویدئوی «{episode.Title}» دریافت شد و برای پردازش قرار گرفت.",
+            $"ÙˆÛŒØ¯Ø¦ÙˆÛŒ Â«{episode.Title}Â» Ø¯Ø±ÛŒØ§ÙØª Ø´Ø¯ Ùˆ Ø¨Ø±Ø§ÛŒ Ù¾Ø±Ø¯Ø§Ø²Ø´ Ù‚Ø±Ø§Ø± Ú¯Ø±ÙØª.",
             Severity.Success);
 
         return InvokeAsync(
             StateHasChanged);
     }
 }
+

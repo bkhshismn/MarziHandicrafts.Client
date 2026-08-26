@@ -2,6 +2,7 @@
 @using Marzi.Client.Shared.Layouts
 @using Marzi.Client.Web.Authentication
 @using Microsoft.AspNetCore.Components.Web
+
 @inject AuthenticationStateProvider AuthenticationStateProvider
 
 <CascadingAuthenticationState>
@@ -40,11 +41,13 @@
         </Found>
 
         <NotFound>
+
             <LayoutView Layout="@typeof(MainLayout)">
                 <p>
                     صفحه مورد نظر پیدا نشد.
                 </p>
             </LayoutView>
+
         </NotFound>
 
     </Router>
@@ -66,4 +69,5 @@
             await provider.InitializeAsync();
         }
     }
+
 }

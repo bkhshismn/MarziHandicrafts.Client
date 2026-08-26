@@ -1,8 +1,196 @@
-html, body {
-    font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+/* =========================================================
+   MARZI HANDICRAFTS
+   GLOBAL APP CSS
+   ========================================================= */
+
+
+/* =========================================================
+   1. FONT - VAZIR
+   ========================================================= */
+
+@font-face {
+    font-family: "Vazir";
+    src: url("/fonts/Vazir.woff2") format("woff2");
+    font-weight: 400;
+    font-style: normal;
+    font-display: swap;
 }
 
-a, .btn-link {
+@font-face {
+    font-family: "Vazir";
+    src: url("/fonts/Vazir-Medium.woff2") format("woff2");
+    font-weight: 500;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: "Vazir";
+    src: url("/fonts/Vazir-Bold.woff2") format("woff2");
+    font-weight: 700;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: "Vazir";
+    src: url("/fonts/Vazir-Light.woff2") format("woff2");
+    font-weight: 300;
+    font-style: normal;
+    font-display: swap;
+}
+
+
+/* =========================================================
+   2. GLOBAL RESET
+   ========================================================= */
+
+html {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    margin: 0;
+    padding: 0;
+    overflow-x: hidden;
+    box-sizing: border-box;
+}
+
+body {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    margin: 0;
+    padding: 0;
+    overflow-x: hidden;
+    box-sizing: border-box;
+    font-family: "Vazir", Tahoma, Arial, sans-serif;
+    font-size: 16px;
+    line-height: 1.8;
+    direction: rtl;
+    background: #FAF8F4;
+}
+
+*,
+*::before,
+*::after {
+    box-sizing: border-box;
+}
+
+
+/* =========================================================
+   3. BLAZOR ROOT
+   ========================================================= */
+
+#app {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    margin: 0;
+    padding: 0;
+    overflow-x: hidden;
+}
+
+
+/* =========================================================
+   4. MUD RTL / LAYOUT
+   ========================================================= */
+
+.mud-rtl-provider {
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    box-sizing: border-box !important;
+    overflow-x: hidden !important;
+}
+
+.mud-layout {
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    box-sizing: border-box !important;
+    overflow-x: hidden !important;
+}
+
+
+
+
+/* =========================================================
+   5. BODY CHILDREN
+   ========================================================= */
+
+body > * {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
+}
+
+
+/* =========================================================
+   6. TYPOGRAPHY
+   ========================================================= */
+
+body,
+button,
+input,
+textarea,
+select {
+    font-family: "Vazir", Tahoma, Arial, sans-serif;
+}
+
+.mud-typography,
+.mud-button-root,
+.mud-input,
+.mud-input-label,
+.mud-nav-link,
+.mud-list-item,
+.mud-table,
+.mud-chip,
+.mud-alert,
+.mud-snackbar,
+.mud-dialog,
+.mud-menu,
+.mud-popover {
+    font-family: "Vazir", Tahoma, Arial, sans-serif !important;
+}
+
+.mud-typography-h1 {
+    font-weight: 700;
+}
+
+.mud-typography-h2,
+.mud-typography-h3,
+.mud-typography-h4,
+.mud-typography-h5,
+.mud-typography-h6 {
+    font-weight: 600;
+}
+
+.mud-typography-body1 {
+    font-size: 1rem;
+    line-height: 1.9;
+}
+
+.mud-typography-body2 {
+    font-size: 0.925rem;
+    line-height: 1.8;
+}
+
+.mud-button-label {
+    font-weight: 500;
+}
+
+
+/* =========================================================
+   7. LINKS / DEFAULT BLAZOR
+   ========================================================= */
+
+a,
+.btn-link {
     color: #006bb7;
 }
 
@@ -12,8 +200,12 @@ a, .btn-link {
     border-color: #1861ac;
 }
 
-.btn:focus, .btn:active:focus, .btn-link.nav-link:focus, .form-control:focus, .form-check-input:focus {
-  box-shadow: 0 0 0 0.1rem white, 0 0 0 0.25rem #258cfb;
+.btn:focus,
+.btn:active:focus,
+.btn-link.nav-link:focus,
+.form-control:focus,
+.form-check-input:focus {
+    box-shadow: 0 0 0 0.1rem white, 0 0 0 0.25rem #258cfb;
 }
 
 .content {
@@ -36,25 +228,370 @@ h1:focus {
     color: #e50000;
 }
 
-.blazor-error-boundary {
-    background: url(data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNTYiIGhlaWdodD0iNDkiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIgeG1sbnM6eGxpbms9Imh0dHA6Ly93d3cudzMub3JnLzE5OTkveGxpbmsiIG92ZXJmbG93PSJoaWRkZW4iPjxkZWZzPjxjbGlwUGF0aCBpZD0iY2xpcDAiPjxyZWN0IHg9IjIzNSIgeT0iNTEiIHdpZHRoPSI1NiIgaGVpZ2h0PSI0OSIvPjwvY2xpcFBhdGg+PC9kZWZzPjxnIGNsaXAtcGF0aD0idXJsKCNjbGlwMCkiIHRyYW5zZm9ybT0idHJhbnNsYXRlKC0yMzUgLTUxKSI+PHBhdGggZD0iTTI2My41MDYgNTFDMjY0LjcxNyA1MSAyNjUuODEzIDUxLjQ4MzcgMjY2LjYwNiA1Mi4yNjU4TDI2Ny4wNTIgNTIuNzk4NyAyNjcuNTM5IDUzLjYyODMgMjkwLjE4NSA5Mi4xODMxIDI5MC41NDUgOTIuNzk1IDI5MC42NTYgOTIuOTk2QzI5MC44NzcgOTMuNTEzIDI5MSA5NC4wODE1IDI5MSA5NC42NzgyIDI5MSA5Ny4wNjUxIDI4OS4wMzggOTkgMjg2LjYxNyA5OUwyNDAuMzgzIDk5QzIzNy45NjMgOTkgMjM2IDk3LjA2NTEgMjM2IDk0LjY3ODIgMjM2IDk0LjM3OTkgMjM2LjAzMSA5NC4wODg2IDIzNi4wODkgOTMuODA3MkwyMzYuMzM4IDkzLjAxNjIgMjM2Ljg1OCA5Mi4xMzE0IDI1OS40NzMgNTMuNjI5NCAyNTkuOTYxIDUyLjc5ODUgMjYwLjQwNyA1Mi4yNjU4QzI2MS4yIDUxLjQ4MzcgMjYyLjI5NiA1MSAyNjMuNTA2IDUxWk0yNjMuNTg2IDY2LjAxODNDMjYwLjczNyA2Ni4wMTgzIDI1OS4zMTMgNjcuMTI0NSAyNTkuMzEzIDY5LjMzNyAyNTkuMzEzIDY5LjYxMDIgMjU5LjMzMiA2OS44NjA4IDI1OS4zNzEgNzAuMDg4N0wyNjEuNzk1IDg0LjAxNjEgMjY1LjM4IDg0LjAxNjEgMjY3LjgyMSA2OS43NDc1QzI2Ny44NiA2OS43MzA5IDI2Ny44NzkgNjkuNTg3NyAyNjcuODc5IDY5LjMxNzkgMjY3Ljg3OSA2Ny4xMTgyIDI2Ni40NDggNjYuMDE4MyAyNjMuNTg2IDY2LjAxODNaTTI2My41NzYgODYuMDU0N0MyNjEuMDQ5IDg2LjA1NDcgMjU5Ljc4NiA4Ny4zMDA1IDI1OS43ODYgODkuNzkyMSAyNTkuNzg2IDkyLjI4MzcgMjYxLjA0OSA5My41Mjk1IDI2My41NzYgOTMuNTI5NSAyNjYuMTE2IDkzLjUyOTUgMjY3LjM4NyA5Mi4yODM3IDI2Ny4zODcgODkuNzkyMSAyNjcuMzg3IDg3LjMwMDUgMjY2LjExNiA4Ni4wNTQ3IDI2My41NzYgODYuMDU0N1oiIGZpbGw9IiNGRkU1MDAiIGZpbGwtcnVsZT0iZXZlbm9kZCIvPjwvZz48L3N2Zz4=) no-repeat 1rem/1.8rem, #b32121;
-    padding: 1rem 1rem 1rem 3.7rem;
-    color: white;
+
+/* =========================================================
+   8. FORM
+   ========================================================= */
+
+.form-floating > .form-control-plaintext::placeholder,
+.form-floating > .form-control::placeholder {
+    color: var(--bs-secondary-color);
+    text-align: end;
 }
 
-    .blazor-error-boundary::after {
-        content: "An error has occurred."
-    }
+.form-floating > .form-control-plaintext:focus::placeholder,
+.form-floating > .form-control:focus::placeholder {
+    text-align: start;
+}
 
 .darker-border-checkbox.form-check-input {
     border-color: #929292;
 }
 
-.form-floating > .form-control-plaintext::placeholder, .form-floating > .form-control::placeholder {
-    color: var(--bs-secondary-color);
-    text-align: end;
+
+/* =========================================================
+   9. BLAZOR ERROR
+   ========================================================= */
+
+.blazor-error-boundary {
+    background: #b32121;
+    padding: 1rem 1rem 1rem 3.7rem;
+    color: white;
 }
 
-.form-floating > .form-control-plaintext:focus::placeholder, .form-floating > .form-control:focus::placeholder {
-    text-align: start;
+    .blazor-error-boundary::after {
+        content: "An error has occurred.";
+    }
+
+
+/* =========================================================
+   10. GLOBAL RESPONSIVE SAFETY
+   ========================================================= */
+
+img,
+video,
+canvas,
+svg {
+    max-width: 100%;
+}
+
+img,
+video {
+    display: block;
+}
+
+p,
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+    max-width: 100%;
+    overflow-wrap: anywhere;
+}
+
+.mud-paper,
+.mud-card,
+.mud-container,
+.mud-grid,
+.mud-stack {
+    min-width: 0;
+    max-width: 100%;
+}
+
+
+/* =========================================================
+   11. MAIN CONTENT
+   ========================================================= */
+
+.main-content {
+    width: 100%;
+    max-width: 1440px;
+    min-width: 0;
+    margin: 0 auto;
+    padding: 32px 24px 48px;
+    box-sizing: border-box;
+    overflow-x: hidden;
+}
+
+.main-content-inner {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    overflow-x: hidden;
+}
+
+
+/* =========================================================
+   12. APP BAR
+   ========================================================= */
+
+.marzi-appbar {
+    width: 100%;
+    max-width: 100%;
+    direction: rtl;
+    box-sizing: border-box;
+}
+
+.brand-title {
+    white-space: nowrap;
+    font-weight: 700;
+}
+
+.desktop-navigation {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    min-width: 0;
+}
+
+
+/* =========================================================
+   13. MOBILE BOTTOM NAVIGATION
+   ========================================================= */
+
+.mobile-bottom-navigation {
+    display: none;
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+}
+
+@media (max-width: 959.98px) {
+
+    .mobile-bottom-navigation {
+        display: block;
+        width: 100%;
+        max-width: 100%;
+        min-width: 0;
+    }
+}
+
+/* =========================================================
+   14. MOBILE
+   ========================================================= */
+
+@media (max-width: 959.98px) {
+
+    .desktop-navigation {
+        display: none;
+    }
+
+    .main-content {
+        width: 100%;
+        max-width: 100%;
+        padding: 20px 16px 100px;
+    }
+
+    .main-content-inner {
+        width: 100%;
+        max-width: 100%;
+        padding: 0;
+    }
+
+    .mobile-bottom-navigation {
+        display: block;
+    }
+
+    .brand-title {
+        font-size: 1rem;
+    }
+}
+
+
+/* =========================================================
+   15. SMALL MOBILE
+   ========================================================= */
+
+@media (max-width: 600px) {
+
+    html,
+    body {
+        width: 100%;
+        max-width: 100%;
+        min-width: 0;
+        overflow-x: hidden;
+    }
+
+    #app {
+        width: 100%;
+        max-width: 100%;
+        min-width: 0;
+        overflow-x: hidden;
+    }
+
+    .main-content {
+        width: 100%;
+        max-width: 100%;
+        min-width: 0;
+        padding: 12px 10px 96px;
+        overflow-x: hidden;
+    }
+
+    .main-content-inner {
+        width: 100%;
+        max-width: 100%;
+        min-width: 0;
+        padding: 0;
+        overflow-x: hidden;
+    }
+
+    .marzi-appbar {
+        width: 100%;
+        max-width: 100%;
+    }
+
+    .brand-title {
+        font-size: 0.95rem;
+    }
+}
+
+
+/* =========================================================
+   16. VERY SMALL PHONES
+   ========================================================= */
+
+@media (max-width: 380px) {
+
+    .main-content {
+        padding-left: 8px;
+        padding-right: 8px;
+        padding-bottom: 94px;
+    }
+
+    .brand-title {
+        font-size: 0.85rem;
+    }
+}
+
+
+/* =========================================================
+   17. REDUCED MOTION
+   ========================================================= */
+
+@media (prefers-reduced-motion: reduce) {
+
+    *,
+    *::before,
+    *::after {
+        scroll-behavior: auto !important;
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
+}
+/* =========================================================
+   MARZI - COURSE MEDIA HARD RESPONSIVE FIX
+   ========================================================= */
+
+.course-hero,
+.course-hero-image,
+.course-cover {
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    box-sizing: border-box !important;
+}
+
+.course-hero {
+    display: block !important;
+    overflow: hidden !important;
+}
+
+.course-hero-image {
+    position: relative !important;
+    display: block !important;
+    overflow: hidden !important;
+}
+
+.course-cover {
+    position: absolute !important;
+    top: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    left: 0 !important;
+    display: block !important;
+    height: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    object-fit: cover !important;
+}
+
+
+/* =========================================================
+   VIDEO
+   ========================================================= */
+
+.video-player-wrapper {
+    position: relative !important;
+    display: block !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    height: auto !important;
+    overflow: hidden !important;
+    box-sizing: border-box !important;
+    aspect-ratio: 16 / 9 !important;
+}
+
+    .video-player-wrapper .video-player,
+    video.video-player {
+        display: block !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        min-width: 0 !important;
+        height: 100% !important;
+        max-height: 100% !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        box-sizing: border-box !important;
+        object-fit: contain !important;
+    }
+
+
+/* =========================================================
+   COURSE DETAILS
+   ========================================================= */
+
+.course-details-page,
+.course-info-section,
+.course-video-section,
+.lesson-list {
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    box-sizing: border-box !important;
+}
+
+.course-info-section,
+.course-video-section {
+    overflow: hidden !important;
+}
+
+
+/* =========================================================
+   MOBILE
+   ========================================================= */
+
+@media (max-width: 600px) {
+
+    .course-hero-image {
+        aspect-ratio: 4 / 3 !important;
+    }
+
+    .video-player-wrapper {
+        width: 100% !important;
+        max-width: 100% !important;
+        aspect-ratio: 16 / 9 !important;
+    }
+
+        .video-player-wrapper .video-player,
+        video.video-player {
+            width: 100% !important;
+            max-width: 100% !important;
+        }
 }

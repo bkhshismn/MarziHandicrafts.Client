@@ -1,6 +1,4 @@
-@page "/portfolio"
-
-@layout Marzi.Client.Shared.Layouts.MainLayout
+﻿@page "/portfolio"
 
 @using Marzi.Client.Core.Models.Portfolio
 @using Marzi.Client.Infrastructure.Services
@@ -19,13 +17,13 @@
         <div>
 
             <MudText Typo="Typo.h4">
-                نمونه کارها
+                Ù†Ù…ÙˆÙ†Ù‡ Ú©Ø§Ø±Ù‡Ø§
             </MudText>
 
             <MudText Typo="Typo.body2"
                      Color="Color.Secondary">
 
-                آثار منتشر شده
+                Ø¢Ø«Ø§Ø± Ù…Ù†ØªØ´Ø± Ø´Ø¯Ù‡
 
             </MudText>
 
@@ -37,7 +35,7 @@
                      Color="Color.Primary"
                      Variant="Variant.Outlined">
 
-                @_filteredItems.Count اثر
+                @_filteredItems.Count Ø§Ø«Ø±
 
             </MudChip>
         }
@@ -61,8 +59,8 @@
                     <MudTextField T="string"
                                   @bind-Value="_searchText"
                                   @bind-Value:after="ApplyFilters"
-                                  Label="جستجوی نمونه کار"
-                                  Placeholder="عنوان، توضیحات یا دسته‌بندی..."
+                                  Label="Ø¬Ø³ØªØ¬ÙˆÛŒ Ù†Ù…ÙˆÙ†Ù‡ Ú©Ø§Ø±"
+                                  Placeholder="Ø¹Ù†ÙˆØ§Ù†ØŒ ØªÙˆØ¶ÛŒØ­Ø§Øª ÛŒØ§ Ø¯Ø³ØªÙ‡â€ŒØ¨Ù†Ø¯ÛŒ..."
                                   Variant="Variant.Outlined"
                                   Adornment="Adornment.Start"
                                   AdornmentIcon="@Icons.Material.Filled.Search"
@@ -79,13 +77,13 @@
                     <MudSelect T="string"
                                @bind-Value="_selectedCategory"
                                @bind-Value:after="ApplyFilters"
-                               Label="دسته‌بندی"
+                               Label="Ø¯Ø³ØªÙ‡â€ŒØ¨Ù†Ø¯ÛŒ"
                                Variant="Variant.Outlined">
 
                         <MudSelectItem T="string"
                                        Value="@AllCategories">
 
-                            همه دسته‌بندی‌ها
+                            Ù‡Ù…Ù‡ Ø¯Ø³ØªÙ‡â€ŒØ¨Ù†Ø¯ÛŒâ€ŒÙ‡Ø§
 
                         </MudSelectItem>
 
@@ -117,7 +115,7 @@
                     <MudText Typo="Typo.caption"
                              Color="Color.Secondary">
 
-                        فیلتر فعال:
+                        ÙÛŒÙ„ØªØ± ÙØ¹Ø§Ù„:
 
                     </MudText>
 
@@ -149,7 +147,7 @@
                                Size="Size.Small"
                                OnClick="ClearFilters">
 
-                        حذف فیلترها
+                        Ø­Ø°Ù ÙÛŒÙ„ØªØ±Ù‡Ø§
 
                     </MudButton>
 
@@ -205,7 +203,7 @@
 
         <MudAlert Severity="Severity.Info">
 
-            نمونه کاری منتشر نشده است.
+            Ù†Ù…ÙˆÙ†Ù‡ Ú©Ø§Ø±ÛŒ Ù…Ù†ØªØ´Ø± Ù†Ø´Ø¯Ù‡ Ø§Ø³Øª.
 
         </MudAlert>
     }
@@ -223,14 +221,14 @@
             <MudText Typo="Typo.h6"
                      Class="mt-3">
 
-                نتیجه‌ای پیدا نشد
+                Ù†ØªÛŒØ¬Ù‡â€ŒØ§ÛŒ Ù¾ÛŒØ¯Ø§ Ù†Ø´Ø¯
 
             </MudText>
 
             <MudText Typo="Typo.body2"
                      Color="Color.Secondary">
 
-                نمونه کاری با معیار جستجوی فعلی پیدا نشد.
+                Ù†Ù…ÙˆÙ†Ù‡ Ú©Ø§Ø±ÛŒ Ø¨Ø§ Ù…Ø¹ÛŒØ§Ø± Ø¬Ø³ØªØ¬ÙˆÛŒ ÙØ¹Ù„ÛŒ Ù¾ÛŒØ¯Ø§ Ù†Ø´Ø¯.
 
             </MudText>
 
@@ -239,7 +237,7 @@
                        Class="mt-4"
                        OnClick="ClearFilters">
 
-                حذف فیلترها
+                Ø­Ø°Ù ÙÛŒÙ„ØªØ±Ù‡Ø§
 
             </MudButton>
 
@@ -257,7 +255,7 @@
 
 @code {
 
-    private const string AllCategories = "همه";
+    private const string AllCategories = "Ù‡Ù…Ù‡";
 
     private IReadOnlyList<PortfolioItemDto> _items = [];
 
@@ -387,3 +385,4 @@
     }
 
 }
+

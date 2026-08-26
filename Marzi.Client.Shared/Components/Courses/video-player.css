@@ -1,0 +1,119 @@
+﻿.video-player-wrapper {
+    position: relative;
+    width: 100%;
+    max-width: 1100px;
+    min-width: 0;
+    margin: 0 auto;
+    overflow: hidden;
+    box-sizing: border-box;
+    border-radius: 20px;
+    background: #000;
+    aspect-ratio: 16 / 9;
+}
+
+.video-player {
+    display: block;
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    height: 100%;
+    min-height: 0;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    border-radius: inherit;
+    background: #000;
+    object-fit: contain;
+    box-sizing: border-box;
+}
+
+@media (max-width: 600px) {
+    .video-player-wrapper {
+        width: 100%;
+        max-width: 100%;
+        border-radius: 14px;
+    }
+
+    .video-player {
+        width: 100%;
+        max-width: 100%;
+        border-radius: inherit;
+    }
+}
+
+
+/* =========================================
+   Upload
+   ========================================= */
+
+.lesson-video-upload {
+    width: 100%;
+    max-width: 100%;
+    border-radius: 20px;
+    box-sizing: border-box;
+}
+
+    .lesson-video-upload input[type="file"] {
+        width: 100%;
+        max-width: 100%;
+        padding: 12px;
+        border: 1px dashed var(--mud-palette-primary);
+        border-radius: 12px;
+        cursor: pointer;
+        box-sizing: border-box;
+    }
+
+
+/* =========================================
+   Mobile
+   ========================================= */
+
+@media (max-width: 600px) {
+
+    .video-player-wrapper {
+        border-radius: 12px;
+    }
+
+    .video-player-loading,
+    .video-player-error {
+        padding: 14px;
+        gap: 8px;
+    }
+
+    .video-player-empty {
+        min-height: 180px;
+        border-radius: 12px;
+    }
+
+    .lesson-video-upload {
+        border-radius: 14px;
+    }
+
+        .lesson-video-upload input[type="file"] {
+            padding: 10px;
+            font-size: 0.85rem;
+        }
+}
+.video-player-wrapper {
+    position: relative;
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    overflow: hidden;
+    box-sizing: border-box;
+    border-radius: 20px;
+    background: #000;
+    aspect-ratio: 16 / 9;
+}
+
+.video-player {
+    display: block;
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    height: 100%;
+    min-height: 0;
+    background: #000;
+    object-fit: contain;
+    box-sizing: border-box;
+}

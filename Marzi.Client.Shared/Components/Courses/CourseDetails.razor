@@ -1,7 +1,5 @@
 @page "/courses/{Id:guid}"
 
-@layout Marzi.Client.Shared.Layouts.MainLayout
-
 @using Marzi.Client.Core.Models.Courses
 @using Marzi.Client.Infrastructure.Services
 @using Marzi.Client.Shared.Components.Courses
@@ -39,12 +37,12 @@ else
         <!-- Course Hero -->
         <!-- ========================= -->
 
-        <MudPaper Class="course-hero-section"
+       @*  <MudPaper Class="course-hero-section"
                   Elevation="0">
 
             <CourseHero Course="_course" />
 
-        </MudPaper>
+        </MudPaper> *@
 
 
         <!-- ========================= -->

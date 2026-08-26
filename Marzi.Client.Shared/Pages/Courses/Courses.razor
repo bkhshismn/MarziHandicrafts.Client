@@ -1,6 +1,4 @@
-@page "/courses"
-
-@layout Marzi.Client.Shared.Layouts.MainLayout
+﻿@page "/courses"
 
 @using Marzi.Client.Core.Models.Courses
 @using Marzi.Client.Infrastructure.Services
@@ -18,13 +16,13 @@
     <div>
 
         <MudText Typo="Typo.h4">
-            دوره‌های آموزشی
+            Ø¯ÙˆØ±Ù‡â€ŒÙ‡Ø§ÛŒ Ø¢Ù…ÙˆØ²Ø´ÛŒ
         </MudText>
 
         <MudText Typo="Typo.body2"
                  Color="Color.Secondary">
 
-            دوره‌های منتشر شده
+            Ø¯ÙˆØ±Ù‡â€ŒÙ‡Ø§ÛŒ Ù…Ù†ØªØ´Ø± Ø´Ø¯Ù‡
 
         </MudText>
 
@@ -36,7 +34,7 @@
                  Color="Color.Primary"
                  Variant="Variant.Outlined">
 
-            @_filteredCourses.Count دوره
+            @_filteredCourses.Count Ø¯ÙˆØ±Ù‡
 
         </MudChip>
     }
@@ -60,8 +58,8 @@
                 <MudTextField T="string"
                               @bind-Value="_searchText"
                               @bind-Value:after="ApplyFilters"
-                              Label="جستجوی دوره"
-                              Placeholder="عنوان، توضیحات یا دسته‌بندی..."
+                              Label="Ø¬Ø³ØªØ¬ÙˆÛŒ Ø¯ÙˆØ±Ù‡"
+                              Placeholder="Ø¹Ù†ÙˆØ§Ù†ØŒ ØªÙˆØ¶ÛŒØ­Ø§Øª ÛŒØ§ Ø¯Ø³ØªÙ‡â€ŒØ¨Ù†Ø¯ÛŒ..."
                               Variant="Variant.Outlined"
                               Adornment="Adornment.Start"
                               AdornmentIcon="@Icons.Material.Filled.Search"
@@ -78,13 +76,13 @@
                 <MudSelect T="string"
                            @bind-Value="_selectedCategory"
                            @bind-Value:after="ApplyFilters"
-                           Label="دسته‌بندی"
+                           Label="Ø¯Ø³ØªÙ‡â€ŒØ¨Ù†Ø¯ÛŒ"
                            Variant="Variant.Outlined">
 
                     <MudSelectItem T="string"
                                    Value="@AllCategories">
 
-                        همه دسته‌بندی‌ها
+                        Ù‡Ù…Ù‡ Ø¯Ø³ØªÙ‡â€ŒØ¨Ù†Ø¯ÛŒâ€ŒÙ‡Ø§
 
                     </MudSelectItem>
 
@@ -116,7 +114,7 @@
                 <MudText Typo="Typo.caption"
                          Color="Color.Secondary">
 
-                    فیلتر فعال:
+                    ÙÛŒÙ„ØªØ± ÙØ¹Ø§Ù„:
 
                 </MudText>
 
@@ -151,7 +149,7 @@
                            Size="Size.Small"
                            OnClick="ClearFilters">
 
-                    حذف فیلترها
+                    Ø­Ø°Ù ÙÛŒÙ„ØªØ±Ù‡Ø§
 
                 </MudButton>
 
@@ -178,7 +176,7 @@
                Class="mt-3"
                OnClick="LoadCourses">
 
-        تلاش مجدد
+        ØªÙ„Ø§Ø´ Ù…Ø¬Ø¯Ø¯
 
     </MudButton>
 }
@@ -202,14 +200,14 @@ else if (_filteredCourses.Count == 0)
         <MudText Typo="Typo.h6"
                  Class="mt-3">
 
-            نتیجه‌ای پیدا نشد
+            Ù†ØªÛŒØ¬Ù‡â€ŒØ§ÛŒ Ù¾ÛŒØ¯Ø§ Ù†Ø´Ø¯
 
         </MudText>
 
         <MudText Typo="Typo.body2"
                  Color="Color.Secondary">
 
-            دوره‌ای با معیار جستجوی فعلی پیدا نشد.
+            Ø¯ÙˆØ±Ù‡â€ŒØ§ÛŒ Ø¨Ø§ Ù…Ø¹ÛŒØ§Ø± Ø¬Ø³ØªØ¬ÙˆÛŒ ÙØ¹Ù„ÛŒ Ù¾ÛŒØ¯Ø§ Ù†Ø´Ø¯.
 
         </MudText>
 
@@ -218,7 +216,7 @@ else if (_filteredCourses.Count == 0)
                    Class="mt-4"
                    OnClick="ClearFilters">
 
-            حذف فیلترها
+            Ø­Ø°Ù ÙÛŒÙ„ØªØ±Ù‡Ø§
 
         </MudButton>
 
@@ -235,7 +233,7 @@ else
 
 @code {
 
-    private const string AllCategories = "همه";
+    private const string AllCategories = "Ù‡Ù…Ù‡";
 
 
     private IReadOnlyList<CourseDto> _courses = [];
@@ -401,3 +399,4 @@ else
     }
 
 }
+
