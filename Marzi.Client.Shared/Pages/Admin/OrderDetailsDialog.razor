@@ -194,10 +194,19 @@
                    Color="Color.Primary"
                    StartIcon="@Icons.Material.Filled.Save"
                    OnClick="Save"
-                   Loading="_saving"
                    Disabled="_saving || _loading">
 
-            ذخیره تغییرات
+            @if (_saving)
+            {
+                <MudProgressCircular Size="Size.Small"
+                                     Indeterminate="true"
+                                     Class="me-2" />
+                <span>در حال ذخیره...</span>
+            }
+            else
+            {
+                <span>ذخیره تغییرات</span>
+            }
 
         </MudButton>
 
