@@ -1,0 +1,176 @@
+@using Marzi.Client.Core.Models.Portfolio
+@using MudBlazor
+
+@if (OrderedImages.Count == 0)
+{
+    <MudPaper Class="gallery-empty"
+              Elevation="0">
+
+        <MudImage Src="/images/course-placeholder.jpg"
+                  Fluid="true" />
+
+    </MudPaper>
+}
+else
+{
+    <div class="gallery-container">
+
+        <!-- Main Image -->
+
+        <div class="main-image-wrapper"
+             @onclick="OpenLightbox">
+
+            @if (CurrentImage is not null)
+            {
+                <MudImage Src="@CurrentImage.ImageUrl"
+                          Fluid="true"
+                          Class="gallery-main" />
+            }
+
+            <div class="gallery-overlay">
+
+                <MudIcon Icon="@Icons.Material.Filled.ZoomIn"
+                         Size="Size.Large" />
+
+                <MudText Typo="Typo.subtitle2">
+                    مشاهده در اندازه بزرگ
+                </MudText>
+
+            </div>
+
+        </div>
+
+
+        <!-- Thumbnail Strip -->
+        @if (OrderedImages.Count > 1)
+        {
+            <MudStack Row="true"
+                      Spacing="2"
+                      Class="gallery-thumbs">
+
+                @for (var i = 0; i < OrderedImages.Count; i++)
+                {
+                    var index = i;
+                    var image = OrderedImages[i];
+
+                    <div class="@ThumbClass(index)"
+                         @onclick="@(() => Select(index))">
+
+                        <MudImage Src="@image.ImageUrl"
+                                  Width="90"
+                                  Height="90"
+                                  ObjectFit="ObjectFit.Cover" />
+
+                    </div>
+                }
+
+            </MudStack>
+        }
+
+
+        <!-- Fullscreen Lightbox -->
+
+        <ImageLightbox Visible="_lightboxOpen"
+                       VisibleChanged="OnLightboxChanged"
+                       Images="OrderedImages"
+                       SelectedIndex="_selectedIndex"
+                       SelectedIndexChanged="OnSelectedChanged" />
+
+    </div>
+}
+
+
+@code {
+
+    [Parameter]
+    public List<PortfolioImageDto> Images { get; set; } = [];
+
+    private List<PortfolioImageDto> OrderedImages = [];
+
+    private PortfolioImageDto? CurrentImage;
+
+    private int _selectedIndex;
+
+    private bool _lightboxOpen;
+
+
+    protected override void OnParametersSet()
+    {
+        OrderedImages = Images
+            .OrderBy(x => x.Order)
+            .ToList();
+
+        if (OrderedImages.Count == 0)
+        {
+            CurrentImage = null;
+            _selectedIndex = 0;
+            return;
+        }
+
+        if (_selectedIndex < 0 ||
+            _selectedIndex >= OrderedImages.Count)
+        {
+            _selectedIndex = 0;
+        }
+
+        CurrentImage = OrderedImages[_selectedIndex];
+    }
+
+
+    private void Select(int index)
+    {
+        if (index < 0 ||
+            index >= OrderedImages.Count)
+        {
+            return;
+        }
+
+        _selectedIndex = index;
+
+        CurrentImage = OrderedImages[index];
+
+        StateHasChanged();
+    }
+
+
+    private void OpenLightbox()
+    {
+        if (OrderedImages.Count == 0)
+            return;
+
+        _lightboxOpen = true;
+    }
+
+
+    private async Task OnLightboxChanged(bool value)
+    {
+        _lightboxOpen = value;
+
+        await InvokeAsync(StateHasChanged);
+    }
+
+
+    private async Task OnSelectedChanged(int index)
+    {
+        if (index < 0 ||
+            index >= OrderedImages.Count)
+        {
+            return;
+        }
+
+        _selectedIndex = index;
+
+        CurrentImage = OrderedImages[index];
+
+        await InvokeAsync(StateHasChanged);
+    }
+
+
+    private string ThumbClass(int index)
+    {
+        return index == _selectedIndex
+            ? "thumb selected"
+            : "thumb";
+    }
+
+}

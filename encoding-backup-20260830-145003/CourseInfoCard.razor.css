@@ -1,0 +1,151 @@
+﻿.course-card {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    border-radius: 20px;
+    box-sizing: border-box;
+    transition: transform .25s ease, box-shadow .25s ease;
+}
+
+    .course-card:hover {
+        transform: translateY(-5px);
+        box-shadow: var(--mud-elevation-8);
+    }
+
+
+/* =========================================
+   Cover Image
+   ========================================= */
+.course-card-cover {
+    position: relative;
+    width: 100%;
+    max-width: 100%;
+    overflow: hidden;
+    border-radius: 12px;
+}
+
+.course-card-image {
+    display: block;
+    width: 100%;
+    height: 220px;
+    max-width: 100%;
+    object-fit: cover;
+    border-radius: 12px;
+    clip-path: inset(0 round 12px);
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+/* =========================================
+   Price Overlay
+   ========================================= */
+
+.course-card-overlay {
+    position: absolute;
+    top: 14px;
+    left: 14px;
+    z-index: 2;
+}
+
+
+/* =========================================
+   Title
+   ========================================= */
+
+.course-card-title {
+    max-width: 100%;
+    font-weight: 800;
+    line-height: 1.5;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+
+/* =========================================
+   Description
+   ========================================= */
+
+.course-card-description {
+    max-width: 100%;
+    line-height: 1.8;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+
+/* =========================================
+   Meta
+   ========================================= */
+
+.course-card-meta {
+    width: 100%;
+    min-width: 0;
+    min-height: 28px;
+    flex-wrap: wrap;
+}
+
+
+/* =========================================
+   Actions
+   ========================================= */
+
+.course-card-actions {
+    width: 100%;
+    margin-top: auto;
+    padding: 0 16px 16px;
+    box-sizing: border-box;
+}
+
+    .course-card-actions .mud-button-root {
+        width: 100%;
+        min-height: 46px;
+        border-radius: 12px;
+        font-weight: 700;
+    }
+
+
+/* =========================================
+   Mobile
+   ========================================= */
+
+@media (max-width: 600px) {
+
+    .course-card {
+        width: 100%;
+        max-width: 100%;
+        border-radius: 16px;
+    }
+
+    .course-card-cover {
+        border-radius: 12px;
+    }
+
+    .course-card-image {
+        height: 220px;
+        border-radius: 12px;
+    }
+
+    .course-card-title {
+        font-size: 1.05rem;
+    }
+
+    .course-card-description {
+        font-size: .9rem;
+    }
+}
+
+
+/* =========================================
+   Reduced Motion
+   ========================================= */
+
+

@@ -1,0 +1,165 @@
+@using Marzi.Client.Core.Models.Portfolio
+@using MudBlazor
+
+@if (Visible)
+{
+    <div class="lightbox-backdrop"
+         @onclick="BackdropClick">
+
+        <div class="lightbox-container"
+             @onclick:stopPropagation="true">
+
+            <MudIconButton Icon="@Icons.Material.Filled.Close"
+                           Class="close-btn"
+                           Color="Color.Inherit"
+                           OnClick="Close" />
+
+            <MudText Typo="Typo.subtitle1"
+                     Class="counter">
+
+                @(SelectedIndex + 1) / @Images.Count
+
+            </MudText>
+
+            @if (Images.Count > 1)
+            {
+                <MudIconButton Icon="@Icons.Material.Filled.ChevronLeft"
+                               Class="nav-left"
+                               Disabled="SelectedIndex == 0"
+                               Color="Color.Inherit"
+                               OnClick="Previous" />
+
+                <MudIconButton Icon="@Icons.Material.Filled.ChevronRight"
+                               Class="nav-right"
+                               Disabled="SelectedIndex >= Images.Count - 1"
+                               Color="Color.Inherit"
+                               OnClick="Next" />
+            }
+
+            <div class="image-wrapper">
+
+                @if (CurrentImage is not null)
+                {
+                    <MudImage Src="@CurrentImage.ImageUrl"
+                              Fluid="true"
+                              Class="lightbox-image" />
+                }
+
+            </div>
+
+            @if (Images.Count > 1)
+            {
+                <MudPaper Elevation="0"
+                          Class="thumb-strip">
+
+                    <MudStack Row="true"
+                              Spacing="2"
+                              Justify="Justify.Center">
+
+                        @for (int i = 0; i < Images.Count; i++)
+                        {
+                            var index = i;                 // ← این خط را اضافه کن
+                            var image = Images[i];
+
+                            <MudImage Src="@image.ImageUrl"
+                                      Width="72"
+                                      Height="72"
+                                      ObjectFit="ObjectFit.Cover"
+                                      Class="@ThumbClass(index)"
+                                      @onclick="() => Select(index)" />
+                        }
+
+                    </MudStack>
+
+                </MudPaper>
+            }
+
+        </div>
+
+    </div>
+}
+
+@code {
+
+    [Parameter]
+    public bool Visible { get; set; }
+
+    [Parameter]
+    public List<PortfolioImageDto> Images { get; set; } = [];
+
+    [Parameter]
+    public int SelectedIndex { get; set; }
+
+    [Parameter]
+    public EventCallback<bool> VisibleChanged { get; set; }
+
+    [Parameter]
+    public EventCallback<int> SelectedIndexChanged { get; set; }
+
+    private PortfolioImageDto? CurrentImage
+    {
+        get
+        {
+            if (Images.Count == 0)
+                return null;
+
+            if (SelectedIndex < 0)
+                SelectedIndex = 0;
+
+            if (SelectedIndex >= Images.Count)
+                SelectedIndex = Images.Count - 1;
+
+            return Images[SelectedIndex];
+        }
+    }
+
+    private async Task Close()
+    {
+        Visible = false;
+
+        await VisibleChanged.InvokeAsync(false);
+    }
+
+    private async Task BackdropClick()
+    {
+        await Close();
+    }
+
+    private async Task Previous()
+    {
+        if (SelectedIndex == 0)
+            return;
+
+        SelectedIndex--;
+
+        await SelectedIndexChanged
+            .InvokeAsync(SelectedIndex);
+    }
+
+    private async Task Next()
+    {
+        if (SelectedIndex >= Images.Count - 1)
+            return;
+
+        SelectedIndex++;
+
+        await SelectedIndexChanged
+            .InvokeAsync(SelectedIndex);
+    }
+
+    private async Task Select(int index)
+    {
+        SelectedIndex = index;
+
+        await SelectedIndexChanged
+            .InvokeAsync(index);
+    }
+
+    private string ThumbClass(int index)
+    {
+        return index == SelectedIndex
+            ? "thumb selected"
+            : "thumb";
+    }
+
+}

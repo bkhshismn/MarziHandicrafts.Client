@@ -1,0 +1,573 @@
+@page "/orders"
+
+@using System.Security.Claims
+@using Marzi.Client.Core.Models.Orders
+@using Marzi.Client.Infrastructure.Services
+@using Microsoft.AspNetCore.Components.Authorization
+@using MudBlazor
+
+@inject OrderService OrderService
+@inject AuthenticationStateProvider AuthenticationStateProvider
+
+<MudContainer MaxWidth="MaxWidth.Large" Class="py-6">
+
+    <MudText Typo="Typo.h4" Class="mb-2">
+        سفارش ساخت اثر
+    </MudText>
+
+    <MudText Typo="Typo.body1"
+             Color="Color.Secondary"
+             Class="mb-6">
+
+        مشخصات اثری که می‌خواهید برای شما ساخته شود را ثبت کنید.
+
+    </MudText>
+
+
+    @if (!_authenticated)
+    {
+        <MudAlert Severity="Severity.Info"
+                  Variant="Variant.Outlined">
+
+            برای ثبت سفارش ابتدا وارد حساب کاربری خود شوید.
+
+        </MudAlert>
+    }
+    else
+    {
+        <MudGrid Spacing="3">
+
+            <!-- ================================================= -->
+            <!-- Create Order -->
+            <!-- ================================================= -->
+
+            <MudItem xs="12" md="5">
+
+                <MudCard Elevation="2">
+
+                    <MudCardContent>
+
+                        <MudText Typo="Typo.h6"
+                                 Class="mb-4">
+
+                            ثبت سفارش جدید
+
+                        </MudText>
+
+
+                        <MudForm @ref="_form">
+
+                            <!-- Type -->
+
+                            <MudSelect T="string"
+                                       @bind-Value="_request.Type"
+                                       Label="نوع اثر"
+                                       Variant="Variant.Outlined"
+                                       Required="true"
+                                       RequiredError="نوع اثر را انتخاب کنید."
+                                       Class="mb-4">
+
+                                <MudSelectItem Value="@("مجسمه")">
+                                    مجسمه
+                                </MudSelectItem>
+
+                                <MudSelectItem Value="@("چهره")">
+                                    چهره
+                                </MudSelectItem>
+
+                                <MudSelectItem Value="@("سفارشی")">
+                                    سفارش سفارشی
+                                </MudSelectItem>
+
+                                <MudSelectItem Value="@("سایر")">
+                                    سایر
+                                </MudSelectItem>
+
+                            </MudSelect>
+
+
+                            <!-- Description -->
+
+                            <MudTextField T="string"
+                                          @bind-Value="_request.Description"
+                                          Label="توضیحات سفارش"
+                                          Placeholder="مثلاً اندازه، سبک، جزئیات چهره یا هر توضیحی که درباره سفارش دارید..."
+                                          Variant="Variant.Outlined"
+                                          Lines="5"
+                                          Required="true"
+                                          RequiredError="توضیحات سفارش را وارد کنید."
+                                          Class="mb-4" />
+
+
+                            <!-- Image URL -->
+
+                            <MudTextField T="string"
+                                          @bind-Value="_request.ImageUrl"
+                                          Label="لینک تصویر مرجع"
+                                          Placeholder="https://..."
+                                          Variant="Variant.Outlined"
+                                          Class="mb-4" />
+
+
+                            @if (!string.IsNullOrWhiteSpace(_submitError))
+                            {
+                                <MudAlert Severity="Severity.Error"
+                                          Variant="Variant.Outlined"
+                                          Class="mb-4">
+
+                                    @_submitError
+
+                                </MudAlert>
+                            }
+
+
+                            @if (_submitSuccess)
+                            {
+                                <MudAlert Severity="Severity.Success"
+                                          Variant="Variant.Outlined"
+                                          Class="mb-4">
+
+                                    سفارش شما با موفقیت ثبت شد و پس از بررسی،
+                                    قیمت پیشنهادی اعلام خواهد شد.
+
+                                </MudAlert>
+                            }
+
+
+                            <MudButton Variant="Variant.Filled"
+                                       Color="Color.Primary"
+                                       FullWidth="true"
+                                       Size="Size.Large"
+                                       Disabled="_submitting"
+                                       OnClick="SubmitOrder">
+
+                                @if (_submitting)
+                                {
+                                    <MudProgressCircular Indeterminate="true"
+                                                         Size="Size.Small"
+                                                         Class="me-2" />
+
+                                    <span>در حال ثبت...</span>
+                                }
+                                else
+                                {
+                                    <span>ثبت سفارش</span>
+                                }
+
+                            </MudButton>
+
+                        </MudForm>
+
+                    </MudCardContent>
+
+                </MudCard>
+
+            </MudItem>
+
+
+            <!-- ================================================= -->
+            <!-- Orders -->
+            <!-- ================================================= -->
+
+            <MudItem xs="12" md="7">
+
+                <MudCard Elevation="2">
+
+                    <MudCardContent>
+
+                        <MudText Typo="Typo.h6"
+                                 Class="mb-4">
+
+                            سفارش‌های من
+
+                        </MudText>
+
+
+                        @if (_loadingOrders)
+                        {
+                            <div class="d-flex justify-center pa-8">
+
+                                <MudProgressCircular Indeterminate="true"
+                                                     Color="Color.Primary" />
+
+                            </div>
+                        }
+                        else if (_orders.Count == 0)
+                        {
+                            <MudText Typo="Typo.body2"
+                                     Color="Color.Secondary"
+                                     Class="pa-4">
+
+                                هنوز سفارشی ثبت نکرده‌اید.
+
+                            </MudText>
+                        }
+                        else
+                        {
+                            <MudStack Spacing="2">
+
+                                @foreach (var order in _orders)
+                                {
+                                    <MudPaper Class="pa-4"
+                                              Outlined="true">
+
+                                        <div class="d-flex justify-space-between align-center mb-2">
+
+                                            <MudText Typo="Typo.subtitle1">
+                                                @order.Type
+                                            </MudText>
+
+                                            <MudChip T="string"
+                                                     Size="Size.Small"
+                                                     Color="@GetStatusColor(order.Status)"
+                                                     Variant="Variant.Outlined">
+
+                                                @GetStatusText(order.Status)
+
+                                            </MudChip>
+
+                                        </div>
+
+
+                                        <MudText Typo="Typo.body2"
+                                                 Class="mb-3">
+
+                                            @order.Description
+
+                                        </MudText>
+
+
+                                        @if (order.EstimatedPrice.HasValue)
+                                        {
+                                            <MudText Typo="Typo.caption"
+                                                     Color="Color.Secondary">
+
+                                                قیمت پیشنهادی:
+                                                @order.EstimatedPrice.Value.ToString("N0")
+                                                تومان
+
+                                            </MudText>
+                                        }
+                                        else
+                                        {
+                                            <MudText Typo="Typo.caption"
+                                                     Color="Color.Secondary">
+
+                                                قیمت پس از بررسی سفارش اعلام می‌شود.
+
+                                            </MudText>
+                                        }
+
+
+                                        <MudText Typo="Typo.caption"
+                                                 Color="Color.Secondary"
+                                                 Class="d-block mt-1">
+
+                                            ثبت شده در:
+                                            @(order.CreatedAt.ToLocalTime()
+                                                .ToString("yyyy/MM/dd HH:mm"))
+
+                                        </MudText>
+
+                                    </MudPaper>
+                                }
+
+                            </MudStack>
+                        }
+
+                    </MudCardContent>
+
+                </MudCard>
+
+            </MudItem>
+
+        </MudGrid>
+    }
+
+</MudContainer>
+
+
+@code {
+
+    private MudForm? _form;
+
+    private readonly List<OrderDto> _orders = [];
+
+    private CreateOrderRequest _request = new();
+
+    private bool _authenticated;
+
+    private bool _loadingOrders = true;
+
+    private bool _submitting;
+
+    private bool _submitSuccess;
+
+    private string? _submitError;
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadOrders();
+    }
+
+
+    // ============================================================
+    // Load Orders
+    // ============================================================
+
+    private async Task LoadOrders()
+    {
+        _loadingOrders = true;
+
+        try
+        {
+            var state =
+                await AuthenticationStateProvider
+                    .GetAuthenticationStateAsync();
+
+            var user = state.User;
+
+            _authenticated =
+                user.Identity?.IsAuthenticated == true;
+
+
+            if (!_authenticated)
+            {
+                return;
+            }
+
+
+            var userId =
+                GetUserId(user);
+
+
+            if (userId == Guid.Empty)
+            {
+                Console.WriteLine(
+                    "[ORDERS] UserId claim not found.");
+
+                return;
+            }
+
+
+            var orders =
+                await OrderService.GetByUserAsync(
+                    userId);
+
+
+            _orders.Clear();
+
+            _orders.AddRange(orders);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(
+                $"[ORDERS] Load failed: {ex}");
+        }
+        finally
+        {
+            _loadingOrders = false;
+        }
+    }
+
+
+    // ============================================================
+    // Submit Order
+    // ============================================================
+
+    private async Task SubmitOrder()
+    {
+        _submitError = null;
+        _submitSuccess = false;
+
+        if (_form is null)
+            return;
+
+
+        await _form.Validate();
+
+
+        if (!_form.IsValid)
+            return;
+
+
+        _submitting = true;
+
+
+        try
+        {
+            var state =
+                await AuthenticationStateProvider
+                    .GetAuthenticationStateAsync();
+
+            var user = state.User;
+
+
+            if (user.Identity?.IsAuthenticated != true)
+            {
+                _submitError =
+                    "برای ثبت سفارش باید وارد حساب کاربری شوید.";
+
+                return;
+            }
+
+
+            // ====================================================
+            // مهم:
+            // UserId، Status و Price از Client ارسال نمی‌شوند.
+            //
+            // Backend:
+            // UserId = JWT
+            // Status = Pending
+            // EstimatedPrice = null
+            // ====================================================
+
+            var created =
+                await OrderService.CreateAsync(
+                    _request);
+
+
+            _orders.Insert(
+                0,
+                created);
+
+
+            _request =
+                new CreateOrderRequest();
+
+
+            _submitSuccess = true;
+
+
+            await InvokeAsync(
+                StateHasChanged);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(
+                $"[ORDERS] Create failed: {ex}");
+
+            _submitError =
+                "ثبت سفارش انجام نشد. لطفاً دوباره تلاش کنید.";
+        }
+        finally
+        {
+            _submitting = false;
+        }
+    }
+
+
+    // ============================================================
+    // User Id
+    // ============================================================
+
+    private static Guid GetUserId(
+        ClaimsPrincipal user)
+    {
+        var value =
+            user.FindFirst(
+                ClaimTypes.NameIdentifier)?.Value;
+
+        if (Guid.TryParse(
+                value,
+                out var userId))
+        {
+            return userId;
+        }
+
+
+        value =
+            user.FindFirst("sub")?.Value;
+
+        if (Guid.TryParse(
+                value,
+                out userId))
+        {
+            return userId;
+        }
+
+
+        value =
+            user.FindFirst("nameid")?.Value;
+
+        if (Guid.TryParse(
+                value,
+                out userId))
+        {
+            return userId;
+        }
+
+
+        return Guid.Empty;
+    }
+
+
+    // ============================================================
+    // Status
+    // ============================================================
+
+    private static Color GetStatusColor(
+        string? status)
+    {
+        return status?.ToLowerInvariant() switch
+        {
+            "new" =>
+                Color.Info,
+
+            "pending" =>
+                Color.Warning,
+
+            "processing" =>
+                Color.Warning,
+
+            "completed" =>
+                Color.Success,
+
+            "done" =>
+                Color.Success,
+
+            "cancelled" =>
+                Color.Error,
+
+            "canceled" =>
+                Color.Error,
+
+            _ =>
+                Color.Default
+        };
+    }
+
+
+    private static string GetStatusText(
+        string? status)
+    {
+        return status?.ToLowerInvariant() switch
+        {
+            "new" =>
+                "جدید",
+
+            "pending" =>
+                "در انتظار بررسی",
+
+            "processing" =>
+                "در حال انجام",
+
+            "completed" =>
+                "تکمیل شده",
+
+            "done" =>
+                "تکمیل شده",
+
+            "cancelled" =>
+                "لغو شده",
+
+            "canceled" =>
+                "لغو شده",
+
+            _ =>
+                status ?? "نامشخص"
+        };
+    }
+}
+

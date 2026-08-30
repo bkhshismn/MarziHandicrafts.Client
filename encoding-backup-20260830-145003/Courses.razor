@@ -1,0 +1,402 @@
+@page "/courses"
+
+@using Marzi.Client.Core.Models.Courses
+@using Marzi.Client.Infrastructure.Services
+
+@inject CourseService CourseService
+@inject ISnackbar Snackbar
+
+
+<!-- Header -->
+
+<MudStack Row="true"
+          Justify="Justify.SpaceBetween"
+          AlignItems="AlignItems.Center">
+
+    <div>
+
+        <MudText Typo="Typo.h4">
+            دوره‌های آموزشی
+        </MudText>
+
+        <MudText Typo="Typo.body2"
+                 Color="Color.Secondary">
+
+            دوره‌های منتشر شده
+
+        </MudText>
+
+    </div>
+
+    @if (!_loading)
+    {
+        <MudChip T="string"
+                 Color="Color.Primary"
+                 Variant="Variant.Outlined">
+
+            @_filteredCourses.Count دوره
+
+        </MudChip>
+    }
+
+</MudStack>
+
+
+<!-- Search & Filter -->
+@if (!_loading && _courses.Count > 0)
+{
+    <MudPaper Class="course-filters pa-4"
+              Elevation="1">
+
+        <MudGrid>
+
+            <!-- Search -->
+
+            <MudItem xs="12"
+                     md="7">
+
+                <MudTextField T="string"
+                              @bind-Value="_searchText"
+                              @bind-Value:after="ApplyFilters"
+                              Label="جستجوی دوره"
+                              Placeholder="عنوان، توضیحات یا دسته‌بندی..."
+                              Variant="Variant.Outlined"
+                              Adornment="Adornment.Start"
+                              AdornmentIcon="@Icons.Material.Filled.Search"
+                              Clearable="true" />
+
+            </MudItem>
+
+
+            <!-- Category -->
+
+            <MudItem xs="12"
+                     md="5">
+
+                <MudSelect T="string"
+                           @bind-Value="_selectedCategory"
+                           @bind-Value:after="ApplyFilters"
+                           Label="دسته‌بندی"
+                           Variant="Variant.Outlined">
+
+                    <MudSelectItem T="string"
+                                   Value="@AllCategories">
+
+                        همه دسته‌بندی‌ها
+
+                    </MudSelectItem>
+
+                    @foreach (var category in _categories)
+                    {
+                        <MudSelectItem T="string"
+                                       Value="@category">
+
+                            @category
+
+                        </MudSelectItem>
+                    }
+
+                </MudSelect>
+
+            </MudItem>
+
+        </MudGrid>
+
+
+        <!-- Active Filters -->
+        @if (HasActiveFilters)
+        {
+            <MudStack Row="true"
+                      AlignItems="AlignItems.Center"
+                      Spacing="1"
+                      Class="mt-3">
+
+                <MudText Typo="Typo.caption"
+                         Color="Color.Secondary">
+
+                    فیلتر فعال:
+
+                </MudText>
+
+
+                @if (!string.IsNullOrWhiteSpace(_searchText))
+                {
+                    <MudChip T="string"
+                             Size="Size.Small"
+                             Closeable="true"
+                             OnClose="ClearSearch">
+
+                        @_searchText
+
+                    </MudChip>
+                }
+
+
+                @if (_selectedCategory != AllCategories)
+                {
+                    <MudChip T="string"
+                             Size="Size.Small"
+                             Closeable="true"
+                             OnClose="ClearCategory">
+
+                        @_selectedCategory
+
+                    </MudChip>
+                }
+
+
+                <MudButton Variant="Variant.Text"
+                           Size="Size.Small"
+                           OnClick="ClearFilters">
+
+                    حذف فیلترها
+
+                </MudButton>
+
+            </MudStack>
+        }
+
+    </MudPaper>
+}
+
+
+<!-- Error -->
+@if (!string.IsNullOrWhiteSpace(_errorMessage))
+{
+    <MudAlert Severity="Severity.Error"
+              Variant="Variant.Filled"
+              Dense="true">
+
+        @_errorMessage
+
+    </MudAlert>
+
+    <MudButton Variant="Variant.Outlined"
+               Color="Color.Primary"
+               Class="mt-3"
+               OnClick="LoadCourses">
+
+        تلاش مجدد
+
+    </MudButton>
+}
+else if (_loading)
+{
+    <CourseLoading />
+}
+else if (_courses.Count == 0)
+{
+    <CourseEmptyState />
+}
+else if (_filteredCourses.Count == 0)
+{
+    <MudPaper Class="course-search-empty pa-8 text-center"
+              Elevation="0">
+
+        <MudIcon Icon="@Icons.Material.Filled.SearchOff"
+                 Size="Size.Large"
+                 Color="Color.Secondary" />
+
+        <MudText Typo="Typo.h6"
+                 Class="mt-3">
+
+            نتیجه‌ای پیدا نشد
+
+        </MudText>
+
+        <MudText Typo="Typo.body2"
+                 Color="Color.Secondary">
+
+            دوره‌ای با معیار جستجوی فعلی پیدا نشد.
+
+        </MudText>
+
+        <MudButton Variant="Variant.Outlined"
+                   Color="Color.Primary"
+                   Class="mt-4"
+                   OnClick="ClearFilters">
+
+            حذف فیلترها
+
+        </MudButton>
+
+    </MudPaper>
+}
+else
+{
+    <MudGrid Class="mt-6">
+
+        <CourseGrid Courses="_filteredCourses" />
+
+    </MudGrid>
+}
+
+@code {
+
+    private const string AllCategories = "همه";
+
+
+    private IReadOnlyList<CourseDto> _courses = [];
+
+    private IReadOnlyList<CourseDto> _filteredCourses = [];
+
+    private List<string> _categories = [];
+
+
+    private bool _loading = true;
+
+    private string? _errorMessage;
+
+
+    private string _searchText = string.Empty;
+
+    private string _selectedCategory = AllCategories;
+
+
+    private bool HasActiveFilters =>
+        !string.IsNullOrWhiteSpace(_searchText) ||
+        _selectedCategory != AllCategories;
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadCourses();
+    }
+
+
+    private async Task LoadCourses()
+    {
+        _loading = true;
+
+        _errorMessage = null;
+
+        try
+        {
+            _courses =
+                await CourseService.GetPublishedAsync();
+
+            BuildCategories();
+
+            ApplyFilters();
+        }
+        catch (Exception ex)
+        {
+            _errorMessage = ex.Message;
+
+            Snackbar.Add(
+                ex.Message,
+                Severity.Error);
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+
+
+    private void BuildCategories()
+    {
+        _categories = _courses
+            .Select(x => x.Category?.Trim())
+            .Where(x => !string.IsNullOrWhiteSpace(x))
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .OrderBy(x => x)
+            .ToList()!;
+    }
+
+
+    private void ApplyFilters()
+    {
+        IEnumerable<CourseDto> query = _courses;
+
+
+        // Category
+
+        if (_selectedCategory != AllCategories)
+        {
+            query = query.Where(x =>
+                string.Equals(
+                    x.Category?.Trim(),
+                    _selectedCategory,
+                    StringComparison.OrdinalIgnoreCase));
+        }
+
+
+        // Search
+
+        if (!string.IsNullOrWhiteSpace(_searchText))
+        {
+            var search =
+                _searchText.Trim();
+
+            query = query.Where(x =>
+                ContainsIgnoreCase(
+                    x.Title,
+                    search)
+
+                ||
+
+                ContainsIgnoreCase(
+                    x.Description,
+                    search)
+
+                ||
+
+                ContainsIgnoreCase(
+                    x.Category,
+                    search)
+
+                ||
+
+                ContainsIgnoreCase(
+                    x.Level,
+                    search));
+        }
+
+
+        _filteredCourses =
+            query.ToList();
+    }
+
+
+    private static bool ContainsIgnoreCase(
+        string? source,
+        string value)
+    {
+        return !string.IsNullOrWhiteSpace(source)
+               &&
+               source.Contains(
+                   value,
+                   StringComparison.OrdinalIgnoreCase);
+    }
+
+
+    private void ClearSearch()
+    {
+        _searchText = string.Empty;
+
+        ApplyFilters();
+    }
+
+
+    private void ClearCategory()
+    {
+        _selectedCategory =
+            AllCategories;
+
+        ApplyFilters();
+    }
+
+
+    private void ClearFilters()
+    {
+        _searchText = string.Empty;
+
+        _selectedCategory =
+            AllCategories;
+
+        ApplyFilters();
+    }
+
+}
+

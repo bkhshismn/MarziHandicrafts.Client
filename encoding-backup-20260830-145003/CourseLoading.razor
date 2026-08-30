@@ -1,0 +1,27 @@
+@using MudBlazor
+
+<MudGrid>
+
+    @for (int i = 0; i < 8; i++)
+    {
+        <MudItem xs="12"
+                 sm="6"
+                 md="4"
+                 lg="3">
+
+            <MudPaper Class="pa-3">
+
+                <MudSkeleton Height="180px" />
+
+                <MudSkeleton Height="26px" Width="70%" Class="mt-4" />
+
+                <MudSkeleton Height="20px" Width="50%" Class="mt-2" />
+
+                <MudSkeleton Height="40px" Class="mt-5" />
+
+            </MudPaper>
+
+        </MudItem>
+    }
+
+</MudGrid>

@@ -1,4 +1,4 @@
-﻿@page "/portfolio"
+@page "/portfolio"
 
 @using Marzi.Client.Core.Models.Portfolio
 @using Marzi.Client.Infrastructure.Services
@@ -17,13 +17,13 @@
         <div>
 
             <MudText Typo="Typo.h4">
-                Ù†Ù…ÙˆÙ†Ù‡ Ú©Ø§Ø±Ù‡Ø§
+                نمونه کارها
             </MudText>
 
             <MudText Typo="Typo.body2"
                      Color="Color.Secondary">
 
-                Ø¢Ø«Ø§Ø± Ù…Ù†ØªØ´Ø± Ø´Ø¯Ù‡
+                آثار منتشر شده
 
             </MudText>
 
@@ -35,7 +35,7 @@
                      Color="Color.Primary"
                      Variant="Variant.Outlined">
 
-                @_filteredItems.Count Ø§Ø«Ø±
+                @_filteredItems.Count اثر
 
             </MudChip>
         }
@@ -59,8 +59,8 @@
                     <MudTextField T="string"
                                   @bind-Value="_searchText"
                                   @bind-Value:after="ApplyFilters"
-                                  Label="Ø¬Ø³ØªØ¬ÙˆÛŒ Ù†Ù…ÙˆÙ†Ù‡ Ú©Ø§Ø±"
-                                  Placeholder="Ø¹Ù†ÙˆØ§Ù†ØŒ ØªÙˆØ¶ÛŒØ­Ø§Øª ÛŒØ§ Ø¯Ø³ØªÙ‡â€ŒØ¨Ù†Ø¯ÛŒ..."
+                                  Label="جستجوی نمونه کار"
+                                  Placeholder="عنوان، توضیحات یا دسته‌بندی..."
                                   Variant="Variant.Outlined"
                                   Adornment="Adornment.Start"
                                   AdornmentIcon="@Icons.Material.Filled.Search"
@@ -77,13 +77,13 @@
                     <MudSelect T="string"
                                @bind-Value="_selectedCategory"
                                @bind-Value:after="ApplyFilters"
-                               Label="Ø¯Ø³ØªÙ‡â€ŒØ¨Ù†Ø¯ÛŒ"
+                               Label="دسته‌بندی"
                                Variant="Variant.Outlined">
 
                         <MudSelectItem T="string"
                                        Value="@AllCategories">
 
-                            Ù‡Ù…Ù‡ Ø¯Ø³ØªÙ‡â€ŒØ¨Ù†Ø¯ÛŒâ€ŒÙ‡Ø§
+                            همه دسته‌بندی‌ها
 
                         </MudSelectItem>
 
@@ -115,7 +115,7 @@
                     <MudText Typo="Typo.caption"
                              Color="Color.Secondary">
 
-                        ÙÛŒÙ„ØªØ± ÙØ¹Ø§Ù„:
+                        فیلتر فعال:
 
                     </MudText>
 
@@ -147,7 +147,7 @@
                                Size="Size.Small"
                                OnClick="ClearFilters">
 
-                        Ø­Ø°Ù ÙÛŒÙ„ØªØ±Ù‡Ø§
+                        حذف فیلترها
 
                     </MudButton>
 
@@ -203,7 +203,7 @@
 
         <MudAlert Severity="Severity.Info">
 
-            Ù†Ù…ÙˆÙ†Ù‡ Ú©Ø§Ø±ÛŒ Ù…Ù†ØªØ´Ø± Ù†Ø´Ø¯Ù‡ Ø§Ø³Øª.
+            نمونه کاری منتشر نشده است.
 
         </MudAlert>
     }
@@ -221,14 +221,14 @@
             <MudText Typo="Typo.h6"
                      Class="mt-3">
 
-                Ù†ØªÛŒØ¬Ù‡â€ŒØ§ÛŒ Ù¾ÛŒØ¯Ø§ Ù†Ø´Ø¯
+                نتیجه‌ای پیدا نشد
 
             </MudText>
 
             <MudText Typo="Typo.body2"
                      Color="Color.Secondary">
 
-                Ù†Ù…ÙˆÙ†Ù‡ Ú©Ø§Ø±ÛŒ Ø¨Ø§ Ù…Ø¹ÛŒØ§Ø± Ø¬Ø³ØªØ¬ÙˆÛŒ ÙØ¹Ù„ÛŒ Ù¾ÛŒØ¯Ø§ Ù†Ø´Ø¯.
+                نمونه کاری با معیار جستجوی فعلی پیدا نشد.
 
             </MudText>
 
@@ -237,7 +237,7 @@
                        Class="mt-4"
                        OnClick="ClearFilters">
 
-                Ø­Ø°Ù ÙÛŒÙ„ØªØ±Ù‡Ø§
+                حذف فیلترها
 
             </MudButton>
 
@@ -255,7 +255,7 @@
 
 @code {
 
-    private const string AllCategories = "Ù‡Ù…Ù‡";
+    private const string AllCategories = "همه";
 
     private IReadOnlyList<PortfolioItemDto> _items = [];
 

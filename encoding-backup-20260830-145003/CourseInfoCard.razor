@@ -1,0 +1,245 @@
+@using Marzi.Client.Core.Models.Courses
+@using MudBlazor
+
+<MudCard Class="course-card"
+         Elevation="2">
+
+    <!-- Cover -->
+
+    <div class="course-card-cover">
+
+        <img src="@CoverImage"
+             alt="@Course.Title"
+             class="course-card-image"
+             style="border-radius:12px; clip-path:inset(0 round 12px);" />
+
+        <div class="course-card-overlay">
+
+            @if (Course.IsFree)
+            {
+                <MudChip T="string"
+                         Color="Color.Success"
+                         Size="Size.Small"
+                         Variant="Variant.Filled">
+
+                    رایگان
+
+                </MudChip>
+            }
+            else
+            {
+                <MudChip T="string"
+                         Color="Color.Primary"
+                         Size="Size.Small"
+                         Variant="Variant.Filled">
+
+                    @($"{Course.Price:N0} تومان")
+
+                </MudChip>
+            }
+
+        </div>
+
+    </div>
+
+
+    <MudCardContent>
+
+        <MudStack Spacing="2">
+
+            <!-- Category -->
+
+            <div>
+
+                <MudChip T="string"
+                         Color="Color.Primary"
+                         Variant="Variant.Outlined"
+                         Size="Size.Small">
+
+                    @(string.IsNullOrWhiteSpace(Course.Category)
+                        ? "عمومی"
+                        : Course.Category)
+
+                </MudChip>
+
+            </div>
+
+
+            <!-- Title -->
+
+            <MudText Typo="Typo.h6"
+                     Class="course-card-title">
+
+                @Course.Title
+
+            </MudText>
+
+
+            <!-- Description -->
+            @if (!string.IsNullOrWhiteSpace(Course.Description))
+            {
+                <MudText Typo="Typo.body2"
+                         Color="Color.Secondary"
+                         Class="course-card-description">
+
+                    @Course.Description
+
+                </MudText>
+            }
+
+
+            <!-- Meta -->
+
+            <MudStack Row="true"
+                      AlignItems="AlignItems.Center"
+                      Spacing="2"
+                      Class="course-card-meta">
+
+                @if (!string.IsNullOrWhiteSpace(Course.Level))
+                {
+                    <MudStack Row="true"
+                              AlignItems="AlignItems.Center"
+                              Spacing="1">
+
+                        <MudIcon Icon="@Icons.Material.Filled.BarChart"
+                                 Size="Size.Small"
+                                 Color="Color.Primary" />
+
+                        <MudText Typo="Typo.caption">
+
+                            @Course.Level
+
+                        </MudText>
+
+                    </MudStack>
+                }
+
+
+                @if (Course.DurationMinutes > 0)
+                {
+                    <MudStack Row="true"
+                              AlignItems="AlignItems.Center"
+                              Spacing="1">
+
+                        <MudIcon Icon="@Icons.Material.Filled.Schedule"
+                                 Size="Size.Small"
+                                 Color="Color.Primary" />
+
+                        <MudText Typo="Typo.caption">
+
+                            @FormatDuration(Course.DurationMinutes)
+
+                        </MudText>
+
+                    </MudStack>
+                }
+
+            </MudStack>
+
+
+            <MudDivider />
+
+
+            <!-- Course Structure -->
+
+            <MudStack Row="true"
+                      Justify="Justify.SpaceBetween"
+                      AlignItems="AlignItems.Center">
+
+                <MudStack Row="true"
+                          AlignItems="AlignItems.Center"
+                          Spacing="1">
+
+                    <MudIcon Icon="@Icons.Material.Filled.MenuBook"
+                             Size="Size.Small"
+                             Color="Color.Secondary" />
+
+                    <MudText Typo="Typo.caption"
+                             Color="Color.Secondary">
+
+                        @Course.Sections.Count سرفصل
+
+                    </MudText>
+
+                </MudStack>
+
+
+                <MudText Typo="Typo.caption"
+                         Color="Color.Secondary">
+
+                    @LessonCount درس
+
+                </MudText>
+
+            </MudStack>
+
+        </MudStack>
+
+    </MudCardContent>
+
+
+    <MudCardActions Class="course-card-actions">
+
+        <MudButton Variant="Variant.Filled"
+                   Color="Color.Primary"
+                   FullWidth="true"
+                   Href="@($"/courses/{Course.Id}")"
+                   EndIcon="@Icons.Material.Filled.ArrowBack">
+
+            مشاهده دوره
+
+        </MudButton>
+
+    </MudCardActions>
+
+</MudCard>
+
+
+@code {
+
+    [Parameter]
+    public required CourseDto Course { get; set; }
+
+
+    private int LessonCount =>
+        Course.Sections
+            .Sum(section => section.Lessons.Count);
+
+
+    private string CoverImage
+    {
+        get
+        {
+            if (string.IsNullOrWhiteSpace(Course.CoverImageUrl))
+                return "/images/course-placeholder.jpg";
+
+            if (Course.CoverImageUrl.Contains(
+                    "example.com",
+                    StringComparison.OrdinalIgnoreCase))
+            {
+                return "/images/course-placeholder.jpg";
+            }
+
+            return Course.CoverImageUrl;
+        }
+    }
+
+
+    private static string FormatDuration(int minutes)
+    {
+        if (minutes <= 0)
+            return string.Empty;
+
+        var hours = minutes / 60;
+        var remainingMinutes = minutes % 60;
+
+        if (hours > 0 && remainingMinutes > 0)
+            return $"{hours} ساعت و {remainingMinutes} دقیقه";
+
+        if (hours > 0)
+            return $"{hours} ساعت";
+
+        return $"{remainingMinutes} دقیقه";
+    }
+
+}

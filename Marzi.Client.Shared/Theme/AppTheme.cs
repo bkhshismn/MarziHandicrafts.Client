@@ -5,12 +5,12 @@ namespace Marzi.Client.Shared.Theme;
 public static class AppTheme
 {
     private static readonly string[] FontFamily =
-    [
-        "Vazirmatn",
+      [
+          "Vazir",
         "Tahoma",
         "Arial",
         "sans-serif"
-    ];
+      ];
 
     public static MudTheme Default => new()
     {

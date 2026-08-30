@@ -1,0 +1,32 @@
+@using MudBlazor
+
+<div class="section-title">
+
+    <MudText Typo="Typo.h5"
+             Class="section-heading">
+        @Title
+    </MudText>
+
+    @if (!string.IsNullOrWhiteSpace(ActionText))
+    {
+        <MudButton Variant="Variant.Text"
+                   Color="Color.Primary"
+                   Href="@ActionLink"
+                   EndIcon="@Icons.Material.Filled.ArrowBack">
+            @ActionText
+        </MudButton>
+    }
+
+</div>
+
+@code {
+
+    [Parameter]
+    public string Title { get; set; } = string.Empty;
+
+    [Parameter]
+    public string? ActionText { get; set; }
+
+    [Parameter]
+    public string? ActionLink { get; set; }
+}

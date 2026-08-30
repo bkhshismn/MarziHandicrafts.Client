@@ -1,0 +1,1210 @@
+@page "/admin/courses"
+
+@using Microsoft.AspNetCore.Components.Authorization
+@using Marzi.Client.Core.Models.Courses
+@using Marzi.Client.Core.Models.Orders
+@using Marzi.Client.Infrastructure.Api
+@using Marzi.Client.Infrastructure.Services
+@using Marzi.Client.Shared.Components.Courses
+@using MudBlazor
+
+@inject CourseService CourseService
+@inject ISnackbar Snackbar
+@inject AuthenticationStateProvider AuthenticationStateProvider
+
+<AuthorizeView Roles="Admin,Instructor">
+
+    <Authorized>
+
+        <MudContainer MaxWidth="MaxWidth.False">
+
+            <MudStack Spacing="4">
+
+                <!-- Header -->
+
+                <MudStack Row="true"
+                          AlignItems="AlignItems.Center"
+                          Justify="Justify.SpaceBetween">
+
+                    <div>
+
+                        <MudText Typo="Typo.h4">
+                            مدیریت دوره‌ها
+                        </MudText>
+
+                        <MudText Typo="Typo.body2"
+                                 Color="Color.Secondary">
+
+                            مدیریت دوره‌ها، فصل‌ها، درس‌ها و ویدئوهای آموزشی
+
+                        </MudText>
+
+                    </div>
+
+                    @if (!_loading)
+                    {
+                        <MudChip T="string"
+                                 Color="Color.Primary"
+                                 Variant="Variant.Outlined">
+
+                            @_courses.Count دوره
+
+                        </MudChip>
+                    }
+
+                </MudStack>
+
+
+                <!-- Error -->
+                @if (!string.IsNullOrWhiteSpace(_errorMessage))
+                {
+                    <MudAlert Severity="Severity.Error"
+                              Variant="Variant.Filled"
+                              Dense="true">
+
+                        @_errorMessage
+
+                    </MudAlert>
+
+                    <MudButton Variant="Variant.Outlined"
+                               Color="Color.Primary"
+                               OnClick="LoadCourses">
+
+                        تلاش مجدد
+
+                    </MudButton>
+                }
+
+
+                <!-- Loading -->
+                @if (_loading)
+                {
+                    <MudStack Spacing="2">
+
+                        @for (var i = 0; i < 3; i++)
+                        {
+                            <MudSkeleton Height="80px"
+                                         Animation="Animation.Wave" />
+                        }
+
+                    </MudStack>
+                }
+                else if (_courses.Count == 0)
+                {
+                    <MudAlert Severity="Severity.Info">
+
+                        هنوز دوره‌ای برای مدیریت وجود ندارد.
+
+                    </MudAlert>
+                }
+                else
+                {
+                    <MudGrid>
+
+                        <!-- Course List -->
+
+                        <MudItem xs="12"
+                                 md="4"
+                                 lg="3">
+
+                            <MudPaper Class="pa-3"
+                                      Elevation="1">
+
+                                <MudText Typo="Typo.h6"
+                                         Class="mb-3">
+
+                                    دوره‌ها
+
+                                </MudText>
+
+                                <MudStack Spacing="1">
+
+                                    @foreach (var course in _courses)
+                                    {
+                                        <MudButton Variant="@(
+                                                   _selectedCourse?.Id == course.Id
+                                                       ? Variant.Filled
+                                                       : Variant.Text)"
+                                                   Color="Color.Primary"
+                                                   FullWidth="true"
+                                                   Class="justify-start"
+                                                   OnClick="@(() => SelectCourse(course))">
+
+                                            <MudStack Row="true"
+                                                      AlignItems="AlignItems.Center"
+                                                      Spacing="2">
+
+                                                <MudIcon Icon="@Icons.Material.Filled.School"
+                                                         Size="Size.Small" />
+
+                                                <span>
+                                                    @course.Title
+                                                </span>
+
+                                            </MudStack>
+
+                                        </MudButton>
+                                    }
+
+                                </MudStack>
+
+                            </MudPaper>
+
+                        </MudItem>
+
+
+                        <!-- Selected Course -->
+
+                        <MudItem xs="12"
+                                 md="8"
+                                 lg="9">
+
+                            @if (_selectedCourse is null)
+                            {
+                                <MudPaper Class="pa-8 text-center"
+                                          Elevation="0">
+
+                                    <MudIcon Icon="@Icons.Material.Filled.TouchApp"
+                                             Size="Size.Large"
+                                             Color="Color.Secondary" />
+
+                                    <MudText Typo="Typo.h6"
+                                             Class="mt-3">
+
+                                        یک دوره را انتخاب کنید
+
+                                    </MudText>
+
+                                    <MudText Typo="Typo.body2"
+                                             Color="Color.Secondary">
+
+                                        برای مدیریت درس‌ها و آپلود ویدئو، ابتدا یک دوره را انتخاب کنید.
+
+                                    </MudText>
+
+                                </MudPaper>
+                            }
+                            else
+                            {
+                                <MudStack Spacing="3">
+
+                                    <!-- Course Header -->
+
+                                    <MudPaper Class="pa-4"
+                                              Elevation="1">
+
+                                        <MudStack Row="true"
+                                                  AlignItems="AlignItems.Center"
+                                                  Justify="Justify.SpaceBetween">
+
+                                            <div>
+
+                                                <MudText Typo="Typo.h5">
+                                                    @_selectedCourse.Title
+                                                </MudText>
+
+                                                <MudText Typo="Typo.body2"
+                                                         Color="Color.Secondary">
+
+                                                    @_selectedCourse.Category
+                                                    ·
+                                                    @_selectedCourse.Level
+
+                                                </MudText>
+
+                                            </div>
+
+                                            <MudStack Row="true"
+                                                      AlignItems="AlignItems.Center"
+                                                      Spacing="2">
+
+                                                @if (_selectedCourse.IsPublished)
+                                                {
+                                                    <MudChip T="string"
+                                                             Color="Color.Success">
+
+                                                        منتشر شده
+
+                                                    </MudChip>
+                                                }
+                                                else
+                                                {
+                                                    <MudChip T="string"
+                                                             Color="Color.Warning">
+
+                                                        منتشر نشده
+
+                                                    </MudChip>
+                                                }
+
+                                                <MudChip T="string"
+                                                         Color="Color.Primary"
+                                                         Variant="Variant.Outlined">
+
+                                                    @_selectedCourse.Sections.Count بخش
+
+                                                </MudChip>
+
+                                            </MudStack>
+
+                                        </MudStack>
+
+                                    </MudPaper>
+
+
+                                    <!-- Sections Header -->
+
+                                    <MudPaper Class="pa-4"
+                                              Elevation="1">
+
+                                        <MudStack Row="true"
+                                                  AlignItems="AlignItems.Center"
+                                                  Justify="Justify.SpaceBetween">
+
+                                            <div>
+
+                                                <MudText Typo="Typo.h6">
+                                                    سرفصل‌ها
+                                                </MudText>
+
+                                                <MudText Typo="Typo.body2"
+                                                         Color="Color.Secondary">
+
+                                                    بخش‌های آموزشی این دوره را مدیریت کنید.
+
+                                                </MudText>
+
+                                            </div>
+
+                                            <MudButton Variant="Variant.Filled"
+                                                       Color="Color.Primary"
+                                                       StartIcon="@Icons.Material.Filled.Add"
+                                                       OnClick="OpenAddSection">
+
+                                                افزودن سرفصل
+
+                                            </MudButton>
+
+                                        </MudStack>
+
+                                    </MudPaper>
+
+
+                                    <!-- Sections -->
+                                    @if (_sectionsLoading)
+                                    {
+                                        <MudStack Spacing="2">
+
+                                            <MudSkeleton Height="70px"
+                                                         Animation="Animation.Wave" />
+
+                                            <MudSkeleton Height="70px"
+                                                         Animation="Animation.Wave" />
+
+                                        </MudStack>
+                                    }
+                                    else if (_sections.Count == 0)
+                                    {
+                                        <MudAlert Severity="Severity.Info">
+
+                                            این دوره هنوز هیچ سرفصلی ندارد.
+
+                                        </MudAlert>
+                                    }
+                                    else
+                                    {
+                                        <MudExpansionPanels MultiExpansion="true">
+
+                                            @foreach (
+                                                var section in _sections
+                                                    .OrderBy(x => x.OrderIndex))
+                                            {
+                                                <MudExpansionPanel>
+
+                                                    <TitleContent>
+
+                                                        <MudStack Row="true"
+                                                                  AlignItems="AlignItems.Center"
+                                                                  Justify="Justify.SpaceBetween"
+                                                                  Style="width:100%;">
+
+                                                            <MudStack Row="true"
+                                                                      AlignItems="AlignItems.Center"
+                                                                      Spacing="2">
+
+                                                                <MudAvatar Color="Color.Primary"
+                                                                           Size="Size.Small">
+
+                                                                    @section.OrderIndex
+
+                                                                </MudAvatar>
+
+                                                                <MudText Typo="Typo.body1">
+                                                                    @section.Title
+                                                                </MudText>
+
+                                                            </MudStack>
+
+                                                            <MudChip T="string"
+                                                                     Size="Size.Small"
+                                                                     Variant="Variant.Outlined">
+
+                                                                @section.Lessons.Count درس
+
+                                                            </MudChip>
+
+                                                        </MudStack>
+
+                                                    </TitleContent>
+
+
+                                                    <!-- Section Content -->
+
+                                                    <ChildContent>
+
+                                                        <MudStack Spacing="3">
+
+                                                            <MudStack Row="true"
+                                                                      AlignItems="AlignItems.Center"
+                                                                      Justify="Justify.SpaceBetween">
+
+                                                                <MudText Typo="Typo.subtitle2">
+
+                                                                    درس‌های این سرفصل
+
+                                                                </MudText>
+
+                                                                <MudButton Variant="Variant.Outlined"
+                                                                           Color="Color.Primary"
+                                                                           Size="Size.Small"
+                                                                           StartIcon="@Icons.Material.Filled.Add"
+                                                                           OnClick="@(() => OpenAddLesson(section))">
+
+                                                                    افزودن درس
+
+                                                                </MudButton>
+
+                                                            </MudStack>
+
+
+                                                            @if (_loadingLessonsForSectionId == section.Id)
+                                                            {
+                                                                <MudSkeleton Height="60px"
+                                                                             Animation="Animation.Wave" />
+                                                            }
+                                                            else if (!section.Lessons.Any())
+                                                            {
+                                                                <MudText Typo="Typo.body2"
+                                                                         Color="Color.Secondary"
+                                                                         Class="pa-3">
+
+                                                                    این سرفصل هنوز درسی ندارد.
+
+                                                                </MudText>
+                                                            }
+                                                            else
+                                                            {
+                                                                <MudStack Spacing="2">
+
+                                                                    @foreach (
+                                                                        var lesson in section.Lessons
+                                                                            .OrderBy(x => x.OrderIndex))
+                                                                    {
+                                                                        <MudPaper Class="lesson-admin-card pa-3"
+                                                                                  Elevation="0">
+
+                                                                            <MudStack Spacing="2">
+
+                                                                                <!-- Lesson -->
+
+                                                                                <MudStack Row="true"
+                                                                                          AlignItems="AlignItems.Center"
+                                                                                          Justify="Justify.SpaceBetween">
+
+                                                                                    <MudStack Row="true"
+                                                                                              AlignItems="AlignItems.Center"
+                                                                                              Spacing="2">
+
+                                                                                        <MudAvatar Color="Color.Primary"
+                                                                                                   Size="Size.Small">
+
+                                                                                            @lesson.OrderIndex
+
+                                                                                        </MudAvatar>
+
+                                                                                        <div>
+
+                                                                                            <MudText Typo="Typo.body1">
+
+                                                                                                @lesson.Title
+
+                                                                                            </MudText>
+
+                                                                                            @if (!string.IsNullOrWhiteSpace(
+                                                                                                lesson.Description))
+                                                                                            {
+                                                                                                <MudText Typo="Typo.caption"
+                                                                                                         Color="Color.Secondary">
+
+                                                                                                    @lesson.Description
+
+                                                                                                </MudText>
+                                                                                            }
+
+                                                                                        </div>
+
+                                                                                    </MudStack>
+
+
+                                                                                    @if (lesson.HasVideo)
+                                                                                    {
+                                                                                        <MudChip T="string"
+                                                                                                 Color="Color.Success"
+                                                                                                 Size="Size.Small">
+
+                                                                                            ویدئو دارد
+
+                                                                                        </MudChip>
+                                                                                    }
+                                                                                    else
+                                                                                    {
+                                                                                        <MudChip T="string"
+                                                                                                 Color="Color.Default"
+                                                                                                 Size="Size.Small">
+
+                                                                                            بدون ویدئو
+
+                                                                                        </MudChip>
+                                                                                    }
+
+                                                                                </MudStack>
+
+
+                                                                                <!-- Upload -->
+
+                                                                                <LessonVideoUpload Lesson="lesson"
+                                                                                                   OnUploaded="OnVideoUploaded" />
+
+                                                                            </MudStack>
+
+                                                                        </MudPaper>
+                                                                    }
+
+                                                                </MudStack>
+                                                            }
+
+                                                        </MudStack>
+
+                                                    </ChildContent>
+
+                                                </MudExpansionPanel>
+                                            }
+
+                                        </MudExpansionPanels>
+                                    }
+
+                                </MudStack>
+                            }
+
+                        </MudItem>
+
+                    </MudGrid>
+                }
+
+            </MudStack>
+
+        </MudContainer>
+
+    </Authorized>
+
+
+    <NotAuthorized>
+
+        <MudContainer MaxWidth="MaxWidth.Medium"
+                      Class="pa-6">
+
+            <MudPaper Class="pa-8 text-center"
+                      Elevation="1">
+
+                <MudIcon Icon="@Icons.Material.Filled.Lock"
+                         Size="Size.Large"
+                         Color="Color.Error" />
+
+                <MudText Typo="Typo.h5"
+                         Class="mt-4">
+
+                    دسترسی غیرمجاز
+
+                </MudText>
+
+                <MudText Typo="Typo.body2"
+                         Color="Color.Secondary"
+                         Class="mt-2">
+
+                    شما اجازه دسترسی به پنل مدیریت دوره‌ها را ندارید.
+
+                </MudText>
+
+                <MudButton Href="/"
+                           Variant="Variant.Outlined"
+                           Color="Color.Primary"
+                           Class="mt-4">
+
+                    بازگشت
+
+                </MudButton>
+
+            </MudPaper>
+
+        </MudContainer>
+
+    </NotAuthorized>
+
+</AuthorizeView>
+
+
+<!-- ============================================================ -->
+<!-- Add Section Dialog -->
+<!-- ============================================================ -->
+
+<MudDialog @bind-Visible="_showSectionDialog">
+
+    <TitleContent>
+        افزودن سرفصل
+    </TitleContent>
+
+    <DialogContent>
+
+        <MudStack Spacing="3">
+
+            <MudTextField @bind-Value="_sectionTitle"
+                          Label="عنوان سرفصل"
+                          Variant="Variant.Outlined"
+                          FullWidth="true"
+                          Required="true" />
+
+            <MudNumericField T="int"
+                             @bind-Value="_sectionOrder"
+                             Label="ترتیب"
+                             Variant="Variant.Outlined"
+                             Min="1"
+                             FullWidth="true" />
+
+            @if (!string.IsNullOrWhiteSpace(_dialogError))
+            {
+                <MudAlert Severity="Severity.Error"
+                          Variant="Variant.Outlined">
+
+                    @_dialogError
+
+                </MudAlert>
+            }
+
+        </MudStack>
+
+    </DialogContent>
+
+    <DialogActions>
+
+        <MudButton Variant="Variant.Text"
+                   OnClick="CloseSectionDialog"
+                   Disabled="_dialogSaving">
+
+            انصراف
+
+        </MudButton>
+
+        <MudButton Variant="Variant.Filled"
+                   Color="Color.Primary"
+                   StartIcon="@Icons.Material.Filled.Save"
+                   OnClick="CreateSection"
+                   Disabled="_dialogSaving">
+
+            @if (_dialogSaving)
+            {
+                <MudProgressCircular Size="Size.Small"
+                                     Indeterminate="true"
+                                     Class="mr-2" />
+            }
+
+            ذخیره سرفصل
+
+        </MudButton>
+
+    </DialogActions>
+
+</MudDialog>
+
+
+<!-- ============================================================ -->
+<!-- Add Lesson Dialog -->
+<!-- ============================================================ -->
+
+<MudDialog @bind-Visible="_showLessonDialog">
+
+    <TitleContent>
+        افزودن درس
+    </TitleContent>
+
+    <DialogContent>
+
+        <MudStack Spacing="3">
+
+            @if (_selectedSectionForLesson is not null)
+            {
+                <MudAlert Severity="Severity.Info"
+                          Variant="Variant.Outlined">
+
+                    سرفصل:
+                    <strong>
+                        @_selectedSectionForLesson.Title
+                    </strong>
+
+                </MudAlert>
+            }
+
+            <MudTextField @bind-Value="_lessonTitle"
+                          Label="عنوان درس"
+                          Variant="Variant.Outlined"
+                          FullWidth="true"
+                          Required="true" />
+
+            <MudTextField @bind-Value="_lessonDescription"
+                          Label="توضیحات"
+                          Variant="Variant.Outlined"
+                          Lines="3"
+                          FullWidth="true" />
+
+            <MudNumericField T="int"
+                             @bind-Value="_lessonDuration"
+                             Label="مدت درس به ثانیه"
+                             Variant="Variant.Outlined"
+                             Min="0"
+                             FullWidth="true" />
+
+            <MudNumericField T="int"
+                             @bind-Value="_lessonOrder"
+                             Label="ترتیب"
+                             Variant="Variant.Outlined"
+                             Min="1"
+                             FullWidth="true" />
+
+            <MudSwitch T="bool"
+                       @bind-Value="_lessonIsFreePreview"
+                       Color="Color.Primary">
+
+                پیش‌نمایش رایگان
+
+            </MudSwitch>
+
+            @if (!string.IsNullOrWhiteSpace(_dialogError))
+            {
+                <MudAlert Severity="Severity.Error"
+                          Variant="Variant.Outlined">
+
+                    @_dialogError
+
+                </MudAlert>
+            }
+
+        </MudStack>
+
+    </DialogContent>
+
+    <DialogActions>
+
+        <MudButton Variant="Variant.Text"
+                   OnClick="CloseLessonDialog"
+                   Disabled="_dialogSaving">
+
+            انصراف
+
+        </MudButton>
+
+        <MudButton Variant="Variant.Filled"
+                   Color="Color.Primary"
+                   StartIcon="@Icons.Material.Filled.Save"
+                   OnClick="CreateLesson"
+                   Disabled="_dialogSaving">
+
+            @if (_dialogSaving)
+            {
+                <MudProgressCircular Size="Size.Small"
+                                     Indeterminate="true"
+                                     Class="mr-2" />
+            }
+
+            ذخیره درس
+
+        </MudButton>
+
+    </DialogActions>
+
+</MudDialog>
+
+
+@code {
+
+    // ============================================================
+    // Courses
+    // ============================================================
+
+    private IReadOnlyList<CourseDto> _courses = [];
+
+    private CourseDto? _selectedCourse;
+
+    private bool _loading = true;
+
+    private string? _errorMessage;
+
+
+    // ============================================================
+    // Sections
+    // ============================================================
+
+    private IReadOnlyList<CourseSectionDto> _sections = [];
+
+    private bool _sectionsLoading;
+
+    private bool _showSectionDialog;
+
+    private string _sectionTitle = string.Empty;
+
+    private int _sectionOrder = 1;
+
+
+    // ============================================================
+    // Lessons
+    // ============================================================
+
+    private CourseSectionDto? _selectedSectionForLesson;
+
+    private Guid? _loadingLessonsForSectionId;
+
+    private bool _showLessonDialog;
+
+    private string _lessonTitle = string.Empty;
+
+    private string? _lessonDescription;
+
+    private int _lessonDuration;
+
+    private int _lessonOrder = 1;
+
+    private bool _lessonIsFreePreview;
+
+
+    // ============================================================
+    // Dialog State
+    // ============================================================
+
+    private bool _dialogSaving;
+
+    private string? _dialogError;
+
+
+    // ============================================================
+    // Initialization
+    // ============================================================
+
+    protected override async Task OnInitializedAsync()
+    {
+        await DebugAuthentication();
+
+        await LoadCourses();
+    }
+
+
+    // ============================================================
+    // Authentication Debug
+    // ============================================================
+
+    private async Task DebugAuthentication()
+    {
+        try
+        {
+            var state =
+                await AuthenticationStateProvider
+                    .GetAuthenticationStateAsync();
+
+            var user = state.User;
+
+            Console.WriteLine(
+                "================ ADMIN PAGE AUTH DEBUG ================");
+
+            Console.WriteLine(
+                $"[ADMIN PAGE] IsAuthenticated: {user.Identity?.IsAuthenticated}");
+
+            Console.WriteLine(
+                $"[ADMIN PAGE] AuthenticationType: {user.Identity?.AuthenticationType}");
+
+            Console.WriteLine(
+                $"[ADMIN PAGE] Name: {user.Identity?.Name}");
+
+            Console.WriteLine(
+                $"[ADMIN PAGE] IsAdmin: {user.IsInRole("Admin")}");
+
+            Console.WriteLine(
+                $"[ADMIN PAGE] IsInstructor: {user.IsInRole("Instructor")}");
+
+            foreach (var claim in user.Claims)
+            {
+                Console.WriteLine(
+                    $"[ADMIN PAGE CLAIM] {claim.Type} = {claim.Value}");
+            }
+
+            Console.WriteLine(
+                "========================================================");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(
+                $"[ADMIN PAGE AUTH ERROR] {ex}");
+        }
+    }
+
+
+    // ============================================================
+    // Load Courses
+    // ============================================================
+
+    private async Task LoadCourses()
+    {
+        _loading = true;
+        _errorMessage = null;
+
+        try
+        {
+            _courses =
+                await CourseService.GetAllAsync();
+
+            if (_selectedCourse is not null)
+            {
+                var selectedId =
+                    _selectedCourse.Id;
+
+                _selectedCourse =
+                    _courses.FirstOrDefault(
+                        x => x.Id == selectedId);
+
+                if (_selectedCourse is not null)
+                {
+                    await LoadSections();
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            _errorMessage = ex.Message;
+
+            Snackbar.Add(
+                ex.Message,
+                Severity.Error);
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+
+
+    // ============================================================
+    // Select Course
+    // ============================================================
+
+    private async Task SelectCourse(CourseDto course)
+    {
+        _selectedCourse = course;
+
+        _sections = [];
+
+        await LoadSections();
+    }
+
+
+    // ============================================================
+    // Load Sections
+    // ============================================================
+
+    private async Task LoadSections()
+    {
+        if (_selectedCourse is null)
+            return;
+
+        _sectionsLoading = true;
+
+        try
+        {
+            _sections =
+                await CourseService.GetSectionsAsync(
+                    _selectedCourse.Id);
+
+            foreach (var section in _sections)
+            {
+                section.Lessons = [];
+            }
+
+            _selectedCourse.Sections =
+                _sections.ToList();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add(
+                ex.Message,
+                Severity.Error);
+        }
+        finally
+        {
+            _sectionsLoading = false;
+        }
+    }
+
+
+    // ============================================================
+    // Load Lessons
+    // ============================================================
+
+    private async Task LoadLessons(
+        CourseSectionDto section)
+    {
+        _loadingLessonsForSectionId =
+            section.Id;
+
+        try
+        {
+            var lessons =
+                await CourseService.GetLessonsAsync(
+                    section.Id);
+
+            section.Lessons =
+                lessons.ToList();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add(
+                ex.Message,
+                Severity.Error);
+        }
+        finally
+        {
+            _loadingLessonsForSectionId = null;
+        }
+    }
+
+
+    // ============================================================
+    // Section Dialog
+    // ============================================================
+
+    private void OpenAddSection()
+    {
+        if (_selectedCourse is null)
+            return;
+
+        _sectionTitle = string.Empty;
+
+        _sectionOrder =
+            _sections.Count == 0
+                ? 1
+                : _sections.Max(x => x.OrderIndex) + 1;
+
+        _dialogError = null;
+
+        _showSectionDialog = true;
+    }
+
+
+    private void CloseSectionDialog()
+    {
+        if (_dialogSaving)
+            return;
+
+        _showSectionDialog = false;
+
+        _dialogError = null;
+    }
+
+
+    private async Task CreateSection()
+    {
+        if (_selectedCourse is null)
+            return;
+
+        if (string.IsNullOrWhiteSpace(_sectionTitle))
+        {
+            _dialogError =
+                "عنوان سرفصل را وارد کنید.";
+
+            return;
+        }
+
+        _dialogSaving = true;
+        _dialogError = null;
+
+        try
+        {
+            var request =
+                new CourseSectionCreateRequest
+                {
+                    Title = _sectionTitle.Trim(),
+                    OrderIndex = _sectionOrder
+                };
+
+            await CourseService.CreateSectionAsync(
+                _selectedCourse.Id,
+                request);
+
+            _showSectionDialog = false;
+
+            Snackbar.Add(
+                "سرفصل با موفقیت ایجاد شد.",
+                Severity.Success);
+
+            await LoadSections();
+        }
+        catch (Exception ex)
+        {
+            _dialogError = ex.Message;
+
+            Snackbar.Add(
+                ex.Message,
+                Severity.Error);
+        }
+        finally
+        {
+            _dialogSaving = false;
+        }
+    }
+
+
+    // ============================================================
+    // Lesson Dialog
+    // ============================================================
+
+    private void OpenAddLesson(
+        CourseSectionDto section)
+    {
+        _selectedSectionForLesson =
+            section;
+
+        _lessonTitle = string.Empty;
+
+        _lessonDescription = null;
+
+        _lessonDuration = 0;
+
+        _lessonOrder =
+            section.Lessons.Count == 0
+                ? 1
+                : section.Lessons.Max(
+                    x => x.OrderIndex) + 1;
+
+        _lessonIsFreePreview = false;
+
+        _dialogError = null;
+
+        _showLessonDialog = true;
+    }
+
+
+    private void CloseLessonDialog()
+    {
+        if (_dialogSaving)
+            return;
+
+        _showLessonDialog = false;
+
+        _selectedSectionForLesson = null;
+
+        _dialogError = null;
+    }
+
+
+    private async Task CreateLesson()
+    {
+        if (_selectedSectionForLesson is null)
+            return;
+
+        if (string.IsNullOrWhiteSpace(_lessonTitle))
+        {
+            _dialogError =
+                "عنوان درس را وارد کنید.";
+
+            return;
+        }
+
+        _dialogSaving = true;
+        _dialogError = null;
+
+        try
+        {
+            var request =
+                new CourseLessonCreateRequest
+                {
+                    Title =
+                        _lessonTitle.Trim(),
+
+                    Description =
+                        string.IsNullOrWhiteSpace(
+                            _lessonDescription)
+                            ? null
+                            : _lessonDescription.Trim(),
+
+                    DurationSeconds =
+                        _lessonDuration,
+
+                    IsFreePreview =
+                        _lessonIsFreePreview,
+
+                    OrderIndex =
+                        _lessonOrder
+                };
+
+            await CourseService.CreateLessonAsync(
+                _selectedSectionForLesson.Id,
+                request);
+
+            var section =
+                _selectedSectionForLesson;
+
+            _showLessonDialog = false;
+
+            _selectedSectionForLesson = null;
+
+            Snackbar.Add(
+                "درس با موفقیت ایجاد شد.",
+                Severity.Success);
+
+            await LoadLessons(section);
+        }
+        catch (Exception ex)
+        {
+            _dialogError = ex.Message;
+
+            Snackbar.Add(
+                ex.Message,
+                Severity.Error);
+        }
+        finally
+        {
+            _dialogSaving = false;
+        }
+    }
+
+
+    // ============================================================
+    // Video Uploaded
+    // ============================================================
+
+    private Task OnVideoUploaded(
+        CourseEpisodeDto episode)
+    {
+        Snackbar.Add(
+            $"ویدئوی «{episode.Title}» دریافت شد و برای پردازش قرار گرفت.",
+            Severity.Success);
+
+        return InvokeAsync(
+            StateHasChanged);
+    }
+}
+

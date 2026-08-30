@@ -1,0 +1,136 @@
+@using Marzi.Client.Core.Models.Courses
+@using Marzi.Client.Infrastructure.Services
+@using MudBlazor
+
+@inject CourseLessonProgressService ProgressService
+
+
+@if (Sections.Any())
+{
+    <div class="lesson-list">
+
+        <MudText Typo="Typo.h5"
+                 Class="lesson-list-title">
+
+            سرفصل‌های دوره
+
+        </MudText>
+
+
+        <MudExpansionPanels MultiExpansion="true">
+
+            @foreach (var section in Sections.OrderBy(x => x.OrderIndex))
+            {
+                <MudExpansionPanel Text="@section.Title">
+
+                    @if (section.Lessons.Any())
+                    {
+                        <MudList T="CourseLessonDto"
+                                 Dense="true">
+
+                            @foreach (var lesson in section.Lessons.OrderBy(x => x.OrderIndex))
+                            {
+                                <LessonItem Lesson="lesson"
+                                            LessonSelected="OnLessonSelected" />
+                            }
+
+                        </MudList>
+                    }
+                    else
+                    {
+                        <MudText Typo="Typo.body2"
+                                 Color="Color.Secondary"
+                                 Class="pa-4">
+
+                            در این سرفصل هنوز درسی قرار نگرفته است.
+
+                        </MudText>
+                    }
+
+                </MudExpansionPanel>
+            }
+
+        </MudExpansionPanels>
+
+    </div>
+}
+else
+{
+    <MudAlert Severity="Severity.Info">
+
+        هنوز سرفصلی برای این دوره ثبت نشده است.
+
+    </MudAlert>
+}
+
+
+@code {
+
+    [Parameter]
+    public IEnumerable<CourseSectionDto> Sections { get; set; }
+        = Enumerable.Empty<CourseSectionDto>();
+
+
+    [Parameter]
+    public EventCallback<CourseLessonDto> LessonSelected { get; set; }
+
+
+    private readonly Dictionary<Guid, CourseLessonProgressDto> _progress
+        = new();
+
+
+    protected override async Task OnParametersSetAsync()
+    {
+        await LoadProgressAsync();
+    }
+
+
+    private async Task LoadProgressAsync()
+    {
+        _progress.Clear();
+
+        var lessons =
+            Sections
+                .SelectMany(x => x.Lessons)
+                .ToList();
+
+
+        foreach (var lesson in lessons)
+        {
+            try
+            {
+                var progress =
+                    await ProgressService.GetProgressAsync(
+                        lesson.Id);
+
+                if (progress is not null)
+                {
+                    _progress[lesson.Id] = progress;
+                }
+            }
+            catch
+            {
+                // اگر کاربر لاگین نباشد
+                // یا Progress قابل دریافت نباشد،
+                // لیست درس‌ها همچنان نمایش داده می‌شود.
+            }
+        }
+    }
+
+
+    private bool IsCompleted(Guid lessonId)
+    {
+        return _progress.TryGetValue(
+                   lessonId,
+                   out var progress)
+               && progress.Completed;
+    }
+
+
+    private async Task OnLessonSelected(
+        CourseLessonDto lesson)
+    {
+        await LessonSelected.InvokeAsync(lesson);
+    }
+
+}

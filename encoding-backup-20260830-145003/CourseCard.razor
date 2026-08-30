@@ -1,0 +1,118 @@
+@using Marzi.Client.Core.Models.Courses
+@using MudBlazor
+
+@if (Course is null)
+{
+    <MudCard Elevation="2" Class="course-card pa-4">
+        <MudText Color="Color.Error">
+            Course is null
+        </MudText>
+    </MudCard>
+}
+else
+{
+    <MudCard Class="course-card" Elevation="2">
+
+        <MudCardMedia Height="180"
+                      Image="@CoverImage" />
+
+        <MudCardContent>
+
+            <MudText Typo="Typo.h6" Class="mb-2">
+                @Course.Title
+            </MudText>
+
+            <MudText Typo="Typo.body2"
+                     Color="Color.Secondary"
+                     Class="mb-3">
+                @Course.Level
+            </MudText>
+
+            <div class="d-flex justify-space-between align-center">
+
+                <MudChip T="string"
+                         Color="Color.Primary"
+                         Variant="Variant.Outlined">
+
+                    @(string.IsNullOrWhiteSpace(Course.Category)
+                        ? "عمومی"
+                        : Course.Category)
+
+                </MudChip>
+
+                @if (Course.IsFree)
+                {
+                    <MudChip T="string"
+                             Color="Color.Success">
+
+                        رایگان
+
+                    </MudChip>
+                }
+                else
+                {
+                    <MudText Typo="Typo.subtitle2"
+                             Color="Color.Primary">
+
+                        @($"{Course.Price:N0} تومان")
+
+                    </MudText>
+                }
+
+            </div>
+
+            <MudDivider Class="my-3" />
+
+            <MudText Typo="Typo.caption">
+                مدت دوره: @Course.DurationMinutes دقیقه
+            </MudText>
+
+        </MudCardContent>
+
+        <MudCardActions>
+
+            <MudButton Variant="Variant.Filled"
+                       Color="Color.Primary"
+                       FullWidth="true"
+                       Href="@($"/courses/{Course.Id}")">
+
+                مشاهده دوره
+
+            </MudButton>
+
+        </MudCardActions>
+
+    </MudCard>
+}
+
+@code {
+
+    [Parameter]
+    public CourseDto? Course { get; set; }
+
+    private string CoverImage
+    {
+        get
+        {
+            if (Course is null)
+                return "/images/course-placeholder.jpg";
+
+            if (string.IsNullOrWhiteSpace(Course.CoverImageUrl))
+                return "/images/course-placeholder.jpg";
+
+            if (Course.CoverImageUrl.Contains("example.com"))
+                return "/images/course-placeholder.jpg";
+
+            return Course.CoverImageUrl;
+        }
+    }
+
+}
+
+<style>
+    .course-card {
+        border-radius: 18px;
+        overflow: hidden;
+        height: 100%;
+    }
+</style>

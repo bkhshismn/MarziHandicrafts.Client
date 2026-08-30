@@ -1,4 +1,4 @@
-﻿@page "/admin/courses"
+@page "/admin/courses"
 
 @using Microsoft.AspNetCore.Components.Authorization
 @using Marzi.Client.Core.Models.Courses
@@ -29,13 +29,13 @@
                     <div>
 
                         <MudText Typo="Typo.h4">
-                            Ù…Ø¯ÛŒØ±ÛŒØª Ø¯ÙˆØ±Ù‡â€ŒÙ‡Ø§
+                            مدیریت دوره‌ها
                         </MudText>
 
                         <MudText Typo="Typo.body2"
                                  Color="Color.Secondary">
 
-                            Ù…Ø¯ÛŒØ±ÛŒØª Ø¯ÙˆØ±Ù‡â€ŒÙ‡Ø§ØŒ ÙØµÙ„â€ŒÙ‡Ø§ØŒ Ø¯Ø±Ø³â€ŒÙ‡Ø§ Ùˆ ÙˆÛŒØ¯Ø¦ÙˆÙ‡Ø§ÛŒ Ø¢Ù…ÙˆØ²Ø´ÛŒ
+                            مدیریت دوره‌ها، فصل‌ها، درس‌ها و ویدئوهای آموزشی
 
                         </MudText>
 
@@ -47,7 +47,7 @@
                                  Color="Color.Primary"
                                  Variant="Variant.Outlined">
 
-                            @_courses.Count Ø¯ÙˆØ±Ù‡
+                            @_courses.Count دوره
 
                         </MudChip>
                     }
@@ -70,7 +70,7 @@
                                Color="Color.Primary"
                                OnClick="LoadCourses">
 
-                        ØªÙ„Ø§Ø´ Ù…Ø¬Ø¯Ø¯
+                        تلاش مجدد
 
                     </MudButton>
                 }
@@ -93,7 +93,7 @@
                 {
                     <MudAlert Severity="Severity.Info">
 
-                        Ù‡Ù†ÙˆØ² Ø¯ÙˆØ±Ù‡â€ŒØ§ÛŒ Ø¨Ø±Ø§ÛŒ Ù…Ø¯ÛŒØ±ÛŒØª ÙˆØ¬ÙˆØ¯ Ù†Ø¯Ø§Ø±Ø¯.
+                        هنوز دوره‌ای برای مدیریت وجود ندارد.
 
                     </MudAlert>
                 }
@@ -113,7 +113,7 @@
                                 <MudText Typo="Typo.h6"
                                          Class="mb-3">
 
-                                    Ø¯ÙˆØ±Ù‡â€ŒÙ‡Ø§
+                                    دوره‌ها
 
                                 </MudText>
 
@@ -171,14 +171,14 @@
                                     <MudText Typo="Typo.h6"
                                              Class="mt-3">
 
-                                        ÛŒÚ© Ø¯ÙˆØ±Ù‡ Ø±Ø§ Ø§Ù†ØªØ®Ø§Ø¨ Ú©Ù†ÛŒØ¯
+                                        یک دوره را انتخاب کنید
 
                                     </MudText>
 
                                     <MudText Typo="Typo.body2"
                                              Color="Color.Secondary">
 
-                                        Ø¨Ø±Ø§ÛŒ Ù…Ø¯ÛŒØ±ÛŒØª Ø¯Ø±Ø³â€ŒÙ‡Ø§ Ùˆ Ø¢Ù¾Ù„ÙˆØ¯ ÙˆÛŒØ¯Ø¦ÙˆØŒ Ø§Ø¨ØªØ¯Ø§ ÛŒÚ© Ø¯ÙˆØ±Ù‡ Ø±Ø§ Ø§Ù†ØªØ®Ø§Ø¨ Ú©Ù†ÛŒØ¯.
+                                        برای مدیریت درس‌ها و آپلود ویدئو، ابتدا یک دوره را انتخاب کنید.
 
                                     </MudText>
 
@@ -207,7 +207,7 @@
                                                          Color="Color.Secondary">
 
                                                     @_selectedCourse.Category
-                                                    Â·
+                                                    ·
                                                     @_selectedCourse.Level
 
                                                 </MudText>
@@ -223,7 +223,7 @@
                                                     <MudChip T="string"
                                                              Color="Color.Success">
 
-                                                        Ù…Ù†ØªØ´Ø± Ø´Ø¯Ù‡
+                                                        منتشر شده
 
                                                     </MudChip>
                                                 }
@@ -232,7 +232,7 @@
                                                     <MudChip T="string"
                                                              Color="Color.Warning">
 
-                                                        Ù…Ù†ØªØ´Ø± Ù†Ø´Ø¯Ù‡
+                                                        منتشر نشده
 
                                                     </MudChip>
                                                 }
@@ -241,7 +241,7 @@
                                                          Color="Color.Primary"
                                                          Variant="Variant.Outlined">
 
-                                                    @_selectedCourse.Sections.Count Ø¨Ø®Ø´
+                                                    @_selectedCourse.Sections.Count بخش
 
                                                 </MudChip>
 
@@ -264,13 +264,13 @@
                                             <div>
 
                                                 <MudText Typo="Typo.h6">
-                                                    Ø³Ø±ÙØµÙ„â€ŒÙ‡Ø§
+                                                    سرفصل‌ها
                                                 </MudText>
 
                                                 <MudText Typo="Typo.body2"
                                                          Color="Color.Secondary">
 
-                                                    Ø¨Ø®Ø´â€ŒÙ‡Ø§ÛŒ Ø¢Ù…ÙˆØ²Ø´ÛŒ Ø§ÛŒÙ† Ø¯ÙˆØ±Ù‡ Ø±Ø§ Ù…Ø¯ÛŒØ±ÛŒØª Ú©Ù†ÛŒØ¯.
+                                                    بخش‌های آموزشی این دوره را مدیریت کنید.
 
                                                 </MudText>
 
@@ -281,7 +281,7 @@
                                                        StartIcon="@Icons.Material.Filled.Add"
                                                        OnClick="OpenAddSection">
 
-                                                Ø§ÙØ²ÙˆØ¯Ù† Ø³Ø±ÙØµÙ„
+                                                افزودن سرفصل
 
                                             </MudButton>
 
@@ -307,7 +307,7 @@
                                     {
                                         <MudAlert Severity="Severity.Info">
 
-                                            Ø§ÛŒÙ† Ø¯ÙˆØ±Ù‡ Ù‡Ù†ÙˆØ² Ù‡ÛŒÚ† Ø³Ø±ÙØµÙ„ÛŒ Ù†Ø¯Ø§Ø±Ø¯.
+                                            این دوره هنوز هیچ سرفصلی ندارد.
 
                                         </MudAlert>
                                     }
@@ -349,7 +349,7 @@
                                                                      Size="Size.Small"
                                                                      Variant="Variant.Outlined">
 
-                                                                @section.Lessons.Count Ø¯Ø±Ø³
+                                                                @section.Lessons.Count درس
 
                                                             </MudChip>
 
@@ -370,7 +370,7 @@
 
                                                                 <MudText Typo="Typo.subtitle2">
 
-                                                                    Ø¯Ø±Ø³â€ŒÙ‡Ø§ÛŒ Ø§ÛŒÙ† Ø³Ø±ÙØµÙ„
+                                                                    درس‌های این سرفصل
 
                                                                 </MudText>
 
@@ -380,7 +380,7 @@
                                                                            StartIcon="@Icons.Material.Filled.Add"
                                                                            OnClick="@(() => OpenAddLesson(section))">
 
-                                                                    Ø§ÙØ²ÙˆØ¯Ù† Ø¯Ø±Ø³
+                                                                    افزودن درس
 
                                                                 </MudButton>
 
@@ -398,7 +398,7 @@
                                                                          Color="Color.Secondary"
                                                                          Class="pa-3">
 
-                                                                    Ø§ÛŒÙ† Ø³Ø±ÙØµÙ„ Ù‡Ù†ÙˆØ² Ø¯Ø±Ø³ÛŒ Ù†Ø¯Ø§Ø±Ø¯.
+                                                                    این سرفصل هنوز درسی ندارد.
 
                                                                 </MudText>
                                                             }
@@ -462,7 +462,7 @@
                                                                                                  Color="Color.Success"
                                                                                                  Size="Size.Small">
 
-                                                                                            ÙˆÛŒØ¯Ø¦Ùˆ Ø¯Ø§Ø±Ø¯
+                                                                                            ویدئو دارد
 
                                                                                         </MudChip>
                                                                                     }
@@ -472,7 +472,7 @@
                                                                                                  Color="Color.Default"
                                                                                                  Size="Size.Small">
 
-                                                                                            Ø¨Ø¯ÙˆÙ† ÙˆÛŒØ¯Ø¦Ùˆ
+                                                                                            بدون ویدئو
 
                                                                                         </MudChip>
                                                                                     }
@@ -533,7 +533,7 @@
                 <MudText Typo="Typo.h5"
                          Class="mt-4">
 
-                    Ø¯Ø³ØªØ±Ø³ÛŒ ØºÛŒØ±Ù…Ø¬Ø§Ø²
+                    دسترسی غیرمجاز
 
                 </MudText>
 
@@ -541,7 +541,7 @@
                          Color="Color.Secondary"
                          Class="mt-2">
 
-                    Ø´Ù…Ø§ Ø§Ø¬Ø§Ø²Ù‡ Ø¯Ø³ØªØ±Ø³ÛŒ Ø¨Ù‡ Ù¾Ù†Ù„ Ù…Ø¯ÛŒØ±ÛŒØª Ø¯ÙˆØ±Ù‡â€ŒÙ‡Ø§ Ø±Ø§ Ù†Ø¯Ø§Ø±ÛŒØ¯.
+                    شما اجازه دسترسی به پنل مدیریت دوره‌ها را ندارید.
 
                 </MudText>
 
@@ -550,7 +550,7 @@
                            Color="Color.Primary"
                            Class="mt-4">
 
-                    Ø¨Ø§Ø²Ú¯Ø´Øª
+                    بازگشت
 
                 </MudButton>
 
@@ -570,7 +570,7 @@
 <MudDialog @bind-Visible="_showSectionDialog">
 
     <TitleContent>
-        Ø§ÙØ²ÙˆØ¯Ù† Ø³Ø±ÙØµÙ„
+        افزودن سرفصل
     </TitleContent>
 
     <DialogContent>
@@ -578,14 +578,14 @@
         <MudStack Spacing="3">
 
             <MudTextField @bind-Value="_sectionTitle"
-                          Label="Ø¹Ù†ÙˆØ§Ù† Ø³Ø±ÙØµÙ„"
+                          Label="عنوان سرفصل"
                           Variant="Variant.Outlined"
                           FullWidth="true"
                           Required="true" />
 
             <MudNumericField T="int"
                              @bind-Value="_sectionOrder"
-                             Label="ØªØ±ØªÛŒØ¨"
+                             Label="ترتیب"
                              Variant="Variant.Outlined"
                              Min="1"
                              FullWidth="true" />
@@ -610,7 +610,7 @@
                    OnClick="CloseSectionDialog"
                    Disabled="_dialogSaving">
 
-            Ø§Ù†ØµØ±Ø§Ù
+            انصراف
 
         </MudButton>
 
@@ -627,7 +627,7 @@
                                      Class="mr-2" />
             }
 
-            Ø°Ø®ÛŒØ±Ù‡ Ø³Ø±ÙØµÙ„
+            ذخیره سرفصل
 
         </MudButton>
 
@@ -643,7 +643,7 @@
 <MudDialog @bind-Visible="_showLessonDialog">
 
     <TitleContent>
-        Ø§ÙØ²ÙˆØ¯Ù† Ø¯Ø±Ø³
+        افزودن درس
     </TitleContent>
 
     <DialogContent>
@@ -655,7 +655,7 @@
                 <MudAlert Severity="Severity.Info"
                           Variant="Variant.Outlined">
 
-                    Ø³Ø±ÙØµÙ„:
+                    سرفصل:
                     <strong>
                         @_selectedSectionForLesson.Title
                     </strong>
@@ -664,27 +664,27 @@
             }
 
             <MudTextField @bind-Value="_lessonTitle"
-                          Label="Ø¹Ù†ÙˆØ§Ù† Ø¯Ø±Ø³"
+                          Label="عنوان درس"
                           Variant="Variant.Outlined"
                           FullWidth="true"
                           Required="true" />
 
             <MudTextField @bind-Value="_lessonDescription"
-                          Label="ØªÙˆØ¶ÛŒØ­Ø§Øª"
+                          Label="توضیحات"
                           Variant="Variant.Outlined"
                           Lines="3"
                           FullWidth="true" />
 
             <MudNumericField T="int"
                              @bind-Value="_lessonDuration"
-                             Label="Ù…Ø¯Øª Ø¯Ø±Ø³ Ø¨Ù‡ Ø«Ø§Ù†ÛŒÙ‡"
+                             Label="مدت درس به ثانیه"
                              Variant="Variant.Outlined"
                              Min="0"
                              FullWidth="true" />
 
             <MudNumericField T="int"
                              @bind-Value="_lessonOrder"
-                             Label="ØªØ±ØªÛŒØ¨"
+                             Label="ترتیب"
                              Variant="Variant.Outlined"
                              Min="1"
                              FullWidth="true" />
@@ -693,7 +693,7 @@
                        @bind-Value="_lessonIsFreePreview"
                        Color="Color.Primary">
 
-                Ù¾ÛŒØ´â€ŒÙ†Ù…Ø§ÛŒØ´ Ø±Ø§ÛŒÚ¯Ø§Ù†
+                پیش‌نمایش رایگان
 
             </MudSwitch>
 
@@ -717,7 +717,7 @@
                    OnClick="CloseLessonDialog"
                    Disabled="_dialogSaving">
 
-            Ø§Ù†ØµØ±Ø§Ù
+            انصراف
 
         </MudButton>
 
@@ -734,7 +734,7 @@
                                      Class="mr-2" />
             }
 
-            Ø°Ø®ÛŒØ±Ù‡ Ø¯Ø±Ø³
+            ذخیره درس
 
         </MudButton>
 
@@ -1033,7 +1033,7 @@
         if (string.IsNullOrWhiteSpace(_sectionTitle))
         {
             _dialogError =
-                "Ø¹Ù†ÙˆØ§Ù† Ø³Ø±ÙØµÙ„ Ø±Ø§ ÙˆØ§Ø±Ø¯ Ú©Ù†ÛŒØ¯.";
+                "عنوان سرفصل را وارد کنید.";
 
             return;
         }
@@ -1057,7 +1057,7 @@
             _showSectionDialog = false;
 
             Snackbar.Add(
-                "Ø³Ø±ÙØµÙ„ Ø¨Ø§ Ù…ÙˆÙÙ‚ÛŒØª Ø§ÛŒØ¬Ø§Ø¯ Ø´Ø¯.",
+                "سرفصل با موفقیت ایجاد شد.",
                 Severity.Success);
 
             await LoadSections();
@@ -1128,7 +1128,7 @@
         if (string.IsNullOrWhiteSpace(_lessonTitle))
         {
             _dialogError =
-                "Ø¹Ù†ÙˆØ§Ù† Ø¯Ø±Ø³ Ø±Ø§ ÙˆØ§Ø±Ø¯ Ú©Ù†ÛŒØ¯.";
+                "عنوان درس را وارد کنید.";
 
             return;
         }
@@ -1172,7 +1172,7 @@
             _selectedSectionForLesson = null;
 
             Snackbar.Add(
-                "Ø¯Ø±Ø³ Ø¨Ø§ Ù…ÙˆÙÙ‚ÛŒØª Ø§ÛŒØ¬Ø§Ø¯ Ø´Ø¯.",
+                "درس با موفقیت ایجاد شد.",
                 Severity.Success);
 
             await LoadLessons(section);
@@ -1200,7 +1200,7 @@
         CourseEpisodeDto episode)
     {
         Snackbar.Add(
-            $"ÙˆÛŒØ¯Ø¦ÙˆÛŒ Â«{episode.Title}Â» Ø¯Ø±ÛŒØ§ÙØª Ø´Ø¯ Ùˆ Ø¨Ø±Ø§ÛŒ Ù¾Ø±Ø¯Ø§Ø²Ø´ Ù‚Ø±Ø§Ø± Ú¯Ø±ÙØª.",
+            $"ویدئوی «{episode.Title}» دریافت شد و برای پردازش قرار گرفت.",
             Severity.Success);
 
         return InvokeAsync(

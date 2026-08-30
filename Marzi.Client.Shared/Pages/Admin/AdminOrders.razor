@@ -1,4 +1,4 @@
-﻿@page "/admin/orders"
+@page "/admin/orders"
 
 @using Microsoft.AspNetCore.Components.Authorization
 @using Marzi.Client.Core.Models.Orders
@@ -25,13 +25,13 @@
 
             <div>
                 <MudText Typo="Typo.h4">
-                    Ù…Ø¯ÛŒØ±ÛŒØª Ø³ÙØ§Ø±Ø´â€ŒÙ‡Ø§
+                    مدیریت سفارش‌ها
                 </MudText>
 
                 <MudText Typo="Typo.body1"
                          Color="Color.Secondary"
                          Class="mt-1">
-                    Ø³ÙØ§Ø±Ø´â€ŒÙ‡Ø§ÛŒ Ø«Ø¨Øªâ€ŒØ´Ø¯Ù‡ ØªÙˆØ³Ø· Ù…Ø´ØªØ±ÛŒØ§Ù† Ø±Ø§ Ù…Ø´Ø§Ù‡Ø¯Ù‡ Ùˆ Ø¨Ø±Ø±Ø³ÛŒ Ú©Ù†ÛŒØ¯.
+                    سفارش‌های ثبت‌شده توسط مشتریان را مشاهده و بررسی کنید.
                 </MudText>
             </div>
 
@@ -40,7 +40,7 @@
                 <MudChip T="string"
                          Color="Color.Primary"
                          Variant="Variant.Outlined">
-                    @($"{_orders.Count} Ø³ÙØ§Ø±Ø´")
+                    @($"{_orders.Count} سفارش")
                 </MudChip>
             }
 
@@ -102,7 +102,7 @@
                        StartIcon="@Icons.Material.Filled.Refresh"
                        OnClick="LoadOrders">
 
-                ØªÙ„Ø§Ø´ Ù…Ø¬Ø¯Ø¯
+                تلاش مجدد
 
             </MudButton>
         }
@@ -120,14 +120,14 @@
 
                     <MudText Typo="Typo.h6">
 
-                        Ù‡Ù†ÙˆØ² Ø³ÙØ§Ø±Ø´ÛŒ Ø«Ø¨Øª Ù†Ø´Ø¯Ù‡ Ø§Ø³Øª.
+                        هنوز سفارشی ثبت نشده است.
 
                     </MudText>
 
                     <MudText Typo="Typo.body2"
                              Color="Color.Secondary">
 
-                        ÙˆÙ‚ØªÛŒ Ù…Ø´ØªØ±ÛŒ Ø³ÙØ§Ø±Ø´ÛŒ Ø«Ø¨Øª Ú©Ù†Ø¯ØŒ Ø³ÙØ§Ø±Ø´ Ø¯Ø± Ø§ÛŒÙ† Ù‚Ø³Ù…Øª Ù†Ù…Ø§ÛŒØ´ Ø¯Ø§Ø¯Ù‡ Ù…ÛŒâ€ŒØ´ÙˆØ¯.
+                        وقتی مشتری سفارشی ثبت کند، سفارش در این قسمت نمایش داده می‌شود.
 
                     </MudText>
 
@@ -212,7 +212,7 @@
                                         <MudText Typo="Typo.body2"
                                                  Color="Color.Secondary">
 
-                                            Ø´Ù†Ø§Ø³Ù‡ Ù…Ø´ØªØ±ÛŒ:
+                                            شناسه مشتری:
 
                                         </MudText>
 
@@ -236,7 +236,7 @@
                                         <MudText Typo="Typo.body2"
                                                  Color="Color.Secondary">
 
-                                            Ø«Ø¨Øª Ø´Ø¯Ù‡ Ø¯Ø±:
+                                            ثبت شده در:
 
                                         </MudText>
 
@@ -261,11 +261,11 @@
 
                                             <MudText Typo="Typo.body2">
 
-                                                Ù‚ÛŒÙ…Øª:
+                                                قیمت:
 
                                                 @order.EstimatedPrice.Value.ToString("N0")
 
-                                                ØªÙˆÙ…Ø§Ù†
+                                                تومان
 
                                             </MudText>
 
@@ -284,7 +284,7 @@
                                             <MudText Typo="Typo.body2"
                                                      Color="Color.Warning">
 
-                                                Ù‚ÛŒÙ…Øª Ù‡Ù†ÙˆØ² ØªØ¹ÛŒÛŒÙ† Ù†Ø´Ø¯Ù‡
+                                                قیمت هنوز تعیین نشده
 
                                             </MudText>
 
@@ -304,7 +304,7 @@
                                            StartIcon="@Icons.Material.Filled.Visibility"
                                            OnClick="@(() => ShowOrderInfo(order))">
 
-                                    Ù…Ø´Ø§Ù‡Ø¯Ù‡ Ø³ÙØ§Ø±Ø´
+                                    مشاهده سفارش
 
                                 </MudButton>
 
@@ -354,7 +354,7 @@
             if (user.Identity?.IsAuthenticated != true)
             {
                 _errorMessage =
-                    "Ø¨Ø±Ø§ÛŒ Ù…Ø´Ø§Ù‡Ø¯Ù‡ Ø³ÙØ§Ø±Ø´â€ŒÙ‡Ø§ Ø¨Ø§ÛŒØ¯ ÙˆØ§Ø±Ø¯ Ø­Ø³Ø§Ø¨ Ú©Ø§Ø±Ø¨Ø±ÛŒ Ø´ÙˆÛŒØ¯.";
+                    "برای مشاهده سفارش‌ها باید وارد حساب کاربری شوید.";
 
                 return;
             }
@@ -362,7 +362,7 @@
             if (!user.IsInRole("Admin"))
             {
                 _errorMessage =
-                    "Ø´Ù…Ø§ Ø¯Ø³ØªØ±Ø³ÛŒ Ù…Ø´Ø§Ù‡Ø¯Ù‡ Ø³ÙØ§Ø±Ø´â€ŒÙ‡Ø§ÛŒ Ù…Ø¯ÛŒØ±ÛŒØª Ø±Ø§ Ù†Ø¯Ø§Ø±ÛŒØ¯.";
+                    "شما دسترسی مشاهده سفارش‌های مدیریت را ندارید.";
 
                 return;
             }
@@ -379,10 +379,10 @@
                 $"[ADMIN ORDERS] Load failed: {ex}");
 
             _errorMessage =
-                "Ø¯Ø±ÛŒØ§ÙØª Ø³ÙØ§Ø±Ø´â€ŒÙ‡Ø§ Ø¨Ø§ Ø®Ø·Ø§ Ù…ÙˆØ§Ø¬Ù‡ Ø´Ø¯.";
+                "دریافت سفارش‌ها با خطا مواجه شد.";
 
             Snackbar.Add(
-                "Ø¯Ø±ÛŒØ§ÙØª Ø³ÙØ§Ø±Ø´â€ŒÙ‡Ø§ Ø¨Ø§ Ø®Ø·Ø§ Ù…ÙˆØ§Ø¬Ù‡ Ø´Ø¯.",
+                "دریافت سفارش‌ها با خطا مواجه شد.",
                 Severity.Error);
         }
         finally
@@ -413,7 +413,7 @@
 
         var dialog =
             await DialogService.ShowAsync<OrderDetailsDialog>(
-                "Ù…Ø¯ÛŒØ±ÛŒØª Ø³ÙØ§Ø±Ø´",
+                "مدیریت سفارش",
                 parameters,
                 options);
 
@@ -462,13 +462,13 @@
     {
         return type switch
         {
-            "Ù…Ø¬Ø³Ù…Ù‡" => "Ù…Ø¬Ø³Ù…Ù‡",
-            "Ú†Ù‡Ø±Ù‡" => "Ú†Ù‡Ø±Ù‡",
-            "Ø³ÙØ§Ø±Ø´ÛŒ" => "Ø³ÙØ§Ø±Ø´ Ø³ÙØ§Ø±Ø´ÛŒ",
+            "مجسمه" => "مجسمه",
+            "چهره" => "چهره",
+            "سفارشی" => "سفارش سفارشی",
 
-            "custom" => "Ø³ÙØ§Ø±Ø´ÛŒ",
-            "statue" => "Ù…Ø¬Ø³Ù…Ù‡",
-            "painting" => "Ù†Ù‚Ø§Ø´ÛŒ",
+            "custom" => "سفارشی",
+            "statue" => "مجسمه",
+            "painting" => "نقاشی",
 
             _ => type
         };
@@ -507,19 +507,19 @@
         return status switch
         {
             "Pending" =>
-                "Ø¬Ø¯ÛŒØ¯",
+                "جدید",
 
             "InProgress" =>
-                "Ø¯Ø± Ø­Ø§Ù„ Ø³Ø§Ø®Øª",
+                "در حال ساخت",
 
             "Completed" =>
-                "ØªÚ©Ù…ÛŒÙ„ Ø´Ø¯Ù‡",
+                "تکمیل شده",
 
             "Cancelled" =>
-                "Ù„ØºÙˆ Ø´Ø¯Ù‡",
+                "لغو شده",
 
             "New" =>
-                "Ø¬Ø¯ÛŒØ¯",
+                "جدید",
 
             _ =>
                 status

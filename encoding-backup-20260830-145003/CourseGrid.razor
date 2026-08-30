@@ -1,0 +1,26 @@
+@using Marzi.Client.Core.Models.Courses
+@using Marzi.Client.Shared.Components.Cards
+
+<MudGrid>
+
+    @foreach (var item in Courses)
+    {
+        <MudItem xs="12"
+                 sm="6"
+                 md="4"
+                 lg="3">
+
+            <CourseCard Course="item" />
+
+        </MudItem>
+    }
+
+</MudGrid>
+
+@code {
+
+    [Parameter]
+    public IEnumerable<CourseDto> Courses { get; set; }
+        = Enumerable.Empty<CourseDto>();
+
+}

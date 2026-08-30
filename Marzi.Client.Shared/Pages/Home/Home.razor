@@ -1,4 +1,4 @@
-﻿@page "/"
+@page "/"
 
 @using Marzi.Client.Core.Models.Courses
 @using Marzi.Client.Core.Models.Portfolio
@@ -15,21 +15,21 @@
 <HeroBanner />
 
 <MudText Typo="Typo.h5" Class="mb-2">
-    Ø³Ù„Ø§Ù… ðŸŒ¸
+    سلام 🌸
 </MudText>
 
 <MudText Typo="Typo.body1"
          Color="Color.Secondary"
          Class="mb-6">
 
-    Ø§Ù…Ø±ÙˆØ² Ø¢Ù…Ø§Ø¯Ù‡â€ŒØ§ÛŒ ÛŒÚ© Ø§Ø«Ø± Ù‡Ù†Ø±ÛŒ Ø¬Ø¯ÛŒØ¯ Ø®Ù„Ù‚ Ú©Ù†ÛŒÙ…ØŸ
+    امروز آماده‌ای یک اثر هنری جدید خلق کنیم؟
 
 </MudText>
 
 <!-- Courses -->
 
-<SectionTitle Title="Ø¯ÙˆØ±Ù‡â€ŒÙ‡Ø§ÛŒ Ø¢Ù…ÙˆØ²Ø´ÛŒ"
-              ActionText="Ù‡Ù…Ù‡"
+<SectionTitle Title="دوره‌های آموزشی"
+              ActionText="همه"
               ActionLink="/courses" />
 
 @if (_loadingCourses)
@@ -41,7 +41,7 @@ else if (_courses.Count == 0)
 {
     <MudAlert Severity="Severity.Info">
 
-        Ù‡Ù†ÙˆØ² Ø¯ÙˆØ±Ù‡â€ŒØ§ÛŒ Ù…Ù†ØªØ´Ø± Ù†Ø´Ø¯Ù‡ Ø§Ø³Øª.
+        هنوز دوره‌ای منتشر نشده است.
 
     </MudAlert>
 }
@@ -65,8 +65,8 @@ else
 
 <!-- Portfolio -->
 
-<SectionTitle Title="Ù†Ù…ÙˆÙ†Ù‡ Ú©Ø§Ø±Ù‡Ø§"
-              ActionText="Ù‡Ù…Ù‡"
+<SectionTitle Title="نمونه کارها"
+              ActionText="همه"
               ActionLink="/portfolio" />
 
 @if (_loadingPortfolio)
@@ -78,7 +78,7 @@ else if (_portfolio.Count == 0)
 {
     <MudAlert Severity="Severity.Info">
 
-        Ù‡Ù†ÙˆØ² Ù†Ù…ÙˆÙ†Ù‡ Ú©Ø§Ø±ÛŒ Ù…Ù†ØªØ´Ø± Ù†Ø´Ø¯Ù‡ Ø§Ø³Øª.
+        هنوز نمونه کاری منتشر نشده است.
 
     </MudAlert>
 }
@@ -106,14 +106,14 @@ else
     <MudText Typo="Typo.h6"
              Class="mb-2">
 
-        Ø³ÙØ§Ø±Ø´ Ø³Ø§Ø®Øª Ø§Ø«Ø± Ù‡Ù†Ø±ÛŒ
+        سفارش ساخت اثر هنری
 
     </MudText>
 
     <MudText Typo="Typo.body2"
              Color="Color.Secondary">
 
-        Ø§Ú¯Ø± Ø§ÛŒØ¯Ù‡â€ŒØ§ÛŒ Ø¯Ø± Ø°Ù‡Ù† Ø¯Ø§Ø±ÛŒØŒ Ø¨Ø±Ø§ÛŒ Ù…Ø§ Ø§Ø±Ø³Ø§Ù„ Ú©Ù† ØªØ§ Ø¨Ù‡ ÛŒÚ© Ø§Ø«Ø± Ù‡Ù†Ø±ÛŒ Ø®Ø§Øµ ØªØ¨Ø¯ÛŒÙ„ Ø´ÙˆØ¯.
+        اگر ایده‌ای در ذهن داری، برای ما ارسال کن تا به یک اثر هنری خاص تبدیل شود.
 
     </MudText>
 
@@ -123,7 +123,7 @@ else
                FullWidth="true"
                Href="/orders">
 
-        Ø«Ø¨Øª Ø³ÙØ§Ø±Ø´
+        ثبت سفارش
 
     </MudButton>
 

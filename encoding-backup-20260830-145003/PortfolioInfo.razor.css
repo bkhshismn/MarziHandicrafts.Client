@@ -1,0 +1,108 @@
+﻿/* =========================================
+   Portfolio Info
+   ========================================= */
+
+.portfolio-info {
+    width: 100%;
+}
+
+
+/* =========================================
+   Title
+   ========================================= */
+
+.portfolio-title {
+    font-weight: 800;
+    line-height: 1.5;
+}
+
+
+/* =========================================
+   Description
+   ========================================= */
+
+.portfolio-description {
+    line-height: 2;
+    white-space: pre-line;
+}
+
+
+/* =========================================
+   Category
+   ========================================= */
+
+.portfolio-info .mud-chip {
+    width: fit-content;
+}
+
+
+/* =========================================
+   Date
+   ========================================= */
+
+.portfolio-info .mud-icon-root {
+    flex-shrink: 0;
+}
+
+
+/* =========================================
+   Order Button
+   ========================================= */
+
+.order-button {
+    width: 100%;
+    min-height: 52px;
+    margin-top: 8px;
+
+    border-radius: 14px;
+
+    font-weight: 700;
+
+    transition:
+        transform 0.25s ease,
+        box-shadow 0.25s ease;
+}
+
+.order-button:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--mud-elevation-5);
+}
+
+
+/* =========================================
+   Mobile
+   ========================================= */
+
+@media (max-width: 600px) {
+
+    .portfolio-title {
+        font-size: 1.5rem;
+    }
+
+    .portfolio-description {
+        font-size: 0.95rem;
+        line-height: 1.9;
+    }
+
+    .order-button {
+        min-height: 50px;
+    }
+
+}
+
+
+/* =========================================
+   Reduced Motion
+   ========================================= */
+
+@media (prefers-reduced-motion: reduce) {
+
+    .order-button {
+        transition: none;
+    }
+
+    .order-button:hover {
+        transform: none;
+    }
+
+}

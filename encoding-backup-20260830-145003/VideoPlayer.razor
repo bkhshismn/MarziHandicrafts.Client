@@ -1,0 +1,1017 @@
+@using Marzi.Client.Core.Authentication
+@using Marzi.Client.Core.Models.Courses
+@using Marzi.Client.Infrastructure.Services
+@using Microsoft.JSInterop
+
+@implements IAsyncDisposable
+
+@inject ITokenStorage TokenStorage
+@inject CourseLessonProgressService ProgressService
+@inject IJSRuntime JS
+
+@if (Lesson is null)
+{
+    <MudPaper Class="video-player-empty"
+              Elevation="0">
+
+        <MudIcon Icon="@Icons.Material.Filled.VideoLibrary"
+                 Size="Size.Large"
+                 Color="Color.Secondary" />
+
+        <MudText Typo="Typo.body1"
+                 Color="Color.Secondary">
+
+            درسی برای پخش انتخاب نشده است.
+
+        </MudText>
+
+    </MudPaper>
+}
+else if (!Lesson.HasVideo)
+{
+    <MudAlert Severity="Severity.Info">
+
+        برای این درس هنوز ویدئویی قرار نگرفته است.
+
+    </MudAlert>
+}
+else
+{
+    <div class="video-player-wrapper">
+
+        <video @ref="_videoElement"
+               class="video-player"
+               controls
+               playsinline
+               preload="metadata">
+        </video>
+
+        @if (_loading)
+        {
+            <div class="video-player-loading">
+
+                <MudProgressCircular Indeterminate="true"
+                                     Color="Color.Primary" />
+
+                <MudText Typo="Typo.body2">
+
+                    در حال آماده‌سازی ویدئو...
+
+                </MudText>
+
+            </div>
+        }
+
+        @if (!string.IsNullOrWhiteSpace(_error))
+        {
+            <div class="video-player-error">
+
+                <MudIcon Icon="@Icons.Material.Filled.ErrorOutline"
+                         Size="Size.Large"
+                         Color="Color.Error" />
+
+                <MudText Typo="Typo.body2">
+
+                    @_error
+
+                </MudText>
+
+            </div>
+        }
+
+    </div>
+}
+
+@code {
+
+    [Parameter]
+    public required CourseLessonDto Lesson { get; set; }
+
+    [Parameter]
+    public required string ApiBaseUrl { get; set; }
+
+
+    // ============================================================
+    // Video
+    // ============================================================
+
+    private ElementReference _videoElement;
+
+    private IJSObjectReference? _module;
+
+    private DotNetObjectReference<VideoPlayer>? _dotNetReference;
+
+
+    // ============================================================
+    // Initialization state
+    // ============================================================
+
+    private bool _loading;
+
+    private bool _initializing;
+
+    private bool _disposed;
+
+    private Guid? _currentEpisodeId;
+
+    private Guid? _initializedEpisodeId;
+
+
+    // ============================================================
+    // Error
+    // ============================================================
+
+    private string? _error;
+
+
+    // ============================================================
+    // Progress
+    // ============================================================
+
+    private Guid? _progressLessonId;
+
+    private int _lastSavedWatchedSeconds;
+
+    private bool _progressCompleted;
+
+    private CancellationTokenSource? _progressCancellation;
+
+    private Task? _progressTask;
+
+
+    // ============================================================
+    // Parameters Changed
+    // ============================================================
+
+    protected override void OnParametersSet()
+    {
+        if (_disposed)
+            return;
+
+        var episodeId =
+            Lesson?.EpisodeId;
+
+        /*
+         * اگر Episode تغییر نکرده،
+         * هیچ کاری انجام نده.
+         *
+         * این قسمت خیلی مهم است.
+         */
+
+        if (_currentEpisodeId == episodeId)
+        {
+            return;
+        }
+
+
+        Console.WriteLine(
+            "[VIDEO PLAYER] Episode changed.");
+
+
+        /*
+         * Episode جدید
+         */
+
+        _currentEpisodeId =
+            episodeId;
+
+
+        /*
+         * اجازه initialize برای Episode جدید
+         */
+
+        _initializedEpisodeId = null;
+
+
+        /*
+         * Reset UI
+         */
+
+        _error = null;
+
+        _loading = false;
+
+        _initializing = false;
+
+
+        /*
+         * Reset progress
+         */
+
+        _lastSavedWatchedSeconds = 0;
+
+        _progressCompleted = false;
+
+        _progressLessonId = null;
+
+
+        /*
+         * Progress قبلی را متوقف کن
+         */
+
+        StopProgressLoop();
+    }
+
+
+    // ============================================================
+    // After Render
+    // ============================================================
+
+    protected override async Task OnAfterRenderAsync(
+        bool firstRender)
+    {
+        if (_disposed)
+            return;
+
+
+        /*
+         * اطلاعات ویدئو معتبر نیست
+         */
+
+        if (Lesson is null ||
+            !Lesson.HasVideo ||
+            Lesson.EpisodeId is null)
+        {
+            return;
+        }
+
+
+        /*
+         * فقط ویدئوی Ready
+         */
+
+        if (!string.Equals(
+                Lesson.VideoStatus,
+                "Ready",
+                StringComparison.OrdinalIgnoreCase))
+        {
+            return;
+        }
+
+
+        var episodeId =
+            Lesson.EpisodeId.Value;
+
+
+        /*
+         * اگر قبلاً initialize شده،
+         * هرگز دوباره initialize نکن.
+         */
+
+        if (_initializedEpisodeId == episodeId)
+        {
+            return;
+        }
+
+
+        /*
+         * اگر در حال initialize هستیم،
+         * دوباره وارد نشو.
+         */
+
+        if (_initializing)
+        {
+            return;
+        }
+
+
+        /*
+         * Initialize
+         */
+
+        await InitializePlayerAsync();
+    }
+
+
+    // ============================================================
+    // Initialize Player
+    // ============================================================
+
+    private async Task InitializePlayerAsync()
+    {
+        if (_disposed)
+            return;
+
+
+        if (Lesson is null ||
+            !Lesson.HasVideo ||
+            Lesson.EpisodeId is null)
+        {
+            return;
+        }
+
+
+        var episodeId =
+            Lesson.EpisodeId.Value;
+
+
+        /*
+         * Double protection
+         */
+
+        if (_initializedEpisodeId == episodeId)
+        {
+            return;
+        }
+
+
+        if (_initializing)
+        {
+            return;
+        }
+
+
+        _initializing = true;
+
+
+        try
+        {
+            _loading = true;
+
+            _error = null;
+
+
+            /*
+             * فقط برای نمایش Loading
+             *
+             * توجه:
+             * این StateHasChanged دیگر باعث initialize مجدد
+             * نمی‌شود چون _initializing=true است.
+             */
+
+            await InvokeAsync(
+                StateHasChanged);
+
+
+            // ====================================================
+            // Progress
+            // ====================================================
+
+            CourseLessonProgressDto? progress = null;
+
+
+            try
+            {
+                progress =
+                    await ProgressService.GetProgressAsync(
+                        Lesson.Id);
+
+
+                if (progress is not null)
+                {
+                    _progressLessonId =
+                        progress.LessonId;
+
+
+                    _lastSavedWatchedSeconds =
+                        Math.Max(
+                            0,
+                            progress.WatchedSeconds);
+
+
+                    _progressCompleted =
+                        progress.Completed;
+
+
+                    Console.WriteLine(
+                        "[VIDEO PROGRESS] =============================");
+
+                    Console.WriteLine(
+                        $"[VIDEO PROGRESS] LessonId: {progress.LessonId}");
+
+                    Console.WriteLine(
+                        $"[VIDEO PROGRESS] WatchedSeconds: {progress.WatchedSeconds}");
+
+                    Console.WriteLine(
+                        $"[VIDEO PROGRESS] Completed: {progress.Completed}");
+
+                    Console.WriteLine(
+                        "[VIDEO PROGRESS] =============================");
+                }
+            }
+            catch (Exception ex)
+            {
+                /*
+                 * Progress نباید جلوی پخش را بگیرد.
+                 */
+
+                Console.WriteLine(
+                    $"[VIDEO PROGRESS] Failed to load progress: {ex}");
+            }
+
+
+            if (_disposed)
+                return;
+
+
+            // ====================================================
+            // Playlist
+            // ====================================================
+
+            var playlistUrl =
+                $"{ApiBaseUrl.TrimEnd('/')}" +
+                $"/api/admin/lessons/{Lesson.Id}/video/" +
+                $"{episodeId}/stream/master.m3u8";
+
+
+            Console.WriteLine(
+                "[VIDEO PLAYER] =============================");
+
+            Console.WriteLine(
+                $"[VIDEO PLAYER] LessonId: {Lesson.Id}");
+
+            Console.WriteLine(
+                $"[VIDEO PLAYER] EpisodeId: {episodeId}");
+
+            Console.WriteLine(
+                $"[VIDEO PLAYER] VideoStatus: {Lesson.VideoStatus}");
+
+            Console.WriteLine(
+                $"[VIDEO PLAYER] IsFreePreview: {Lesson.IsFreePreview}");
+
+            Console.WriteLine(
+                $"[VIDEO PLAYER] Playlist: {playlistUrl}");
+
+            Console.WriteLine(
+                $"[VIDEO PLAYER] ResumeSeconds: {_lastSavedWatchedSeconds}");
+
+
+            // ====================================================
+            // Token
+            // ====================================================
+
+            string? token = null;
+
+
+            if (Lesson.IsFreePreview)
+            {
+                Console.WriteLine(
+                    "[VIDEO PLAYER] FREE PREVIEW");
+
+                Console.WriteLine(
+                    "[VIDEO PLAYER] No access token required.");
+            }
+            else
+            {
+                token =
+                    await GetAccessTokenAsync();
+
+
+                if (_disposed)
+                    return;
+
+
+                if (string.IsNullOrWhiteSpace(token))
+                {
+                    _error =
+                        "برای مشاهده این ویدئو باید وارد حساب کاربری شوید.";
+
+                    Console.WriteLine(
+                        "[VIDEO PLAYER] Paid video but token is unavailable.");
+
+                    return;
+                }
+
+
+                Console.WriteLine(
+                    "[VIDEO PLAYER] Paid video. Token exists.");
+            }
+
+
+            // ====================================================
+            // Load JS module
+            // ====================================================
+
+            if (_module is null)
+            {
+                _module =
+                    await JS.InvokeAsync<IJSObjectReference>(
+                        "import",
+                        "./_content/Marzi.Client.Shared/js/hlsPlayer.js");
+            }
+
+
+            if (_disposed)
+                return;
+
+
+            // ====================================================
+            // DotNet reference
+            // ====================================================
+
+            _dotNetReference ??=
+                DotNetObjectReference.Create(this);
+
+
+            // ====================================================
+            // Initialize HLS
+            // ====================================================
+
+            Console.WriteLine(
+                "[VIDEO PLAYER] Calling JS initialize...");
+
+
+            await _module.InvokeVoidAsync(
+                "initialize",
+                _videoElement,
+                playlistUrl,
+                token,
+                _dotNetReference);
+
+
+            if (_disposed)
+                return;
+
+
+            // ====================================================
+            // Resume
+            // ====================================================
+
+            if (_progressLessonId == Lesson.Id &&
+                _lastSavedWatchedSeconds > 0)
+            {
+                try
+                {
+                    await _module.InvokeVoidAsync(
+                        "setCurrentTime",
+                        _videoElement,
+                        _lastSavedWatchedSeconds);
+
+
+                    Console.WriteLine(
+                        $"[VIDEO PROGRESS] Resume set to {_lastSavedWatchedSeconds} seconds.");
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine(
+                        $"[VIDEO PROGRESS] Could not set resume position: {ex}");
+                }
+            }
+
+
+            if (_disposed)
+                return;
+
+
+            // ====================================================
+            // Progress Loop
+            // ====================================================
+
+            StartProgressLoop();
+
+
+            // ====================================================
+            // VERY IMPORTANT
+            //
+            // Episode را فقط همینجا initialized کن.
+            //
+            // از این لحظه به بعد حتی StateHasChanged هم
+            // باعث initialize دوباره نمی‌شود.
+            // ====================================================
+
+            _initializedEpisodeId =
+                episodeId;
+
+
+            Console.WriteLine(
+                $"[VIDEO PLAYER] Initialized successfully. " +
+                $"EpisodeId={episodeId}");
+
+            Console.WriteLine(
+                "[VIDEO PLAYER] =============================");
+        }
+        catch (JSException ex)
+        {
+            if (!_disposed)
+            {
+                _error =
+                    "پخش‌کننده ویدئو بارگذاری نشد.";
+            }
+
+
+            Console.WriteLine(
+                $"[VIDEO PLAYER] JS ERROR: {ex}");
+        }
+        catch (OperationCanceledException)
+        {
+            Console.WriteLine(
+                "[VIDEO PLAYER] Initialization canceled.");
+        }
+        catch (Exception ex)
+        {
+            if (!_disposed)
+            {
+                _error =
+                    "خطایی هنگام آماده‌سازی ویدئو رخ داد.";
+            }
+
+
+            Console.WriteLine(
+                $"[VIDEO PLAYER] ERROR: {ex}");
+        }
+        finally
+        {
+            _loading = false;
+
+            _initializing = false;
+
+
+            if (!_disposed)
+            {
+                await InvokeAsync(
+                    StateHasChanged);
+            }
+        }
+    }
+
+
+    // ============================================================
+    // Progress Loop
+    // ============================================================
+
+    private void StartProgressLoop()
+    {
+        StopProgressLoop();
+
+
+        if (_disposed ||
+            Lesson is null)
+        {
+            return;
+        }
+
+
+        var lessonId =
+            Lesson.Id;
+
+
+        _progressCancellation =
+            new CancellationTokenSource();
+
+
+        var cancellationToken =
+            _progressCancellation.Token;
+
+
+        _progressTask =
+            ProgressLoopAsync(
+                lessonId,
+                cancellationToken);
+    }
+
+
+    // ============================================================
+    // Progress Loop
+    // ============================================================
+
+    private async Task ProgressLoopAsync(
+        Guid lessonId,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            while (!cancellationToken.IsCancellationRequested)
+            {
+                await Task.Delay(
+                    TimeSpan.FromSeconds(10),
+                    cancellationToken);
+
+
+                if (cancellationToken.IsCancellationRequested ||
+                    _disposed)
+                {
+                    break;
+                }
+
+
+                await SaveCurrentProgressAsync(
+                    lessonId,
+                    false);
+            }
+        }
+        catch (OperationCanceledException)
+        {
+            Console.WriteLine(
+                "[VIDEO PROGRESS] Progress loop canceled.");
+        }
+        catch (JSDisconnectedException)
+        {
+            Console.WriteLine(
+                "[VIDEO PROGRESS] JS circuit disconnected.");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(
+                $"[VIDEO PROGRESS] Save failed: {ex}");
+        }
+    }
+
+
+    // ============================================================
+    // Save Progress
+    // ============================================================
+
+    private async Task SaveCurrentProgressAsync(
+        Guid lessonId,
+        bool completed)
+    {
+        if (_disposed)
+            return;
+
+
+        if (_progressCompleted && !completed)
+        {
+            return;
+        }
+
+
+        if (Lesson is null ||
+            Lesson.Id != lessonId)
+        {
+            return;
+        }
+
+
+        if (_module is null)
+        {
+            return;
+        }
+
+
+        try
+        {
+            var currentTime =
+                await _module.InvokeAsync<double>(
+                    "getCurrentTime",
+                    _videoElement);
+
+
+            if (double.IsNaN(currentTime) ||
+                double.IsInfinity(currentTime) ||
+                currentTime < 0)
+            {
+                return;
+            }
+
+
+            var watchedSeconds =
+                Math.Max(
+                    0,
+                    (int)Math.Floor(currentTime));
+
+
+            /*
+             * اگر پیشرفت جدیدی نداریم،
+             * درخواست نزن.
+             */
+
+            if (!completed &&
+                watchedSeconds <= _lastSavedWatchedSeconds &&
+                !_progressCompleted)
+            {
+                return;
+            }
+
+
+            var result =
+                await ProgressService.UpdateProgressAsync(
+                    lessonId,
+                    watchedSeconds,
+                    completed);
+
+
+            if (result is not null)
+            {
+                _lastSavedWatchedSeconds =
+                    result.WatchedSeconds;
+
+                _progressCompleted =
+                    result.Completed;
+
+                _progressLessonId =
+                    result.LessonId;
+            }
+            else
+            {
+                _lastSavedWatchedSeconds =
+                    watchedSeconds;
+
+                _progressCompleted =
+                    completed;
+            }
+
+
+            Console.WriteLine(
+                $"[VIDEO PROGRESS] Saved. " +
+                $"LessonId={lessonId}, " +
+                $"WatchedSeconds={watchedSeconds}, " +
+                $"Completed={completed}");
+        }
+        catch (OperationCanceledException)
+        {
+            // طبیعی است.
+        }
+        catch (JSDisconnectedException)
+        {
+            Console.WriteLine(
+                "[VIDEO PROGRESS] JS disconnected.");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(
+                $"[VIDEO PROGRESS] Save failed: {ex}");
+        }
+    }
+
+
+    // ============================================================
+    // Stop Progress
+    // ============================================================
+
+    private void StopProgressLoop()
+    {
+        try
+        {
+            _progressCancellation?.Cancel();
+
+            _progressCancellation?.Dispose();
+
+            _progressCancellation = null;
+
+            _progressTask = null;
+        }
+        catch
+        {
+            // Ignore.
+        }
+    }
+
+
+    // ============================================================
+    // Video Ended
+    // ============================================================
+
+    [JSInvokable]
+    public async Task VideoEnded()
+    {
+        if (_disposed ||
+            Lesson is null)
+        {
+            return;
+        }
+
+
+        Console.WriteLine(
+            "[VIDEO PROGRESS] VIDEO ENDED.");
+
+
+        try
+        {
+            StopProgressLoop();
+
+
+            _progressCompleted =
+                true;
+
+
+            await SaveCurrentProgressAsync(
+                Lesson.Id,
+                true);
+        }
+        catch (JSDisconnectedException)
+        {
+            Console.WriteLine(
+                "[VIDEO PROGRESS] JS disconnected.");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(
+                $"[VIDEO PROGRESS] Completed save failed: {ex}");
+        }
+    }
+
+
+    // ============================================================
+    // Token
+    // ============================================================
+
+    private async Task<string?> GetAccessTokenAsync()
+    {
+        const int maxAttempts = 20;
+
+        const int delayMilliseconds = 250;
+
+
+        for (var attempt = 1;
+             attempt <= maxAttempts;
+             attempt++)
+        {
+            if (_disposed)
+                return null;
+
+
+            var token =
+                await GetTokenFromStorageAsync();
+
+
+            if (!string.IsNullOrWhiteSpace(token))
+            {
+                Console.WriteLine(
+                    $"[VIDEO PLAYER] Access token ready. " +
+                    $"Attempt={attempt}");
+
+                return token;
+            }
+
+
+            Console.WriteLine(
+                $"[VIDEO PLAYER] Access token not ready. " +
+                $"Attempt={attempt}/{maxAttempts}");
+
+
+            if (attempt < maxAttempts)
+            {
+                await Task.Delay(
+                    delayMilliseconds);
+            }
+        }
+
+
+        return null;
+    }
+
+
+    // ============================================================
+    // Token Storage
+    // ============================================================
+
+    private async Task<string?> GetTokenFromStorageAsync()
+    {
+        return await TokenStorage.GetAccessTokenAsync();
+    }
+
+
+    // ============================================================
+    // Dispose
+    // ============================================================
+
+    public async ValueTask DisposeAsync()
+    {
+        if (_disposed)
+            return;
+
+
+        _disposed = true;
+
+
+        Console.WriteLine(
+            "[VIDEO PLAYER] Disposing...");
+
+
+        try
+        {
+            StopProgressLoop();
+
+
+            if (_module is not null)
+            {
+                try
+                {
+                    await _module.InvokeVoidAsync(
+                        "dispose",
+                        _videoElement);
+                }
+                catch
+                {
+                    // JS may already be disconnected.
+                }
+
+
+                try
+                {
+                    await _module.DisposeAsync();
+                }
+                catch
+                {
+                    // Ignore.
+                }
+
+
+                _module = null;
+            }
+
+
+            _dotNetReference?.Dispose();
+
+            _dotNetReference = null;
+        }
+        catch
+        {
+            // Component may already be disconnected.
+        }
+
+
+        Console.WriteLine(
+            "[VIDEO PLAYER] Disposed.");
+    }
+}

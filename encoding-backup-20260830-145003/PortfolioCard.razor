@@ -1,0 +1,139 @@
+@using Marzi.Client.Core.Models.Portfolio
+@using MudBlazor
+
+@inject NavigationManager Navigation
+
+@if (Item is null)
+{
+    <MudAlert Severity="Severity.Info">
+        اطلاعات نمونه‌کار موجود نیست.
+    </MudAlert>
+}
+else
+{
+    <MudCard Class="portfolio-card"
+             Elevation="2"
+             @onclick="Open">
+
+        <MudCardMedia Image="@CoverImage" />
+
+        <MudCardContent>
+
+            <MudStack Spacing="2">
+
+                <!-- Category -->
+
+                <MudChip T="string"
+                         Color="Color.Primary"
+                         Variant="Variant.Outlined"
+                         Size="Size.Small">
+
+                    @(string.IsNullOrWhiteSpace(Item.Category)
+                        ? "عمومی"
+                        : Item.Category)
+
+                </MudChip>
+
+
+                <!-- Title -->
+
+                <MudText Typo="Typo.h6">
+
+                    @Item.Title
+
+                </MudText>
+
+
+                <!-- Description -->
+
+                <MudText Typo="Typo.body2"
+                         Color="Color.Secondary">
+
+                    @Item.Description
+
+                </MudText>
+
+
+                <MudDivider />
+
+
+                <!-- Footer -->
+
+                <MudStack Row="true"
+                          Justify="Justify.SpaceBetween"
+                          AlignItems="AlignItems.Center">
+
+                    <MudText Typo="Typo.caption"
+                             Color="Color.Secondary">
+
+                        @Item.CreatedAt.ToString("yyyy/MM/dd")
+
+                    </MudText>
+
+
+                    @if (Item.Images.Count > 1)
+                    {
+                        <MudChip T="string"
+                                 Size="Size.Small"
+                                 Color="Color.Info">
+
+                            @($"{Item.Images.Count} تصویر")
+
+                        </MudChip>
+                    }
+
+                </MudStack>
+
+            </MudStack>
+
+        </MudCardContent>
+
+    </MudCard>
+}
+
+
+@code {
+
+    [Parameter]
+    public PortfolioItemDto? Item { get; set; }
+
+
+    private string CoverImage
+    {
+        get
+        {
+            if (Item is null)
+                return "/images/course-placeholder.jpg";
+
+            var image = Item.Images
+                .OrderBy(x => x.Order)
+                .FirstOrDefault();
+
+            if (image is null)
+                return "/images/course-placeholder.jpg";
+
+            if (string.IsNullOrWhiteSpace(image.ImageUrl))
+                return "/images/course-placeholder.jpg";
+
+            if (image.ImageUrl.Contains(
+                    "example.com",
+                    StringComparison.OrdinalIgnoreCase))
+            {
+                return "/images/course-placeholder.jpg";
+            }
+
+            return image.ImageUrl;
+        }
+    }
+
+
+    private void Open()
+    {
+        if (Item is null)
+            return;
+
+        Navigation.NavigateTo(
+            $"/portfolio/{Item.Id}");
+    }
+
+}

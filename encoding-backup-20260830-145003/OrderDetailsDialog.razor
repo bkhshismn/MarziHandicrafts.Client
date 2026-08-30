@@ -1,0 +1,444 @@
+@using Marzi.Client.Core.Models.Orders
+@using Marzi.Client.Infrastructure.Services
+@using MudBlazor
+
+@inject OrderService OrderService
+
+<MudDialog>
+
+    <DialogContent>
+
+        @if (_loading)
+        {
+            <MudStack AlignItems="AlignItems.Center"
+                      Justify="Justify.Center"
+                      Class="pa-8">
+
+                <MudProgressCircular Indeterminate="true"
+                                     Color="Color.Primary" />
+
+                <MudText Typo="Typo.body2">
+                    در حال دریافت اطلاعات سفارش...
+                </MudText>
+
+            </MudStack>
+        }
+        else if (_order is null)
+        {
+            <MudAlert Severity="Severity.Error">
+                اطلاعات سفارش دریافت نشد.
+            </MudAlert>
+        }
+        else
+        {
+            <MudStack Spacing="3">
+
+                @if (!string.IsNullOrWhiteSpace(_order.ImageUrl))
+                {
+                    <MudImage Src="@_order.ImageUrl"
+                              Alt="تصویر سفارش"
+                              Height="280"
+                              ObjectFit="ObjectFit.Cover"
+                              Class="rounded-lg"
+                              Style="width:100%;" />
+                }
+                else
+                {
+                    <MudPaper Height="220px"
+                              Class="d-flex align-center justify-center">
+
+                        <MudStack AlignItems="AlignItems.Center"
+                                  Spacing="1">
+
+                            <MudIcon Icon="@Icons.Material.Filled.Image"
+                                     Size="Size.Large"
+                                     Color="Color.Secondary" />
+
+                            <MudText Typo="Typo.body2"
+                                     Color="Color.Secondary">
+
+                                تصویری برای این سفارش ثبت نشده است.
+
+                            </MudText>
+
+                        </MudStack>
+
+                    </MudPaper>
+                }
+
+
+                <MudStack Row="true"
+                          AlignItems="AlignItems.Center"
+                          Justify="Justify.SpaceBetween">
+
+                    <MudText Typo="Typo.h6">
+                        @GetTypeText(_order.Type)
+                    </MudText>
+
+                    <MudChip T="string"
+                             Color="@GetStatusColor(_status)"
+                             Variant="Variant.Filled">
+
+                        @GetStatusText(_status)
+
+                    </MudChip>
+
+                </MudStack>
+
+
+                <MudDivider />
+
+
+                <MudText Typo="Typo.subtitle2">
+                    توضیحات سفارش
+                </MudText>
+
+                <MudText Typo="Typo.body2">
+                    @(_order.Description ?? "بدون توضیحات")
+                </MudText>
+
+
+                <MudText Typo="Typo.subtitle2">
+                    شناسه مشتری
+                </MudText>
+
+                <MudText Typo="Typo.body2">
+                    @_order.UserId
+                </MudText>
+
+
+                <MudText Typo="Typo.subtitle2">
+                    تاریخ ثبت سفارش
+                </MudText>
+
+                <MudText Typo="Typo.body2">
+
+                    @if (_order.CreatedAt != default)
+                    {
+                        @_order.CreatedAt.ToString("yyyy/MM/dd HH:mm")
+                    }
+                    else
+                    {
+                        <span>تاریخ ثبت سفارش موجود نیست.</span>
+                    }
+
+                </MudText>
+
+
+                <MudDivider />
+
+
+                <MudNumericField T="decimal?"
+                                 @bind-Value="_price"
+                                 Label="قیمت سفارش"
+                                 Variant="Variant.Outlined"
+                                 Adornment="Adornment.End"
+                                 AdornmentText="تومان"
+                                 Min="0"
+                                 FullWidth="true" />
+
+
+                <MudSelect T="string"
+                           @bind-Value="_status"
+                           Label="وضعیت سفارش"
+                           Variant="Variant.Outlined"
+                           FullWidth="true">
+
+                    <MudSelectItem Value="@("Pending")">
+                        جدید
+                    </MudSelectItem>
+
+                    <MudSelectItem Value="@("InProgress")">
+                        در حال ساخت
+                    </MudSelectItem>
+
+                    <MudSelectItem Value="@("Completed")">
+                        تکمیل شده
+                    </MudSelectItem>
+
+                    <MudSelectItem Value="@("Cancelled")">
+                        لغو شده
+                    </MudSelectItem>
+
+                </MudSelect>
+
+
+                @if (!string.IsNullOrWhiteSpace(_error))
+                {
+                    <MudAlert Severity="Severity.Error"
+                              Variant="Variant.Outlined">
+
+                        @_error
+
+                    </MudAlert>
+                }
+
+            </MudStack>
+        }
+
+    </DialogContent>
+
+
+    <DialogActions>
+
+        <MudButton Variant="Variant.Text"
+                   OnClick="Cancel"
+                   Disabled="_saving">
+
+            انصراف
+
+        </MudButton>
+
+
+        <MudButton Variant="Variant.Filled"
+                   Color="Color.Primary"
+                   StartIcon="@Icons.Material.Filled.Save"
+                   OnClick="Save"
+                   Loading="_saving"
+                   Disabled="_saving || _loading">
+
+            ذخیره تغییرات
+
+        </MudButton>
+
+    </DialogActions>
+
+</MudDialog>
+
+
+@code {
+
+    [CascadingParameter]
+    private IMudDialogInstance MudDialog { get; set; } = null!;
+
+
+    [Parameter]
+    public OrderDto Order { get; set; } = null!;
+
+
+    private OrderDto? _order;
+
+    private decimal? _price;
+
+    private string _status = "Pending";
+
+    private bool _loading = true;
+
+    private bool _saving;
+
+    private string? _error;
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            /*
+             * ابتدا همان سفارش دریافت‌شده از لیست را نگه می‌داریم.
+             * بنابراین حتی اگر API دوباره در دسترس نباشد،
+             * اطلاعات اولیه Dialog از بین نمی‌رود.
+             */
+            _order = Order;
+
+            if (_order is not null)
+            {
+                _price = _order.EstimatedPrice;
+
+                _status =
+                    string.IsNullOrWhiteSpace(_order.Status)
+                        ? "Pending"
+                        : _order.Status;
+            }
+
+
+            /*
+             * سفارش را دوباره از API می‌گیریم تا
+             * اطلاعات کامل و تازه داشته باشیم.
+             */
+            if (Order is not null &&
+                Order.Id != Guid.Empty)
+            {
+                try
+                {
+                    var freshOrder =
+                        await OrderService.GetByIdAsync(Order.Id);
+
+                    if (freshOrder is not null)
+                    {
+                        _order = freshOrder;
+
+                        _price =
+                            freshOrder.EstimatedPrice;
+
+                        _status =
+                            string.IsNullOrWhiteSpace(
+                                freshOrder.Status)
+                                ? "Pending"
+                                : freshOrder.Status;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine(
+                        $"[ADMIN ORDER DIALOG] Refresh failed: {ex}");
+
+                    /*
+                     * اگر دریافت مجدد شکست خورد،
+                     * از اطلاعاتی که از لیست داشتیم استفاده می‌کنیم.
+                     */
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(
+                $"[ADMIN ORDER DIALOG] Initialize failed: {ex}");
+
+            _error =
+                "دریافت اطلاعات سفارش با خطا مواجه شد.";
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+
+
+    private void Cancel()
+    {
+        if (!_saving)
+        {
+            MudDialog.Cancel();
+        }
+    }
+
+
+    private async Task Save()
+    {
+        if (_order is null)
+        {
+            _error =
+                "اطلاعات سفارش موجود نیست.";
+
+            return;
+        }
+
+
+        if (_price.HasValue &&
+            _price.Value < 0)
+        {
+            _error =
+                "قیمت نمی‌تواند منفی باشد.";
+
+            return;
+        }
+
+
+        _saving = true;
+
+        _error = null;
+
+
+        try
+        {
+            var request =
+                new AdminUpdateOrderRequest
+                {
+                    EstimatedPrice = _price,
+                    Status = _status
+                };
+
+
+            var updated =
+                await OrderService.UpdateByAdminAsync(
+                    _order.Id,
+                    request);
+
+
+            MudDialog.Close(
+                DialogResult.Ok(updated));
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(
+                $"[ADMIN ORDER DIALOG] Save failed: {ex}");
+
+            _error =
+                "ذخیره تغییرات سفارش با خطا مواجه شد.";
+        }
+        finally
+        {
+            _saving = false;
+        }
+    }
+
+
+    private static string GetTypeText(
+        string type)
+    {
+        return type switch
+        {
+            "مجسمه" => "مجسمه",
+            "چهره" => "چهره",
+            "سفارشی" => "سفارش سفارشی",
+
+            "custom" => "سفارشی",
+            "statue" => "مجسمه",
+            "painting" => "نقاشی",
+
+            _ => type
+        };
+    }
+
+
+    private static Color GetStatusColor(
+        string status)
+    {
+        return status switch
+        {
+            "Pending" =>
+                Color.Warning,
+
+            "InProgress" =>
+                Color.Info,
+
+            "Completed" =>
+                Color.Success,
+
+            "Cancelled" =>
+                Color.Error,
+
+            "New" =>
+                Color.Warning,
+
+            _ =>
+                Color.Default
+        };
+    }
+
+
+    private static string GetStatusText(
+        string status)
+    {
+        return status switch
+        {
+            "Pending" =>
+                "جدید",
+
+            "InProgress" =>
+                "در حال ساخت",
+
+            "Completed" =>
+                "تکمیل شده",
+
+            "Cancelled" =>
+                "لغو شده",
+
+            "New" =>
+                "جدید",
+
+            _ =>
+                status
+        };
+    }
+}

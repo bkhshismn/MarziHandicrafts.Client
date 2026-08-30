@@ -1,0 +1,351 @@
+﻿/* =========================================
+   Course Details
+   ========================================= */
+
+.course-details-page {
+    width: 100%;
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 32px 24px 64px;
+    box-sizing: border-box;
+    overflow-x: hidden;
+}
+
+
+/* =========================================
+   Hero
+   ========================================= */
+
+.course-hero-section {
+    width: 100%;
+    max-width: 100%;
+    overflow: hidden;
+    border-radius: 24px;
+    margin-bottom: 28px;
+    background: var(--mud-palette-surface);
+    box-sizing: border-box;
+}
+
+
+/* =========================================
+   Course Information
+   ========================================= */
+
+.course-info-section {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    margin: 24px 0;
+    padding: 0;
+    box-sizing: border-box;
+    overflow: hidden;
+}
+
+::deep .course-info-section .course-card {
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    box-shadow: none !important;
+}
+
+::deep .course-info-section .course-card-cover {
+    display: none !important;
+}}
+
+
+/* =========================================
+   Selected Video Section
+   ========================================= */
+
+.course-video-section {
+    width: 100%;
+    max-width: 100%;
+    margin-top: 28px;
+    padding: 28px;
+    border-radius: 24px;
+    background: var(--mud-palette-surface);
+    box-sizing: border-box;
+    overflow: hidden;
+}
+
+    .course-video-section .mud-stack {
+        width: 100%;
+        min-width: 0;
+    }
+
+    .course-video-section .mud-typography {
+        max-width: 100%;
+        overflow-wrap: anywhere;
+        word-break: break-word;
+    }
+
+
+    /* =========================================
+   Video
+   ========================================= */
+
+    .course-video-section .video-player-wrapper {
+        width: 100%;
+        max-width: 100%;
+        min-width: 0;
+    }
+
+
+/* =========================================
+   Divider
+   ========================================= */
+
+.course-section-divider {
+    margin-top: 42px;
+    margin-bottom: 36px;
+    opacity: 0.15;
+}
+
+
+/* =========================================
+   Lesson List
+   ========================================= */
+
+.course-details-page > * {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
+}
+.course-details-page .lesson-list {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
+}
+
+
+/* =========================================
+   Loading
+   ========================================= */
+
+.course-details-loading {
+    width: 100%;
+    max-width: 100%;
+    border-radius: 24px;
+}
+
+
+/* =========================================
+   Tablet
+   ========================================= */
+
+@media (max-width: 960px) {
+
+    .course-details-page {
+        padding: 20px 16px 48px;
+    }
+
+    .course-hero-section {
+        border-radius: 20px;
+        margin-bottom: 22px;
+    }
+
+    .course-info-section {
+        padding: 22px;
+        border-radius: 20px;
+    }
+
+    .course-video-section {
+        margin-top: 22px;
+        padding: 22px;
+        border-radius: 20px;
+    }
+
+    .course-section-divider {
+        margin-top: 34px;
+        margin-bottom: 30px;
+    }
+}
+
+
+/* =========================================
+   Mobile
+   ========================================= */
+
+@media (max-width: 600px) {
+
+    .course-details-page {
+        width: 100%;
+        max-width: 100%;
+        margin: 0;
+        padding: 10px 10px 32px;
+        overflow-x: hidden;
+    }
+
+
+    /* Hero */
+
+    .course-hero-section {
+        width: 100%;
+        border-radius: 14px;
+        margin-bottom: 16px;
+    }
+
+
+    /* Info */
+
+    .course-info-section {
+        width: 100%;
+        padding: 16px;
+        border-radius: 16px;
+    }
+
+
+    /* Video */
+
+    .course-video-section {
+        width: 100%;
+        margin-top: 16px;
+        padding: 14px;
+        border-radius: 16px;
+    }
+
+        .course-video-section .mud-stack {
+            gap: 12px !important;
+        }
+
+        .course-video-section .mud-typography {
+            font-size: 0.95rem;
+            line-height: 1.8;
+        }
+
+
+        /* Video player */
+
+        .course-video-section .video-player-wrapper {
+            width: 100%;
+            border-radius: 12px;
+            aspect-ratio: 16 / 9;
+        }
+
+
+    /* Divider */
+
+    .course-section-divider {
+        margin-top: 24px;
+        margin-bottom: 20px;
+    }
+
+
+    /* Lesson list */
+
+    .course-details-page .lesson-list {
+        width: 100%;
+        overflow: hidden;
+    }
+
+
+    /* Prevent long text from breaking layout */
+
+    .course-details-page * {
+        max-width: 100%;
+        box-sizing: border-box;
+    }
+}
+
+
+/* =========================================
+   Very Small Phones
+   ========================================= */
+
+@media (max-width: 380px) {
+
+    .course-details-page {
+        padding-left: 8px;
+        padding-right: 8px;
+    }
+
+    .course-info-section {
+        padding: 14px;
+    }
+
+    .course-video-section {
+        padding: 12px;
+    }
+
+    .course-hero-section {
+        border-radius: 12px;
+    }
+
+    .course-info-section,
+    .course-video-section {
+        border-radius: 14px;
+    }
+}
+
+
+/* =========================================
+   Reduced Motion
+   ========================================= */
+
+@media (prefers-reduced-motion: reduce) {
+
+    .course-hero-section,
+    .course-info-section,
+    .course-video-section {
+        transition: none;
+    }
+}
+/* =========================================================
+   COURSE DETAILS - INFO CARD
+   Cover is already displayed by CourseHero
+   ========================================================= */
+
+.course-info-section {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    margin: 24px 0;
+    padding: 0;
+    box-sizing: border-box;
+    overflow: hidden;
+}
+
+    .course-info-section .course-card {
+        width: 100% !important;
+        max-width: 100% !important;
+        min-width: 0 !important;
+        box-sizing: border-box;
+        box-shadow: none !important;
+        border-radius: 20px;
+    }
+
+    /* The hero already contains the course cover.
+   Do not show the cover again in CourseInfoCard. */
+
+    .course-info-section .course-card-cover {
+        display: none !important;
+    }
+
+    .course-info-section .course-card-content,
+    .course-info-section .mud-card-content {
+        width: 100%;
+        max-width: 100%;
+        box-sizing: border-box;
+    }
+
+    .course-info-section .course-card-actions {
+        width: 100%;
+        max-width: 100%;
+        box-sizing: border-box;
+    }
+
+@media (max-width: 600px) {
+
+    .course-info-section {
+        margin: 14px 0;
+    }
+
+        .course-info-section .course-card {
+            border-radius: 16px;
+        }
+}
+::deep .course-info-section .course-card-cover {
+    display: none !important;
+}

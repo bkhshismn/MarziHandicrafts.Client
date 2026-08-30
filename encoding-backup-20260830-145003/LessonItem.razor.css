@@ -1,0 +1,88 @@
+﻿.lesson-item {
+    width: 100%;
+    padding: 14px 16px;
+    border-radius: 12px;
+    transition: background 0.2s ease, transform 0.2s ease;
+}
+
+    .lesson-item:hover {
+        background: var(--mud-palette-action-default-hover);
+    }
+
+.lesson-content {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+}
+
+.lesson-icon {
+    width: 40px;
+    min-width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 10px;
+    background: var(--mud-palette-action-default);
+}
+
+.lesson-details {
+    min-width: 0;
+    flex: 1;
+}
+
+.lesson-title {
+    font-weight: 600;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.lesson-description {
+    display: block;
+    margin-top: 3px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.lesson-meta {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-shrink: 0;
+}
+
+@media (max-width: 600px) {
+
+    .lesson-item {
+        padding: 12px;
+    }
+
+    .lesson-content {
+        gap: 10px;
+    }
+
+    .lesson-icon {
+        width: 36px;
+        min-width: 36px;
+        height: 36px;
+    }
+
+    .lesson-description {
+        display: none;
+    }
+
+    .lesson-meta {
+        gap: 6px;
+    }
+    .lesson-click-area {
+        width: 100%;
+        cursor: pointer;
+    }
+
+        .lesson-click-area:hover {
+            opacity: .92;
+        }
+}

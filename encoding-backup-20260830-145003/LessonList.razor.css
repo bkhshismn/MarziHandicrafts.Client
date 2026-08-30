@@ -1,0 +1,52 @@
+.lesson-list {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
+}
+
+.lesson-list-title {
+    width: 100%;
+    max-width: 100%;
+    margin-bottom: 16px;
+}
+
+.lesson-list .mud-expansion-panels {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+}
+
+.lesson-list .mud-expansion-panel {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
+}
+
+.lesson-list .mud-expansion-panel-header {
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+}
+
+.lesson-list .mud-list {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
+}
+
+@media (max-width: 600px) {
+
+    .lesson-list {
+        width: 100%;
+        max-width: 100%;
+        min-width: 0;
+    }
+
+    .lesson-list-title {
+        font-size: 1.15rem;
+        margin-bottom: 12px;
+    }
+}

@@ -1,0 +1,25 @@
+﻿.order-cta {
+    border-radius: 20px;
+}
+
+.order-cta-header {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.order-cta-content {
+    flex: 1;
+    min-width: 0;
+}
+
+@media (max-width: 600px) {
+
+    .order-cta {
+        padding: 20px !important;
+    }
+
+    .order-cta-header {
+        align-items: flex-start;
+    }
+}

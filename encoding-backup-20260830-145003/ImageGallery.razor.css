@@ -1,0 +1,240 @@
+﻿/* =========================================
+   Gallery
+   ========================================= */
+
+.gallery-container {
+    width: 100%;
+}
+
+
+/* =========================================
+   Empty State
+   ========================================= */
+
+.gallery-empty {
+    width: 100%;
+    overflow: hidden;
+    border-radius: 20px;
+}
+
+
+/* =========================================
+   Main Image
+   ========================================= */
+
+.main-image-wrapper {
+    position: relative;
+    width: 100%;
+    overflow: hidden;
+    border-radius: 20px;
+    cursor: pointer;
+    background: var(--mud-palette-background);
+    isolation: isolate;
+}
+
+
+.gallery-main {
+    display: block;
+    width: 100%;
+    max-height: 560px;
+    object-fit: cover;
+    transition: transform 0.45s ease, filter 0.35s ease;
+}
+
+
+.main-image-wrapper:hover .gallery-main {
+    transform: scale(1.025);
+    filter: brightness(0.82);
+}
+
+
+/* =========================================
+   Overlay
+   ========================================= */
+
+.gallery-overlay {
+    position: absolute;
+    inset: 0;
+    z-index: 2;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    color: white;
+    background: rgba(0, 0, 0, 0.28);
+    opacity: 0;
+    transition: opacity 0.3s ease, background 0.3s ease;
+    pointer-events: none;
+}
+
+
+.main-image-wrapper:hover .gallery-overlay {
+    opacity: 1;
+    background: rgba(0, 0, 0, 0.38);
+}
+
+
+.gallery-overlay .mud-icon-root {
+    filter: drop-shadow(0 4px 10px rgba(0, 0, 0, 0.35));
+}
+
+
+/* =========================================
+   Thumbnails
+   ========================================= */
+
+.gallery-thumbs {
+    margin-top: 16px;
+    overflow-x: auto;
+    overflow-y: hidden;
+    padding: 4px 4px 10px;
+    scrollbar-width: thin;
+}
+
+
+    .gallery-thumbs::-webkit-scrollbar {
+        height: 6px;
+    }
+
+
+    .gallery-thumbs::-webkit-scrollbar-thumb {
+        border-radius: 10px;
+        background: rgba(0, 0, 0, 0.2);
+    }
+
+
+/* =========================================
+   Thumbnail
+   ========================================= */
+
+.thumb {
+    width: 90px;
+    height: 90px;
+    min-width: 90px;
+    overflow: hidden;
+    border-radius: 18px;
+    cursor: pointer;
+    border: 3px solid transparent;
+    opacity: 0.55;
+    transition: transform 0.25s ease, opacity 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease;
+}
+
+
+    .thumb .mud-image {
+        display: block;
+        width: 100%;
+        height: 100%;
+    }
+
+
+    .thumb img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        transition: transform 0.25s ease;
+    }
+
+
+    .thumb:hover {
+        opacity: 1;
+        transform: translateY(-4px);
+    }
+
+
+        .thumb:hover img {
+            transform: scale(1.06);
+        }
+
+
+    /* =========================================
+   Selected Thumbnail
+   ========================================= */
+
+    .thumb.selected {
+        opacity: 1;
+        border-color: var(--mud-palette-primary);
+        box-shadow: 0 0 0 3px rgba(25, 118, 210, 0.18);
+        transform: scale(1.04);
+    }
+
+
+/* =========================================
+   Tablet
+   ========================================= */
+
+@media (max-width: 960px) {
+
+    .gallery-main {
+        max-height: 520px;
+    }
+
+    .thumb {
+        width: 78px;
+        height: 78px;
+        min-width: 78px;
+    }
+}
+
+
+/* =========================================
+   Mobile
+   ========================================= */
+
+@media (max-width: 600px) {
+
+    .main-image-wrapper {
+        border-radius: 14px;
+    }
+
+    .gallery-main {
+        max-height: 420px;
+    }
+
+    .gallery-overlay {
+        opacity: 1;
+        background: linear-gradient( to top, rgba(0, 0, 0, 0.42), transparent 45% );
+        justify-content: flex-end;
+        align-items: flex-end;
+        padding: 18px;
+    }
+
+        .gallery-overlay .mud-icon-root {
+            display: none;
+        }
+
+    .thumb {
+        width: 68px;
+        height: 68px;
+        min-width: 68px;
+        border-radius: 14px;
+    }
+}
+
+
+/* =========================================
+   Reduced Motion
+   ========================================= */
+
+@media (prefers-reduced-motion: reduce) {
+
+    .gallery-main,
+    .gallery-overlay,
+    .thumb,
+    .thumb img {
+        transition: none;
+    }
+
+    .main-image-wrapper:hover .gallery-main {
+        transform: none;
+        filter: none;
+    }
+
+    .thumb:hover {
+        transform: none;
+    }
+
+        .thumb:hover img {
+            transform: none;
+        }
+}

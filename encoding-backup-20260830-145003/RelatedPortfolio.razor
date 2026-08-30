@@ -1,0 +1,59 @@
+@using Marzi.Client.Core.Models.Portfolio
+@using Marzi.Client.Infrastructure.Services
+@using Marzi.Client.Shared.Components.Cards
+
+@inject PortfolioService PortfolioService
+
+@if (_items.Any())
+{
+    <MudDivider Class="my-6" />
+
+    <MudText Typo="Typo.h5"
+             Class="mb-4">
+
+        آثار مرتبط
+
+    </MudText>
+
+    <MudGrid>
+
+        @foreach (var item in _items)
+        {
+            <MudItem xs="12"
+                     sm="6"
+                     md="4">
+
+                <PortfolioCard Item="item" />
+
+            </MudItem>
+        }
+
+    </MudGrid>
+}
+
+@code {
+
+    [Parameter]
+    public Guid CurrentId { get; set; }
+
+    [Parameter]
+    public string Category { get; set; } = string.Empty;
+
+    private List<PortfolioItemDto> _items = [];
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (string.IsNullOrWhiteSpace(Category))
+            return;
+
+        var result =
+            await PortfolioService
+                .GetByCategoryAsync(Category);
+
+        _items = result
+            .Where(x => x.Id != CurrentId)
+            .Take(3)
+            .ToList();
+    }
+
+}
