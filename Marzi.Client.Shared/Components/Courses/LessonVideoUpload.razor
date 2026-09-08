@@ -774,7 +774,7 @@
 
             await using var stream =
                 file.OpenReadStream(
-                    maxAllowedSize: 1024L * 1024L * 1024L);
+                    maxAllowedSize: 500L * 1024L * 1024L);
 
             var episode =
                 await EpisodeService.UploadAsync(
