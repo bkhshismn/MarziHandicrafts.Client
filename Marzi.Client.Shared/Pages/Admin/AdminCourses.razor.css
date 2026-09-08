@@ -2,9 +2,15 @@
     gap: 1rem;
 }
 
+.course-info-title {
+    min-width: 0;
+    flex: 1 1 auto;
+}
+
 .course-info-controls {
     flex-wrap: wrap;
     justify-content: flex-end;
+    min-width: 0;
 }
 
 .course-action-button {
@@ -14,6 +20,10 @@
 @media (max-width: 600px) {
     .course-info-header {
         align-items: stretch !important;
+    }
+
+    .course-info-title {
+        width: 100%;
     }
 
     .course-info-controls {
