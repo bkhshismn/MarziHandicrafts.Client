@@ -74,46 +74,14 @@ public static class DependencyInjection
         // ==========================
         // Protected APIs — Scoped Refit Client
         // ==========================
-        // این روش در Blazor Server باعث می‌شود
-        // Handler و TokenStorage از همان scope مدار باشند.
 
         services.AddScoped<IOrderApi>(sp =>
         {
-            var authHandler = sp.GetRequiredService<AuthorizationHandler>();
-            authHandler.InnerHandler = new HttpClientHandler();
-
-            var httpClient = new HttpClient(authHandler)
+            var authHandler = new AuthorizationHandler(
+                sp.GetRequiredService<ITokenStorage>())
             {
-                BaseAddress = new Uri(baseUrl)
+                InnerHandler = new HttpClientHandler()
             };
-
-            return RestService.For<IOrderApi>(httpClient);
-        });
-
-        services.AddScoped<ICourseEpisodeApi>(sp =>
-        {
-            var authHandler = sp.GetRequiredService<AuthorizationHandler>();
-            authHandler.InnerHandler = new HttpClientHandler();
-
-            var httpClient = new HttpClient(authHandler)
-            {
-                BaseAddress = new Uri(baseUrl),
-                Timeout = TimeSpan.FromMinutes(30)
-            };
-
-            return RestService.For<ICourseEpisodeApi>(httpClient);
-        });
-        // ==========================
-        // Protected APIs — Scoped Refit Client
-        // ==========================
-
-        services.AddScoped<IOrderApi>(sp =>
-        {
-            var authHandler =
-                sp.GetRequiredService<AuthorizationHandler>();
-
-            authHandler.InnerHandler =
-                new HttpClientHandler();
 
             var httpClient =
                 new HttpClient(authHandler)
@@ -127,11 +95,11 @@ public static class DependencyInjection
 
         services.AddScoped<ICourseEpisodeApi>(sp =>
         {
-            var authHandler =
-                sp.GetRequiredService<AuthorizationHandler>();
-
-            authHandler.InnerHandler =
-                new HttpClientHandler();
+            var authHandler = new AuthorizationHandler(
+                sp.GetRequiredService<ITokenStorage>())
+            {
+                InnerHandler = new HttpClientHandler()
+            };
 
             var httpClient =
                 new HttpClient(authHandler)
@@ -146,11 +114,11 @@ public static class DependencyInjection
 
         services.AddScoped<ICourseLessonProgressApi>(sp =>
         {
-            var authHandler =
-                sp.GetRequiredService<AuthorizationHandler>();
-
-            authHandler.InnerHandler =
-                new HttpClientHandler();
+            var authHandler = new AuthorizationHandler(
+                sp.GetRequiredService<ITokenStorage>())
+            {
+                InnerHandler = new HttpClientHandler()
+            };
 
             var httpClient =
                 new HttpClient(authHandler)

@@ -533,9 +533,9 @@ h6 {
     max-width: 100% !important;
     min-width: 0 !important;
     height: auto !important;
+    max-height: min(70vh, 720px) !important;
     overflow: hidden !important;
     box-sizing: border-box !important;
-    aspect-ratio: 16 / 9 !important;
 }
 
     .video-player-wrapper .video-player,
@@ -544,8 +544,8 @@ h6 {
         width: 100% !important;
         max-width: 100% !important;
         min-width: 0 !important;
-        height: 100% !important;
-        max-height: 100% !important;
+        height: auto !important;
+        max-height: min(70vh, 720px) !important;
         margin: 0 !important;
         padding: 0 !important;
         box-sizing: border-box !important;
@@ -586,7 +586,7 @@ h6 {
     .video-player-wrapper {
         width: 100% !important;
         max-width: 100% !important;
-        aspect-ratio: 16 / 9 !important;
+        max-height: min(70vh, 720px) !important;
     }
 
         .video-player-wrapper .video-player,
