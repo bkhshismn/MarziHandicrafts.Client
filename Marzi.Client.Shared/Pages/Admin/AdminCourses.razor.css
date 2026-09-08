@@ -20,6 +20,7 @@
 @media (max-width: 600px) {
     .course-info-header {
         align-items: stretch !important;
+        flex-direction: column !important;
     }
 
     .course-info-title {
@@ -27,6 +28,7 @@
     }
 
     .course-info-controls {
+        flex-direction: row !important;
         justify-content: flex-start;
         width: 100%;
     }
