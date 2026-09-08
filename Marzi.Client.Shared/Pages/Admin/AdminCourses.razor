@@ -270,6 +270,7 @@
                                               Elevation="1">
 
                                         <MudStack Row="true"
+                                                  Class="course-info-header"
                                                   AlignItems="AlignItems.Center"
                                                   Justify="Justify.SpaceBetween">
 
@@ -300,6 +301,7 @@
 
 
                                             <MudStack Row="true"
+                                                      Class="course-info-controls"
                                                       AlignItems="AlignItems.Center"
                                                       Spacing="2">
 
@@ -316,6 +318,7 @@
                                                     <MudButton Variant="Variant.Outlined"
                                                                Color="Color.Warning"
                                                                Size="Size.Small"
+                                                               Class="course-action-button"
                                                                StartIcon="@Icons.Material.Filled.VisibilityOff"
                                                                OnClick="TogglePublishedAsync"
                                                                Disabled="_publishingCourse">
@@ -337,6 +340,7 @@
                                                     <MudButton Variant="Variant.Filled"
                                                                Color="Color.Success"
                                                                Size="Size.Small"
+                                                               Class="course-action-button"
                                                                StartIcon="@Icons.Material.Filled.Publish"
                                                                OnClick="TogglePublishedAsync"
                                                                Disabled="_publishingCourse">
@@ -451,6 +455,7 @@
                                                   Variant="Variant.Outlined">
 
                                             این دوره هنوز هیچ سرفصلی ندارد.
+                                                           Class="course-action-button"
 
                                         </MudAlert>
                                     }

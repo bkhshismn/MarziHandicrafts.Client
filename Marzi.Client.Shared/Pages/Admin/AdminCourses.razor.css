@@ -1,0 +1,28 @@
+.course-info-header {
+    gap: 1rem;
+}
+
+.course-info-controls {
+    flex-wrap: wrap;
+    justify-content: flex-end;
+}
+
+.course-action-button {
+    white-space: nowrap;
+}
+
+@media (max-width: 600px) {
+    .course-info-header {
+        align-items: stretch !important;
+    }
+
+    .course-info-controls {
+        justify-content: flex-start;
+        width: 100%;
+    }
+
+    .course-action-button {
+        flex: 1 1 auto;
+        min-width: 0;
+    }
+}
