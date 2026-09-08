@@ -309,4 +309,15 @@ public sealed class CourseEpisodeService
                 ex);
         }
     }
+
+    public async Task DeleteAsync(Guid lessonId, Guid episodeId)
+    {
+        var response = await _api.DeleteAsync(lessonId, episodeId);
+
+        if (!response.IsSuccessStatusCode)
+        {
+            throw new InvalidOperationException(
+                "حذف ویدئو با خطا مواجه شد.");
+        }
+    }
 }

@@ -32,3 +32,17 @@
         row-gap: 0.5rem;
     }
 }
+
+.admin-video-actions {
+    flex-wrap: wrap;
+}
+
+.admin-video-preview {
+    width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
+}
+
+.admin-video-preview :deep(.video-player-wrapper) {
+    max-width: 100%;
+}

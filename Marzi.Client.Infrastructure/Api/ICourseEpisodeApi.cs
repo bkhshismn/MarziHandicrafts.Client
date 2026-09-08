@@ -23,4 +23,9 @@ public interface ICourseEpisodeApi
     Task<ApiResponse<CourseEpisodeDto>> GetStatusAsync(
         Guid lessonId,
         Guid episodeId);
+    
+        [Delete("/api/admin/lessons/{lessonId}/video/{episodeId}")]
+        Task<ApiResponse<object>> DeleteAsync(
+            Guid lessonId,
+            Guid episodeId);
 }

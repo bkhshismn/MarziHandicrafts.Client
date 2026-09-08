@@ -1,10 +1,14 @@
 @using Marzi.Client.Core.Models.Courses
 @using Marzi.Client.Infrastructure.Services
 @using Microsoft.AspNetCore.Components.Forms
+@using Microsoft.Extensions.Configuration
+@using Microsoft.JSInterop
 @using MudBlazor
 
 @inject CourseEpisodeService EpisodeService
 @inject ISnackbar Snackbar
+@inject IConfiguration Configuration
+@inject IJSRuntime JS
 
 <MudPaper Class="admin-lesson-video-upload pa-4"
           Elevation="0">
@@ -210,9 +214,64 @@
                             ویدئو با موفقیت آماده پخش شده است.
 
                         </MudAlert>
+
+                        <MudStack Row="true"
+                                  Class="admin-video-actions"
+                                  Spacing="2">
+
+                            <MudButton Variant="Variant.Filled"
+                                       Color="Color.Primary"
+                                       StartIcon="@Icons.Material.Filled.PlayArrow"
+                                       OnClick="ShowPreview">
+
+                                پخش ویدئو
+
+                            </MudButton>
+
+                            <MudButton Variant="Variant.Outlined"
+                                       Color="Color.Error"
+                                       StartIcon="@Icons.Material.Filled.Delete"
+                                       OnClick="DeleteLatestEpisodeAsync"
+                                       Disabled="_deletingEpisode">
+
+                                حذف ویدئو
+
+                            </MudButton>
+
+                        </MudStack>
                     }
 
                 }
+
+            </MudStack>
+
+        </MudPaper>
+    }
+
+    @if (_previewLesson is not null)
+    {
+        <MudPaper Class="admin-video-preview pa-3 mb-4"
+                  Elevation="1">
+
+            <MudStack Spacing="2">
+
+                <MudStack Row="true"
+                          AlignItems="AlignItems.Center"
+                          Justify="Justify.SpaceBetween">
+
+                    <MudText Typo="Typo.subtitle2">
+                        پیش‌نمایش ویدئو
+                    </MudText>
+
+                    <MudIconButton Icon="@Icons.Material.Filled.Close"
+                                   Color="Color.Default"
+                                   Size="Size.Small"
+                                   OnClick="HidePreview" />
+
+                </MudStack>
+
+                <VideoPlayer Lesson="_previewLesson"
+                             ApiBaseUrl="@ApiBaseUrl" />
 
             </MudStack>
 
@@ -451,6 +510,13 @@
 
     private CancellationTokenSource? _pollCancellation;
 
+    private CourseLessonDto? _previewLesson;
+
+    private bool _deletingEpisode;
+
+    private string ApiBaseUrl =>
+        Configuration["Api:BaseUrl"] ?? string.Empty;
+
 
     // =========================================================
     // Computed
@@ -476,6 +542,66 @@
                 return false;
 
             return true;
+        }
+    }
+
+    private void ShowPreview()
+    {
+        if (_latestEpisode is null || !IsReady(_latestEpisode))
+            return;
+
+        _previewLesson = new CourseLessonDto
+        {
+            Id = Lesson.Id,
+            Title = Lesson.Title,
+            Description = Lesson.Description,
+            DurationSeconds = _latestEpisode.DurationSeconds,
+            IsFreePreview = _latestEpisode.IsFree,
+            OrderIndex = Lesson.OrderIndex,
+            EpisodeId = _latestEpisode.Id,
+            VideoStatus = _latestEpisode.Status.ToString(),
+            HasVideo = true
+        };
+    }
+
+    private void HidePreview()
+    {
+        _previewLesson = null;
+    }
+
+    private async Task DeleteLatestEpisodeAsync()
+    {
+        if (_latestEpisode is null || _deletingEpisode)
+            return;
+
+        var confirmed = await JS.InvokeAsync<bool>(
+            "confirm",
+            $"آیا ویدئوی «{_latestEpisode.Title}» حذف شود؟ عنوان درس باقی می‌ماند.");
+
+        if (!confirmed)
+            return;
+
+        _deletingEpisode = true;
+
+        try
+        {
+            await EpisodeService.DeleteAsync(
+                Lesson.Id,
+                _latestEpisode.Id);
+
+            HidePreview();
+            await LoadExistingVideos();
+            Snackbar.Add(
+                "ویدئو حذف شد؛ عنوان درس باقی مانده و آماده آپلود ویدئوی جدید است.",
+                Severity.Success);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add(ex.Message, Severity.Error);
+        }
+        finally
+        {
+            _deletingEpisode = false;
         }
     }
 
