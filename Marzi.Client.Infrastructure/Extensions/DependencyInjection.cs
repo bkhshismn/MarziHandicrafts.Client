@@ -55,8 +55,16 @@ public static class DependencyInjection
                     InnerHandler = new HttpClientHandler()
                 };
 
+            var refreshHandler = new RefreshTokenHandler(
+                sp.GetRequiredService<AuthService>(),
+                tokenStorage,
+                sp.GetRequiredService<TokenRefreshCoordinator>())
+            {
+                InnerHandler = authHandler
+            };
+
             var httpClient =
-                new HttpClient(authHandler)
+                new HttpClient(refreshHandler)
                 {
                     BaseAddress = new Uri(baseUrl)
                 };
@@ -77,14 +85,21 @@ public static class DependencyInjection
 
         services.AddScoped<IOrderApi>(sp =>
         {
-            var authHandler = new AuthorizationHandler(
-                sp.GetRequiredService<ITokenStorage>())
+            var tokenStorage = sp.GetRequiredService<ITokenStorage>();
+            var authHandler = new AuthorizationHandler(tokenStorage)
             {
                 InnerHandler = new HttpClientHandler()
             };
 
+            var refreshHandler = new RefreshTokenHandler(
+                sp.GetRequiredService<AuthService>(), tokenStorage,
+                sp.GetRequiredService<TokenRefreshCoordinator>())
+            {
+                InnerHandler = authHandler
+            };
+
             var httpClient =
-                new HttpClient(authHandler)
+                new HttpClient(refreshHandler)
                 {
                     BaseAddress = new Uri(baseUrl)
                 };
@@ -95,14 +110,21 @@ public static class DependencyInjection
 
         services.AddScoped<ICourseEpisodeApi>(sp =>
         {
-            var authHandler = new AuthorizationHandler(
-                sp.GetRequiredService<ITokenStorage>())
+            var tokenStorage = sp.GetRequiredService<ITokenStorage>();
+            var authHandler = new AuthorizationHandler(tokenStorage)
             {
                 InnerHandler = new HttpClientHandler()
             };
 
+            var refreshHandler = new RefreshTokenHandler(
+                sp.GetRequiredService<AuthService>(), tokenStorage,
+                sp.GetRequiredService<TokenRefreshCoordinator>())
+            {
+                InnerHandler = authHandler
+            };
+
             var httpClient =
-                new HttpClient(authHandler)
+                new HttpClient(refreshHandler)
                 {
                     BaseAddress = new Uri(baseUrl),
                     Timeout = TimeSpan.FromMinutes(30)
@@ -114,14 +136,21 @@ public static class DependencyInjection
 
         services.AddScoped<ICourseLessonProgressApi>(sp =>
         {
-            var authHandler = new AuthorizationHandler(
-                sp.GetRequiredService<ITokenStorage>())
+            var tokenStorage = sp.GetRequiredService<ITokenStorage>();
+            var authHandler = new AuthorizationHandler(tokenStorage)
             {
                 InnerHandler = new HttpClientHandler()
             };
 
+            var refreshHandler = new RefreshTokenHandler(
+                sp.GetRequiredService<AuthService>(), tokenStorage,
+                sp.GetRequiredService<TokenRefreshCoordinator>())
+            {
+                InnerHandler = authHandler
+            };
+
             var httpClient =
-                new HttpClient(authHandler)
+                new HttpClient(refreshHandler)
                 {
                     BaseAddress = new Uri(baseUrl)
                 };

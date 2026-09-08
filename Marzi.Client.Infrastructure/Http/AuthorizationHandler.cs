@@ -50,30 +50,6 @@ public sealed class AuthorizationHandler : DelegatingHandler
         Console.WriteLine(
             $"[AUTH] Response: {(int)response.StatusCode} {response.StatusCode}");
 
-        // فقط برای خطاهای API، Body را لاگ می‌کنیم.
-        if (!response.IsSuccessStatusCode)
-        {
-            try
-            {
-                var body =
-                    await response.Content.ReadAsStringAsync(
-                        cancellationToken);
-
-                Console.WriteLine(
-                    "[AUTH] ===== ERROR RESPONSE BODY =====");
-
-                Console.WriteLine(body);
-
-                Console.WriteLine(
-                    "[AUTH] =================================");
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine(
-                    $"[AUTH] Could not read error body: {ex.Message}");
-            }
-        }
-
         return response;
     }
 }
