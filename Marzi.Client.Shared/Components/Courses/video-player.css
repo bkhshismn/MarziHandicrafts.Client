@@ -8,6 +8,8 @@
     box-sizing: border-box;
     border-radius: 20px;
     background: #000;
+    width: min(100%, calc(min(70vh, 720px) * var(--video-ratio, 1.7778)));
+    aspect-ratio: var(--video-ratio, 1.7778);
     max-height: min(70vh, 720px);
 }
 
@@ -16,7 +18,9 @@
     width: 100%;
     max-width: 100%;
     min-width: 0;
-    height: auto;
+    height: 100%;
+    width: min(100%, calc(min(70vh, 720px) * var(--video-ratio, 1.7778)));
+    aspect-ratio: var(--video-ratio, 1.7778);
     max-height: min(70vh, 720px);
     min-height: 0;
     margin: 0;
@@ -112,7 +116,7 @@
     width: 100%;
     max-width: 100%;
     min-width: 0;
-    height: auto;
+    height: 100%;
     max-height: min(70vh, 720px);
     min-height: 0;
     background: #000;

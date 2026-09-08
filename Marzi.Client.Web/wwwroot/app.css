@@ -533,6 +533,8 @@ h6 {
     max-width: 100% !important;
     min-width: 0 !important;
     height: auto !important;
+    width: min(100%, calc(min(70vh, 720px) * var(--video-ratio, 1.7778))) !important;
+    aspect-ratio: var(--video-ratio, 1.7778) !important;
     max-height: min(70vh, 720px) !important;
     overflow: hidden !important;
     box-sizing: border-box !important;
@@ -544,7 +546,9 @@ h6 {
         width: 100% !important;
         max-width: 100% !important;
         min-width: 0 !important;
-        height: auto !important;
+        height: 100% !important;
+        width: min(100%, calc(min(70vh, 720px) * var(--video-ratio, 1.7778))) !important;
+        aspect-ratio: var(--video-ratio, 1.7778) !important;
         max-height: min(70vh, 720px) !important;
         margin: 0 !important;
         padding: 0 !important;

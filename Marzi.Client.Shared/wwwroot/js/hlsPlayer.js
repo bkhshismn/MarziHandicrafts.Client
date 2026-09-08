@@ -7,6 +7,17 @@ export async function initialize(video, url, token, dotNetHelper) {
 
     dispose(video);
 
+    const updateVideoRatio = () => {
+        if (video.videoWidth > 0 && video.videoHeight > 0) {
+            video.parentElement?.style.setProperty(
+                "--video-ratio",
+                `${video.videoWidth} / ${video.videoHeight}`
+            );
+        }
+    };
+
+    video.addEventListener("loadedmetadata", updateVideoRatio);
+
     // ============================================================
     // Video Ended
     // ============================================================
@@ -79,6 +90,8 @@ export async function initialize(video, url, token, dotNetHelper) {
         hls.loadSource(url);
 
         hls.attachMedia(video);
+
+        hls.on(window.Hls.Events.MANIFEST_PARSED, updateVideoRatio);
 
 
         hls.on(
