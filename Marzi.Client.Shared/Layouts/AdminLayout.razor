@@ -1,0 +1,131 @@
+@inherits LayoutComponentBase
+
+@using MudBlazor
+@using Marzi.Client.Shared.Theme
+@using Marzi.Client.Shared.Components.Navigation
+@using Marzi.Client.Infrastructure.Services
+
+@inject AuthService AuthService
+@inject NavigationManager NavigationManager
+
+<MudRTLProvider RightToLeft="true">
+
+    <MudThemeProvider Theme="@AppTheme.Default" />
+    <MudPopoverProvider />
+    <MudDialogProvider />
+    <MudSnackbarProvider />
+
+    <MudLayout>
+
+        <!-- ================================================= -->
+        <!-- Desktop AppBar -->
+        <!-- ================================================= -->
+
+        <MudAppBar Elevation="1"
+                   Color="Color.Primary"
+                   Class="marzi-appbar">
+
+            <MudText Typo="Typo.h6"
+                     Class="brand-title">
+
+                Marzi Admin
+
+            </MudText>
+
+            <MudSpacer />
+
+            <div class="desktop-navigation">
+                <MudButton Href="/admin"
+                           Color="Color.Inherit"
+                           StartIcon="@Icons.Material.Filled.Dashboard">
+
+                    داشبورد
+
+                </MudButton>
+                <MudButton Href="/admin/courses"
+                           Color="Color.Inherit"
+                           StartIcon="@Icons.Material.Filled.School">
+
+                    دوره‌ها
+
+                </MudButton>
+
+
+                <MudButton Href="/admin/orders"
+                           Color="Color.Inherit"
+                           StartIcon="@Icons.Material.Filled.ShoppingCart">
+
+                    سفارش‌ها
+
+                </MudButton>
+
+
+                <MudButton Href="/portfolio"
+                           Color="Color.Inherit"
+                           StartIcon="@Icons.Material.Filled.Palette">
+
+                    نمونه‌کارها
+
+                </MudButton>
+
+
+                <MudButton Href="/"
+                           Color="Color.Inherit"
+                           StartIcon="@Icons.Material.Filled.Home">
+
+                    مشاهده سایت
+
+                </MudButton>
+
+
+                <MudIconButton Icon="@Icons.Material.Filled.Logout"
+                               Color="Color.Inherit"
+                               OnClick="LogoutAsync" />
+
+            </div>
+
+        </MudAppBar>
+
+
+        <!-- ================================================= -->
+        <!-- Main Content -->
+        <!-- ================================================= -->
+
+        <MudMainContent>
+
+            <div class="main-content">
+
+                <div class="main-content-inner">
+
+                    @Body
+
+                </div>
+
+            </div>
+
+        </MudMainContent>
+
+
+        <!-- ================================================= -->
+        <!-- Mobile Admin Navigation -->
+        <!-- ================================================= -->
+
+        <AdminBottomNavigation />
+
+    </MudLayout>
+
+</MudRTLProvider>
+
+
+@code {
+
+    private async Task LogoutAsync()
+    {
+        await AuthService.LogoutAsync();
+
+        NavigationManager.NavigateTo(
+            "/",
+            forceLoad: true);
+    }
+
+}

@@ -19,7 +19,14 @@ public interface ICourseApi
     Task<ApiResponse<CourseDto>> GetByIdAsync(
         Guid id);
 
+    [Post("/api/courses")]
+    Task<ApiResponse<CourseDto>> CreateAsync(
+        [Body] CourseCreateRequest request);
 
+    [Put("/api/courses/{id}/publish")]
+    Task<ApiResponse<CourseDto>> SetPublishedAsync(
+    Guid id,
+    [Body] SetCoursePublishedRequest request);
     // ============================================================
     // Admin - Course Sections
     // ============================================================
@@ -52,7 +59,27 @@ public interface ICourseApi
 
 
 // ================================================================
-// Requests
+// Course Create Request
+// ================================================================
+
+public sealed class CourseCreateRequest
+{
+    public string Title { get; set; } = string.Empty;
+
+    public string Description { get; set; } = string.Empty;
+
+    public string CoverImageUrl { get; set; } = string.Empty;
+
+    public decimal Price { get; set; }
+
+    public bool IsPublished { get; set; }
+
+    public int DurationMinutes { get; set; }
+}
+
+
+// ================================================================
+// Section Create Request
 // ================================================================
 
 public sealed class CourseSectionCreateRequest
@@ -62,6 +89,10 @@ public sealed class CourseSectionCreateRequest
     public int OrderIndex { get; set; }
 }
 
+
+// ================================================================
+// Lesson Create Request
+// ================================================================
 
 public sealed class CourseLessonCreateRequest
 {
@@ -74,4 +105,8 @@ public sealed class CourseLessonCreateRequest
     public bool IsFreePreview { get; set; }
 
     public int OrderIndex { get; set; }
+}
+public sealed class SetCoursePublishedRequest
+{
+    public bool IsPublished { get; set; }
 }

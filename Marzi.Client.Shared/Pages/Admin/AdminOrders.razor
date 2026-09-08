@@ -1,14 +1,15 @@
 @page "/admin/orders"
 
-@using Microsoft.AspNetCore.Components.Authorization
 @using Marzi.Client.Core.Models.Orders
 @using Marzi.Client.Infrastructure.Services
 @using Marzi.Client.Shared.Layouts
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Components.Authorization
 @using MudBlazor
+@layout AdminLayout
 
-
-<MudPopoverProvider />
-
+@* <MudPopoverProvider />
+ *@
 @inject OrderService OrderService
 @inject AuthenticationStateProvider AuthenticationStateProvider
 @inject ISnackbar Snackbar

@@ -44,12 +44,25 @@ public static class DependencyInjection
                 c.BaseAddress = new Uri(baseUrl);
             });
 
-        services
-            .AddRefitClient<ICourseApi>()
-            .ConfigureHttpClient(c =>
-            {
-                c.BaseAddress = new Uri(baseUrl);
-            });
+        services.AddScoped<ICourseApi>(sp =>
+        {
+            var tokenStorage =
+                sp.GetRequiredService<ITokenStorage>();
+
+            var authHandler =
+                new AuthorizationHandler(tokenStorage)
+                {
+                    InnerHandler = new HttpClientHandler()
+                };
+
+            var httpClient =
+                new HttpClient(authHandler)
+                {
+                    BaseAddress = new Uri(baseUrl)
+                };
+
+            return RestService.For<ICourseApi>(httpClient);
+        });
 
         services
             .AddRefitClient<IPortfolioApi>()

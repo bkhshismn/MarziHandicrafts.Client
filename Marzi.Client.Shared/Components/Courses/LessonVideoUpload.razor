@@ -1,79 +1,291 @@
 @using Marzi.Client.Core.Models.Courses
 @using Marzi.Client.Infrastructure.Services
 @using Microsoft.AspNetCore.Components.Forms
+@using MudBlazor
 
-@inject CourseEpisodeService CourseEpisodeService
+@inject CourseEpisodeService EpisodeService
 @inject ISnackbar Snackbar
-@implements IDisposable
 
-<MudPaper Class="lesson-video-upload pa-5"
-          Elevation="1">
+<MudPaper Class="lesson-video-upload pa-4"
+          Elevation="0">
 
-    <MudStack Spacing="3">
+    <!-- ========================================================= -->
+    <!-- Header -->
+    <!-- ========================================================= -->
 
-        <MudStack Row="true"
-                  AlignItems="AlignItems.Center"
-                  Spacing="2">
+    <MudStack Row="true"
+              AlignItems="AlignItems.Center"
+              Spacing="2"
+              Class="mb-4">
 
-            <MudIcon Icon="@Icons.Material.Filled.VideoFile"
-                     Color="Color.Primary" />
+        <MudIcon Icon="@Icons.Material.Filled.VideoFile"
+                 Color="Color.Primary" />
 
-            <MudText Typo="Typo.h6">
-                آپلود ویدئوی درس
-            </MudText>
+        <MudText Typo="Typo.h6">
 
-        </MudStack>
-
-
-        <MudText Typo="Typo.body2"
-                 Color="Color.Secondary">
-
-            @Lesson.Title
+            آپلود ویدئوی درس
 
         </MudText>
 
+    </MudStack>
 
-        <MudTextField T="string"
-                      @bind-Value="_title"
-                      Label="عنوان ویدئو"
+
+    <!-- ========================================================= -->
+    <!-- Lesson Info -->
+    <!-- ========================================================= -->
+
+    <MudText Typo="Typo.caption"
+             Color="Color.Secondary"
+             Class="mb-3">
+
+        @Lesson.Title
+
+    </MudText>
+
+
+    <!-- ========================================================= -->
+    <!-- Existing Video -->
+    <!-- ========================================================= -->
+    @if (_loadingExistingVideo)
+    {
+        <MudAlert Severity="Severity.Info"
+                  Variant="Variant.Outlined"
+                  Class="mb-4">
+
+            <MudStack Row="true"
+                      AlignItems="AlignItems.Center"
+                      Spacing="2">
+
+                <MudProgressCircular Size="Size.Small"
+                                     Indeterminate="true" />
+
+                <span>
+                    در حال بررسی ویدئوی این درس...
+                </span>
+
+            </MudStack>
+
+        </MudAlert>
+    }
+
+
+    @if (!_loadingExistingVideo && _episodes.Count > 0)
+    {
+        <MudPaper Class="pa-3 mb-4"
+                  Elevation="1">
+
+            <MudStack Spacing="2">
+
+                <MudStack Row="true"
+                          AlignItems="AlignItems.Center"
+                          Justify="Justify.SpaceBetween">
+
+                    <MudText Typo="Typo.subtitle2">
+
+                        ویدئوی درس
+
+                    </MudText>
+
+
+                    @if (IsReady(_latestEpisode))
+                    {
+                        <MudChip T="string"
+                                 Color="Color.Success"
+                                 Size="Size.Small">
+
+                            آماده پخش
+
+                        </MudChip>
+                    }
+
+
+                    @if (IsProcessing(_latestEpisode))
+                    {
+                        <MudChip T="string"
+                                 Color="Color.Warning"
+                                 Size="Size.Small">
+
+                            در حال پردازش
+
+                        </MudChip>
+                    }
+
+
+                    @if (!IsReady(_latestEpisode) &&
+                         !IsProcessing(_latestEpisode))
+                    {
+                        <MudChip T="string"
+                                 Color="Color.Default"
+                                 Size="Size.Small">
+
+                            @_latestEpisode!.Status
+
+                        </MudChip>
+                    }
+
+                </MudStack>
+
+
+                @if (_latestEpisode is not null)
+                {
+                    <MudText Typo="Typo.body2">
+
+                        @_latestEpisode.Title
+
+                    </MudText>
+
+
+                    @if (!string.IsNullOrWhiteSpace(
+                        _latestEpisode.Description))
+                    {
+                        <MudText Typo="Typo.caption"
+                                 Color="Color.Secondary">
+
+                            @_latestEpisode.Description
+
+                        </MudText>
+                    }
+
+
+                    <MudStack Row="true"
+                              Spacing="2"
+                              AlignItems="AlignItems.Center">
+
+                        <MudChip T="string"
+                                 Size="Size.Small"
+                                 Variant="Variant.Outlined">
+
+                            ترتیب @_latestEpisode.Order
+
+                        </MudChip>
+
+
+                        @if (_latestEpisode.IsFree)
+                        {
+                            <MudChip T="string"
+                                     Size="Size.Small"
+                                     Color="Color.Info">
+
+                                پیش‌نمایش رایگان
+
+                            </MudChip>
+                        }
+
+
+                        @if (_latestEpisode.DurationSeconds > 0)
+                        {
+                            <MudChip T="string"
+                                     Size="Size.Small"
+                                     Variant="Variant.Outlined">
+
+                                @FormatDuration(
+                                    _latestEpisode.DurationSeconds)
+
+                            </MudChip>
+                        }
+
+                    </MudStack>
+
+
+                    @if (IsProcessing(_latestEpisode))
+                    {
+                        <MudProgressLinear Indeterminate="true"
+                                           Color="Color.Warning"
+                                           Class="mt-2" />
+
+                        <MudText Typo="Typo.caption"
+                                 Color="Color.Secondary">
+
+                            ویدئو آپلود شده و سرور در حال تبدیل آن به فرمت پخش است.
+
+                        </MudText>
+                    }
+
+
+                    @if (IsReady(_latestEpisode))
+                    {
+                        <MudAlert Severity="Severity.Success"
+                                  Variant="Variant.Outlined">
+
+                            ویدئو با موفقیت آماده پخش شده است.
+
+                        </MudAlert>
+                    }
+
+                }
+
+            </MudStack>
+
+        </MudPaper>
+    }
+
+
+    <!-- ========================================================= -->
+    <!-- Upload Form -->
+    <!-- ========================================================= -->
+
+    <MudStack Spacing="3">
+
+        <!-- Video Title -->
+
+        <MudTextField @bind-Value="_title"
+                      Label="عنوان ویدئو *"
                       Variant="Variant.Outlined"
+                      FullWidth="true"
                       Required="true"
                       Disabled="_uploading" />
 
 
-        <MudTextField T="string"
-                      @bind-Value="_description"
-                      Label="توضیحات"
+        <!-- Description -->
+
+        <MudTextField @bind-Value="_description"
+                      Label="توضیحات *"
                       Variant="Variant.Outlined"
                       Lines="3"
+                      FullWidth="true"
                       Required="true"
-                      RequiredError="توضیحات ویدئو را وارد کنید."
                       Disabled="_uploading" />
 
+
+        <!-- Order -->
 
         <MudNumericField T="int"
                          @bind-Value="_order"
                          Label="ترتیب"
                          Variant="Variant.Outlined"
-                         Min="0"
+                         Min="1"
+                         FullWidth="true"
                          Disabled="_uploading" />
 
 
+        <!-- Free Preview -->
+
         <MudCheckBox T="bool"
                      @bind-Value="_isFree"
-                     Color="Color.Success"
-                     Disabled="_uploading">
-
-            پیش‌نمایش رایگان
-
-        </MudCheckBox>
+                     Label="پیش‌نمایش رایگان"
+                     Color="Color.Primary"
+                     Disabled="_uploading" />
 
 
-        <InputFile OnChange="OnFileSelected"
-                   accept="video/*"
-                   disabled="@_uploading" />
+        <!-- File -->
+
+        <div>
+
+            <MudText Typo="Typo.body2"
+                     Class="mb-2">
+
+                فایل ویدئو
+
+            </MudText>
+
+            <InputFile OnChange="OnFileSelected"
+                       accept="video/*"
+                       disabled="@_uploading" />
+
+        </div>
 
 
+        <!-- Selected File -->
         @if (_selectedFile is not null)
         {
             <MudPaper Class="pa-3"
@@ -93,13 +305,16 @@
                         <div>
 
                             <MudText Typo="Typo.body2">
+
                                 @_selectedFile.Name
+
                             </MudText>
 
                             <MudText Typo="Typo.caption"
                                      Color="Color.Secondary">
 
-                                @FormatFileSize(_selectedFile.Size)
+                                @FormatFileSize(
+                                    _selectedFile.Size)
 
                             </MudText>
 
@@ -107,10 +322,12 @@
 
                     </MudStack>
 
+
                     @if (!_uploading)
                     {
                         <MudIconButton Icon="@Icons.Material.Filled.Close"
                                        Color="Color.Error"
+                                       Size="Size.Small"
                                        OnClick="ClearFile" />
                     }
 
@@ -120,10 +337,11 @@
         }
 
 
+        <!-- Error -->
         @if (!string.IsNullOrWhiteSpace(_error))
         {
             <MudAlert Severity="Severity.Error"
-                      Dense="true">
+                      Variant="Variant.Outlined">
 
                 @_error
 
@@ -131,102 +349,59 @@
         }
 
 
+        <!-- Upload Progress -->
         @if (_uploading)
         {
-            <MudProgressLinear Indeterminate="true"
-                               Color="Color.Primary" />
+            <MudAlert Severity="Severity.Info"
+                      Variant="Variant.Outlined">
 
-            <MudText Typo="Typo.caption"
-                     Color="Color.Secondary">
+                <MudStack Spacing="2">
 
-                در حال آپلود ویدئو...
+                    <MudStack Row="true"
+                              AlignItems="AlignItems.Center"
+                              Spacing="2">
 
-            </MudText>
-        }
-        @if (!string.IsNullOrWhiteSpace(_processingStatus))
-        {
-            <MudPaper Class="pa-3"
-                      Elevation="0">
+                        <MudProgressCircular Size="Size.Small"
+                                             Indeterminate="true" />
 
-                <MudStack Row="true"
-                          AlignItems="AlignItems.Center"
-                          Spacing="2">
+                        <span>
+                            در حال آپلود ویدئو...
+                        </span>
 
-                    @if (string.Equals(
-                        _processingStatus,
-                        "Pending",
-                        StringComparison.OrdinalIgnoreCase))
-                    {
-                        <MudProgressCircular Indeterminate="true"
-                                             Size="Size.Small"
-                                             Color="Color.Warning" />
+                    </MudStack>
 
-                        <MudText>
-                            در صف پردازش...
-                        </MudText>
-                    }
-                    else if (string.Equals(
-                        _processingStatus,
-                        "Processing",
-                        StringComparison.OrdinalIgnoreCase))
-                    {
-                        <MudProgressCircular Indeterminate="true"
-                                             Size="Size.Small"
-                                             Color="Color.Primary" />
+                    <MudText Typo="Typo.caption">
 
-                        <MudText>
-                            در حال پردازش و تبدیل ویدئو...
-                        </MudText>
-                    }
-                    else if (string.Equals(
-                        _processingStatus,
-                        "Ready",
-                        StringComparison.OrdinalIgnoreCase))
-                    {
-                        <MudIcon Icon="@Icons.Material.Filled.CheckCircle"
-                                 Color="Color.Success" />
+                        پس از پایان آپلود، پردازش ویدئو روی سرور انجام می‌شود.
 
-                        <MudText Color="Color.Success">
-                            ویدئو آماده پخش است
-                        </MudText>
-                    }
-                    else if (string.Equals(
-                        _processingStatus,
-                        "Failed",
-                        StringComparison.OrdinalIgnoreCase))
-                    {
-                        <MudIcon Icon="@Icons.Material.Filled.Error"
-                                 Color="Color.Error" />
-
-                        <MudText Color="Color.Error">
-                            پردازش ویدئو ناموفق بود
-                        </MudText>
-                    }
-                    else
-                    {
-                        <MudText>
-                            وضعیت: @_processingStatus
-                        </MudText>
-                    }
+                    </MudText>
 
                 </MudStack>
 
-            </MudPaper>
+            </MudAlert>
         }
+
+
+        <!-- Upload Button -->
 
         <MudButton Variant="Variant.Filled"
                    Color="Color.Primary"
+                   FullWidth="true"
                    StartIcon="@Icons.Material.Filled.CloudUpload"
-                   Disabled="@(!CanUpload)"
-                   OnClick="Upload">
+                   OnClick="UploadVideo"
+                   Disabled="@(!CanUpload)">
 
             @if (_uploading)
             {
-                <text>در حال آپلود...</text>
+                <MudProgressCircular Size="Size.Small"
+                                     Indeterminate="true" />
             }
-            else
+
+            @if (!_uploading)
             {
-                <text>آپلود ویدئو</text>
+                <span>
+                    آپلود ویدئو
+                </span>
             }
 
         </MudButton>
@@ -238,134 +413,323 @@
 
 @code {
 
+    // =========================================================
+    // Parameters
+    // =========================================================
+
     [Parameter]
-    public required CourseLessonDto Lesson { get; set; }
+    public CourseLessonDto Lesson { get; set; } = default!;
+
 
     [Parameter]
     public EventCallback<CourseEpisodeDto> OnUploaded { get; set; }
 
+
+    // =========================================================
+    // State
+    // =========================================================
+
+    private readonly List<CourseEpisodeDto> _episodes = [];
+
+    private CourseEpisodeDto? _latestEpisode;
+
     private IBrowserFile? _selectedFile;
-    private string _title = string.Empty;
-    private string _description = string.Empty;
-    private int _order;
-    private bool _isFree;
+
+    private bool _loadingExistingVideo;
+
     private bool _uploading;
+
+    private string _title = string.Empty;
+
+    private string _description = string.Empty;
+
+    private int _order = 1;
+
+    private bool _isFree;
+
     private string? _error;
 
-    private CourseEpisodeDto? _uploadedEpisode;
-    private CancellationTokenSource? _statusCts;
-    private string? _processingStatus;
+    private CancellationTokenSource? _pollCancellation;
 
-    private bool CanUpload =>
-        !_uploading &&
-        _selectedFile is not null &&
-        !string.IsNullOrWhiteSpace(_title) &&
-        !string.IsNullOrWhiteSpace(_description);
 
-    protected override void OnParametersSet()
+    // =========================================================
+    // Computed
+    // =========================================================
+
+    private bool CanUpload
     {
-        if (string.IsNullOrWhiteSpace(_title))
-            _title = Lesson.Title;
-
-        if (_order == 0)
-            _order = Lesson.OrderIndex;
-
-        _isFree = Lesson.IsFreePreview;
-    }
-
-    private void OnFileSelected(InputFileChangeEventArgs e)
-    {
-        _error = null;
-        _selectedFile = e.File;
-
-        if (_selectedFile is not null &&
-            string.IsNullOrWhiteSpace(_title))
+        get
         {
-            _title = Lesson.Title;
+            if (_uploading)
+                return false;
+
+            if (_selectedFile is null)
+                return false;
+
+            if (string.IsNullOrWhiteSpace(_title))
+                return false;
+
+            if (string.IsNullOrWhiteSpace(_description))
+                return false;
+
+            if (_order < 1)
+                return false;
+
+            return true;
         }
     }
 
-    private void ClearFile()
+
+    // =========================================================
+    // Initialize
+    // =========================================================
+
+    protected override async Task OnInitializedAsync()
     {
-        _selectedFile = null;
-        _error = null;
+        await LoadExistingVideos();
     }
 
-    private async Task Upload()
+
+    // =========================================================
+    // Load Existing Videos
+    // =========================================================
+
+    private async Task LoadExistingVideos()
     {
+        _loadingExistingVideo = true;
+
         _error = null;
-
-        if (string.IsNullOrWhiteSpace(_title))
-        {
-            _error = "عنوان ویدئو را وارد کنید.";
-            return;
-        }
-
-        if (string.IsNullOrWhiteSpace(_description))
-        {
-            _error = "توضیحات ویدئو را وارد کنید.";
-            return;
-        }
-
-        if (_selectedFile is null)
-        {
-            _error = "فایل ویدئو را انتخاب کنید.";
-            return;
-        }
-
-        if (_order < 1)
-        {
-            _error = "ترتیب ویدئو باید حداقل ۱ باشد.";
-            return;
-        }
-
-        _uploading = true;
-        _statusCts?.Cancel();
-        _statusCts?.Dispose();
-        _statusCts = new CancellationTokenSource();
 
         try
         {
-            await using var stream =
-                _selectedFile.OpenReadStream(
-                    maxAllowedSize: 2_000_000_000);
+            var result =
+                await EpisodeService.GetByLessonIdAsync(
+                    Lesson.Id);
 
-            var episode =
-                await CourseEpisodeService.UploadAsync(
-                    Lesson.Id,
-                    _title,
-                    _description,
-                    _order,
-                    _isFree,
-                    stream,
-                    _selectedFile.Name,
-                    _selectedFile.ContentType);
+            _episodes.Clear();
 
-            _uploadedEpisode = episode;
-            _processingStatus = episode.Status.ToString();
+            _episodes.AddRange(
+                result.OrderBy(x => x.Order));
 
-            await OnUploaded.InvokeAsync(episode);
+            _latestEpisode =
+                _episodes
+                    .OrderByDescending(x => x.Order)
+                    .FirstOrDefault();
 
-            Snackbar.Add(
-                "ویدئو با موفقیت آپلود شد و پردازش آن شروع شد.",
-                Severity.Success);
 
-            _selectedFile = null;
+            if (_latestEpisode is not null)
+            {
+                Lesson.HasVideo = true;
 
-            _ = PollStatusAsync(
-                episode.Id,
-                _statusCts.Token);
+                if (string.IsNullOrWhiteSpace(_title))
+                {
+                    _title =
+                        _latestEpisode.Title;
+                }
+
+                if (string.IsNullOrWhiteSpace(_description))
+                {
+                    _description =
+                        _latestEpisode.Description ?? string.Empty;
+                }
+
+                _order =
+                    Math.Max(
+                        1,
+                        _latestEpisode.Order);
+            }
+
+
+            if (_latestEpisode is not null &&
+                IsProcessing(_latestEpisode))
+            {
+                StartPolling(
+                    _latestEpisode.Id);
+            }
         }
         catch (Exception ex)
         {
             Console.WriteLine(
-                $"[VIDEO UPLOAD ERROR] {ex}");
+                $"[LESSON VIDEO] Load existing videos failed: {ex}");
+
+            _error =
+                ex.Message;
+        }
+        finally
+        {
+            _loadingExistingVideo = false;
+        }
+    }
+
+
+    // =========================================================
+    // File Selected
+    // =========================================================
+
+    private void OnFileSelected(
+        InputFileChangeEventArgs e)
+    {
+        _error = null;
+
+        try
+        {
+            _selectedFile =
+                e.File;
+
+            if (_selectedFile is null)
+                return;
+
+            Console.WriteLine(
+                $"[LESSON VIDEO] File selected: {_selectedFile.Name}");
+
+            Console.WriteLine(
+                $"[LESSON VIDEO] File size: {_selectedFile.Size}");
+
+            Console.WriteLine(
+                $"[LESSON VIDEO] Content type: {_selectedFile.ContentType}");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(
+                $"[LESSON VIDEO] File selection failed: {ex}");
+
+            _selectedFile = null;
+
+            _error =
+                "انتخاب فایل ویدئو ناموفق بود.";
+        }
+    }
+
+
+    // =========================================================
+    // Clear File
+    // =========================================================
+
+    private void ClearFile()
+    {
+        if (_uploading)
+            return;
+
+        _selectedFile = null;
+
+        _error = null;
+    }
+
+
+    // =========================================================
+    // Upload
+    // =========================================================
+
+    private async Task UploadVideo()
+    {
+        if (!CanUpload)
+            return;
+
+        _uploading = true;
+
+        _error = null;
+
+        try
+        {
+            var file =
+                _selectedFile!;
+
+            Console.WriteLine(
+                "[LESSON VIDEO] Starting upload...");
+
+            Console.WriteLine(
+                $"[LESSON VIDEO] LessonId: {Lesson.Id}");
+
+            Console.WriteLine(
+                $"[LESSON VIDEO] File: {file.Name}");
+
+            Console.WriteLine(
+                $"[LESSON VIDEO] Size: {file.Size}");
+
+            await using var stream =
+                file.OpenReadStream(
+                    maxAllowedSize: 1024L * 1024L * 1024L);
+
+            var episode =
+                await EpisodeService.UploadAsync(
+                    Lesson.Id,
+                    _title.Trim(),
+                    _description.Trim(),
+                    _order,
+                    _isFree,
+                    stream,
+                    file.Name,
+                    file.ContentType);
+
+
+            Console.WriteLine(
+                $"[LESSON VIDEO] Upload response Id: {episode.Id}");
+
+            Console.WriteLine(
+                $"[LESSON VIDEO] Upload response Status: {episode.Status}");
+
+
+            // =================================================
+            // Update lesson immediately
+            // =================================================
+
+            Lesson.HasVideo = true;
+
+
+            // =================================================
+            // Update local episode list
+            // =================================================
+
+            _episodes.RemoveAll(
+                x => x.Id == episode.Id);
+
+            _episodes.Add(
+                episode);
+
+            _latestEpisode =
+                _episodes
+                    .OrderByDescending(x => x.Order)
+                    .FirstOrDefault();
+
+
+            _selectedFile = null;
+
+
+            Snackbar.Add(
+                "ویدئو با موفقیت آپلود شد و پردازش آن آغاز شد.",
+                Severity.Success);
+
+
+            // =================================================
+            // Notify parent
+            // =================================================
+
+            await OnUploaded.InvokeAsync(
+                episode);
+
+
+            // =================================================
+            // Poll processing status
+            // =================================================
+
+            if (IsProcessing(episode))
+            {
+                StartPolling(
+                    episode.Id);
+            }
+
+            StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(
+                $"[LESSON VIDEO] Upload failed: {ex}");
 
             _error =
                 ex.Message;
 
             Snackbar.Add(
-                _error,
+                ex.Message,
                 Severity.Error);
         }
         finally
@@ -374,86 +738,209 @@
         }
     }
 
+
+    // =========================================================
+    // Polling
+    // =========================================================
+
+    private void StartPolling(
+        Guid episodeId)
+    {
+        _pollCancellation?.Cancel();
+
+        _pollCancellation?.Dispose();
+
+        _pollCancellation =
+            new CancellationTokenSource();
+
+        var token =
+            _pollCancellation.Token;
+
+        _ = PollStatusAsync(
+            episodeId,
+            token);
+    }
+
+
     private async Task PollStatusAsync(
         Guid episodeId,
         CancellationToken cancellationToken)
     {
-        const int maxConsecutiveErrors = 5;
-        var consecutiveErrors = 0;
-
-        while (!cancellationToken.IsCancellationRequested)
+        try
         {
-            try
+            for (var i = 0; i < 120; i++)
             {
+                if (cancellationToken.IsCancellationRequested)
+                    return;
+
                 await Task.Delay(
-                    TimeSpan.FromSeconds(2),
+                    TimeSpan.FromSeconds(3),
                     cancellationToken);
 
-                var status =
-                    await CourseEpisodeService.GetStatusAsync(
-                        Lesson.Id,
-                        episodeId);
 
-                consecutiveErrors = 0;
+                CourseEpisodeDto status;
 
-                _uploadedEpisode = status;
-                _processingStatus = status.Status.ToString();
-                _error = null;
-
-                await InvokeAsync(StateHasChanged);
-
-                Console.WriteLine(
-                    $"[VIDEO POLL] Status={status.Status}, " +
-                    $"VideoUrl={status.VideoUrl}, " +
-                    $"Duration={status.DurationSeconds}");
-
-                if (status.Status == VideoProcessingStatus.Ready)
+                try
                 {
+                    status =
+                        await EpisodeService.GetStatusAsync(
+                            Lesson.Id,
+                            episodeId);
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine(
+                        $"[LESSON VIDEO] Status check failed: {ex}");
+
+                    continue;
+                }
+
+
+                _latestEpisode =
+                    status;
+
+
+                var existing =
+                    _episodes.FindIndex(
+                        x => x.Id == status.Id);
+
+                if (existing >= 0)
+                {
+                    _episodes[existing] =
+                        status;
+                }
+                else
+                {
+                    _episodes.Add(
+                        status);
+                }
+
+
+                if (IsReady(status))
+                {
+                    Lesson.HasVideo = true;
+
+                    await InvokeAsync(
+                        StateHasChanged);
+
                     Snackbar.Add(
-                        "پردازش ویدئو با موفقیت انجام شد و ویدئو آماده پخش است.",
+                        "ویدئو با موفقیت پردازش شد و آماده پخش است.",
                         Severity.Success);
 
                     return;
                 }
 
-                if (status.Status == VideoProcessingStatus.Failed)
+
+                if (IsFailed(status))
                 {
-                    _error =
-                        "پردازش ویدئو با خطا مواجه شد.";
+                    await InvokeAsync(
+                        StateHasChanged);
 
                     Snackbar.Add(
-                        _error,
+                        "پردازش ویدئو با خطا مواجه شد.",
                         Severity.Error);
 
                     return;
                 }
+
+
+                await InvokeAsync(
+                    StateHasChanged);
             }
-            catch (OperationCanceledException)
-            {
-                return;
-            }
-            catch (Exception ex)
-            {
-                consecutiveErrors++;
-
-                Console.WriteLine(
-                    $"[VIDEO POLL ERROR] {ex.Message}");
-
-                if (consecutiveErrors >= maxConsecutiveErrors)
-                {
-                    _error =
-                        $"دریافت وضعیت ویدئو ناموفق بود: {ex.Message}";
-
-                    await InvokeAsync(
-                        StateHasChanged);
-
-                    return;
-                }
-            }
+        }
+        catch (OperationCanceledException)
+        {
+            // طبیعی است.
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(
+                $"[LESSON VIDEO] Polling failed: {ex}");
         }
     }
 
-    private static string FormatFileSize(long bytes)
+
+    // =========================================================
+    // Status Helpers
+    // =========================================================
+
+    private static bool IsReady(
+       CourseEpisodeDto? episode)
+    {
+        if (episode is null)
+            return false;
+
+        var status =
+            episode.Status.ToString();
+
+        return
+            string.Equals(
+                status,
+                "Ready",
+                StringComparison.OrdinalIgnoreCase)
+            ||
+            string.Equals(
+                status,
+                "Completed",
+                StringComparison.OrdinalIgnoreCase);
+    }
+
+
+    private static bool IsProcessing(
+        CourseEpisodeDto? episode)
+    {
+        if (episode is null)
+            return false;
+
+        var status =
+            episode.Status.ToString();
+
+        return
+            string.Equals(
+                status,
+                "Processing",
+                StringComparison.OrdinalIgnoreCase)
+            ||
+            string.Equals(
+                status,
+                "Pending",
+                StringComparison.OrdinalIgnoreCase)
+            ||
+            string.Equals(
+                status,
+                "Queued",
+                StringComparison.OrdinalIgnoreCase);
+    }
+
+
+    private static bool IsFailed(
+        CourseEpisodeDto? episode)
+    {
+        if (episode is null)
+            return false;
+
+        var status =
+            episode.Status.ToString();
+
+        return
+            string.Equals(
+                status,
+                "Failed",
+                StringComparison.OrdinalIgnoreCase)
+            ||
+            string.Equals(
+                status,
+                "Error",
+                StringComparison.OrdinalIgnoreCase);
+    }
+
+
+    // =========================================================
+    // Formatting
+    // =========================================================
+
+    private static string FormatFileSize(
+        long bytes)
     {
         if (bytes < 1024)
             return $"{bytes} B";
@@ -462,14 +949,43 @@
             return $"{bytes / 1024d:0.##} KB";
 
         if (bytes < 1024L * 1024L * 1024L)
-            return $"{bytes / (1024d * 1024d):0.##} MB";
+            return $"{bytes / 1024d / 1024d:0.##} MB";
 
-        return $"{bytes / (1024d * 1024d * 1024d):0.##} GB";
+        return
+            $"{bytes / 1024d / 1024d / 1024d:0.##} GB";
     }
+
+
+    private static string FormatDuration(
+        int seconds)
+    {
+        if (seconds <= 0)
+            return "مدت نامشخص";
+
+        var time =
+            TimeSpan.FromSeconds(
+                seconds);
+
+        if (time.TotalHours >= 1)
+        {
+            return
+                $"{(int)time.TotalHours:00}:{time.Minutes:00}:{time.Seconds:00}";
+        }
+
+        return
+            $"{time.Minutes:00}:{time.Seconds:00}";
+    }
+
+
+    // =========================================================
+    // Dispose
+    // =========================================================
 
     public void Dispose()
     {
-        _statusCts?.Cancel();
-        _statusCts?.Dispose();
+        _pollCancellation?.Cancel();
+
+        _pollCancellation?.Dispose();
     }
+
 }

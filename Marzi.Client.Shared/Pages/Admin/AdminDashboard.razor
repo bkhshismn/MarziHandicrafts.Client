@@ -1,0 +1,782 @@
+@page "/admin"
+
+@using Marzi.Client.Core.Models.Courses
+@using Marzi.Client.Core.Models.Orders
+@using Marzi.Client.Infrastructure.Services
+@using Microsoft.AspNetCore.Components.Authorization
+@using MudBlazor
+
+@inject CourseService CourseService
+@inject OrderService OrderService
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject ISnackbar Snackbar
+@layout AdminLayout
+
+<AuthorizeView Roles="Admin">
+
+    <Authorized>
+
+        <MudContainer MaxWidth="MaxWidth.False"
+                      Class="admin-dashboard-container">
+
+            <MudStack Spacing="4">
+
+                <!-- ================================================= -->
+                <!-- Header -->
+                <!-- ================================================= -->
+
+                <MudStack Spacing="1">
+
+                    <MudText Typo="Typo.h4">
+                        داشبورد مدیریت
+                    </MudText>
+
+                    <MudText Typo="Typo.body1"
+                             Color="Color.Secondary">
+
+                        نمای کلی از وضعیت دوره‌ها و سفارش‌های سایت
+
+                    </MudText>
+
+                </MudStack>
+
+
+                @if (_loading)
+                {
+                    <!-- ================================================= -->
+                    <!-- Loading -->
+                    <!-- ================================================= -->
+
+                    <MudGrid>
+
+                        @for (var i = 0; i < 4; i++)
+                        {
+                            <MudItem xs="12"
+                                     sm="6"
+                                     md="3">
+
+                                <MudPaper Class="pa-4"
+                                          Elevation="1">
+
+                                    <MudSkeleton Width="40%"
+                                                 Height="24px"
+                                                 Class="mb-3" />
+
+                                    <MudSkeleton Width="65%"
+                                                 Height="40px" />
+
+                                </MudPaper>
+
+                            </MudItem>
+                        }
+
+                    </MudGrid>
+                }
+                else if (!string.IsNullOrWhiteSpace(_errorMessage))
+                {
+                    <!-- ================================================= -->
+                    <!-- Error -->
+                    <!-- ================================================= -->
+
+                    <MudAlert Severity="Severity.Error"
+                              Variant="Variant.Filled">
+
+                        @_errorMessage
+
+                    </MudAlert>
+
+                    <MudButton Variant="Variant.Outlined"
+                               Color="Color.Primary"
+                               StartIcon="@Icons.Material.Filled.Refresh"
+                               OnClick="LoadDashboard">
+
+                        تلاش مجدد
+
+                    </MudButton>
+                }
+                else
+                {
+                    <!-- ================================================= -->
+                    <!-- Statistics -->
+                    <!-- ================================================= -->
+
+                    <MudGrid>
+
+                        <!-- Courses -->
+
+                        <MudItem xs="12"
+                                 sm="6"
+                                 md="3">
+
+                            <MudPaper Class="admin-stat-card pa-4"
+                                      Elevation="1">
+
+                                <MudStack Spacing="2">
+
+                                    <MudStack Row="true"
+                                              AlignItems="AlignItems.Center"
+                                              Justify="Justify.SpaceBetween">
+
+                                        <MudText Typo="Typo.body2"
+                                                 Color="Color.Secondary">
+
+                                            کل دوره‌ها
+
+                                        </MudText>
+
+                                        <MudIcon Icon="@Icons.Material.Filled.School"
+                                                 Color="Color.Primary" />
+
+                                    </MudStack>
+
+                                    <MudText Typo="Typo.h4">
+
+                                        @_courses.Count
+
+                                    </MudText>
+
+                                    <MudText Typo="Typo.caption"
+                                             Color="Color.Secondary">
+
+                                        دوره در سیستم
+
+                                    </MudText>
+
+                                </MudStack>
+
+                            </MudPaper>
+
+                        </MudItem>
+
+
+                        <!-- Published Courses -->
+
+                        <MudItem xs="12"
+                                 sm="6"
+                                 md="3">
+
+                            <MudPaper Class="admin-stat-card pa-4"
+                                      Elevation="1">
+
+                                <MudStack Spacing="2">
+
+                                    <MudStack Row="true"
+                                              AlignItems="AlignItems.Center"
+                                              Justify="Justify.SpaceBetween">
+
+                                        <MudText Typo="Typo.body2"
+                                                 Color="Color.Secondary">
+
+                                            دوره‌های منتشرشده
+
+                                        </MudText>
+
+                                        <MudIcon Icon="@Icons.Material.Filled.Public"
+                                                 Color="Color.Success" />
+
+                                    </MudStack>
+
+                                    <MudText Typo="Typo.h4">
+
+                                        @_publishedCoursesCount
+
+                                    </MudText>
+
+                                    <MudText Typo="Typo.caption"
+                                             Color="Color.Secondary">
+
+                                        آماده نمایش به کاربران
+
+                                    </MudText>
+
+                                </MudStack>
+
+                            </MudPaper>
+
+                        </MudItem>
+
+
+                        <!-- Orders -->
+
+                        <MudItem xs="12"
+                                 sm="6"
+                                 md="3">
+
+                            <MudPaper Class="admin-stat-card pa-4"
+                                      Elevation="1">
+
+                                <MudStack Spacing="2">
+
+                                    <MudStack Row="true"
+                                              AlignItems="AlignItems.Center"
+                                              Justify="Justify.SpaceBetween">
+
+                                        <MudText Typo="Typo.body2"
+                                                 Color="Color.Secondary">
+
+                                            کل سفارش‌ها
+
+                                        </MudText>
+
+                                        <MudIcon Icon="@Icons.Material.Filled.ShoppingCart"
+                                                 Color="Color.Primary" />
+
+                                    </MudStack>
+
+                                    <MudText Typo="Typo.h4">
+
+                                        @_orders.Count
+
+                                    </MudText>
+
+                                    <MudText Typo="Typo.caption"
+                                             Color="Color.Secondary">
+
+                                        سفارش ثبت‌شده
+
+                                    </MudText>
+
+                                </MudStack>
+
+                            </MudPaper>
+
+                        </MudItem>
+
+
+                        <!-- New Orders -->
+
+                        <MudItem xs="12"
+                                 sm="6"
+                                 md="3">
+
+                            <MudPaper Class="admin-stat-card pa-4"
+                                      Elevation="1">
+
+                                <MudStack Spacing="2">
+
+                                    <MudStack Row="true"
+                                              AlignItems="AlignItems.Center"
+                                              Justify="Justify.SpaceBetween">
+
+                                        <MudText Typo="Typo.body2"
+                                                 Color="Color.Secondary">
+
+                                            سفارش‌های جدید
+
+                                        </MudText>
+
+                                        <MudIcon Icon="@Icons.Material.Filled.NotificationsActive"
+                                                 Color="Color.Warning" />
+
+                                    </MudStack>
+
+                                    <MudText Typo="Typo.h4">
+
+                                        @_newOrdersCount
+
+                                    </MudText>
+
+                                    <MudText Typo="Typo.caption"
+                                             Color="Color.Secondary">
+
+                                        نیازمند بررسی
+
+                                    </MudText>
+
+                                </MudStack>
+
+                            </MudPaper>
+
+                        </MudItem>
+
+                    </MudGrid>
+
+
+                    <!-- ================================================= -->
+                    <!-- Quick Actions -->
+                    <!-- ================================================= -->
+
+                    <MudPaper Class="pa-4"
+                              Elevation="1">
+
+                        <MudStack Spacing="3">
+
+                            <div>
+
+                                <MudText Typo="Typo.h6">
+                                    دسترسی سریع
+                                </MudText>
+
+                                <MudText Typo="Typo.body2"
+                                         Color="Color.Secondary">
+
+                                    مدیریت بخش‌های اصلی سایت
+
+                                </MudText>
+
+                            </div>
+
+
+                            <MudGrid>
+
+                                <MudItem xs="12"
+                                         sm="6">
+
+                                    <MudButton Href="/admin/courses"
+                                               Variant="Variant.Filled"
+                                               Color="Color.Primary"
+                                               FullWidth="true"
+                                               Size="Size.Large"
+                                               StartIcon="@Icons.Material.Filled.School">
+
+                                        مدیریت دوره‌ها
+
+                                    </MudButton>
+
+                                </MudItem>
+
+
+                                <MudItem xs="12"
+                                         sm="6">
+
+                                    <MudButton Href="/admin/orders"
+                                               Variant="Variant.Outlined"
+                                               Color="Color.Primary"
+                                               FullWidth="true"
+                                               Size="Size.Large"
+                                               StartIcon="@Icons.Material.Filled.ShoppingCart">
+
+                                        مدیریت سفارش‌ها
+
+                                    </MudButton>
+
+                                </MudItem>
+
+                            </MudGrid>
+
+                        </MudStack>
+
+                    </MudPaper>
+
+
+                    <!-- ================================================= -->
+                    <!-- Recent Orders -->
+                    <!-- ================================================= -->
+
+                    <MudPaper Class="pa-4"
+                              Elevation="1">
+
+                        <MudStack Spacing="3">
+
+                            <MudStack Row="true"
+                                      AlignItems="AlignItems.Center"
+                                      Justify="Justify.SpaceBetween">
+
+                                <div>
+
+                                    <MudText Typo="Typo.h6">
+                                        آخرین سفارش‌ها
+                                    </MudText>
+
+                                    <MudText Typo="Typo.body2"
+                                             Color="Color.Secondary">
+
+                                        جدیدترین سفارش‌های ثبت‌شده
+
+                                    </MudText>
+
+                                </div>
+
+                                <MudButton Href="/admin/orders"
+                                           Variant="Variant.Text"
+                                           Color="Color.Primary">
+
+                                    مشاهده همه
+
+                                </MudButton>
+
+                            </MudStack>
+
+
+                            @if (_orders.Count == 0)
+                            {
+                                <MudAlert Severity="Severity.Info"
+                                          Variant="Variant.Outlined">
+
+                                    هنوز سفارشی ثبت نشده است.
+
+                                </MudAlert>
+                            }
+                            else
+                            {
+                                <MudStack Spacing="1">
+
+                                    @foreach (var order in LatestOrders)
+                                    {
+                                        <MudPaper Class="admin-order-row pa-3"
+                                                  Elevation="0">
+
+                                            <MudStack Row="true"
+                                                      AlignItems="AlignItems.Center"
+                                                      Justify="Justify.SpaceBetween"
+                                                      Spacing="2">
+
+                                                <MudStack Row="true"
+                                                          AlignItems="AlignItems.Center"
+                                                          Spacing="2">
+
+                                                    <MudAvatar Size="Size.Small"
+                                                               Color="Color.Primary">
+
+                                                        <MudIcon Icon="@Icons.Material.Filled.ShoppingBag"
+                                                                 Size="Size.Small" />
+
+                                                    </MudAvatar>
+
+                                                    <div>
+
+                                                        <MudText Typo="Typo.body1">
+                                                            @GetTypeText(order.Type)
+                                                        </MudText>
+
+                                                        <MudText Typo="Typo.caption"
+                                                                 Color="Color.Secondary">
+
+                                                            @order.CreatedAt.ToString("yyyy/MM/dd HH:mm")
+
+                                                        </MudText>
+
+                                                    </div>
+
+                                                </MudStack>
+
+
+                                                <MudChip T="string"
+                                                         Size="Size.Small"
+                                                         Color="@GetStatusColor(order.Status)">
+
+                                                    @GetStatusText(order.Status)
+
+                                                </MudChip>
+
+                                            </MudStack>
+
+                                        </MudPaper>
+                                    }
+
+                                </MudStack>
+                            }
+
+                        </MudStack>
+
+                    </MudPaper>
+
+
+                    <!-- ================================================= -->
+                    <!-- Course Status -->
+                    <!-- ================================================= -->
+
+                    <MudPaper Class="pa-4"
+                              Elevation="1">
+
+                        <MudStack Spacing="3">
+
+                            <div>
+
+                                <MudText Typo="Typo.h6">
+                                    وضعیت دوره‌ها
+                                </MudText>
+
+                                <MudText Typo="Typo.body2"
+                                         Color="Color.Secondary">
+
+                                    وضعیت انتشار دوره‌های موجود
+
+                                </MudText>
+
+                            </div>
+
+
+                            @if (_courses.Count == 0)
+                            {
+                                <MudAlert Severity="Severity.Info"
+                                          Variant="Variant.Outlined">
+
+                                    هنوز دوره‌ای ثبت نشده است.
+
+                                </MudAlert>
+                            }
+                            else
+                            {
+                                <MudStack Spacing="2">
+
+                                    @foreach (var course in _courses)
+                                    {
+                                        <MudPaper Class="admin-course-row pa-3"
+                                                  Elevation="0">
+
+                                            <MudStack Row="true"
+                                                      AlignItems="AlignItems.Center"
+                                                      Justify="Justify.SpaceBetween"
+                                                      Spacing="2">
+
+                                                <MudStack Row="true"
+                                                          AlignItems="AlignItems.Center"
+                                                          Spacing="2">
+
+                                                    <MudIcon Icon="@Icons.Material.Filled.School"
+                                                             Color="Color.Primary" />
+
+                                                    <MudText Typo="Typo.body1">
+
+                                                        @course.Title
+
+                                                    </MudText>
+
+                                                </MudStack>
+
+
+                                                @if (course.IsPublished)
+                                                {
+                                                    <MudChip T="string"
+                                                             Size="Size.Small"
+                                                             Color="Color.Success">
+
+                                                        منتشر شده
+
+                                                    </MudChip>
+                                                }
+                                                else
+                                                {
+                                                    <MudChip T="string"
+                                                             Size="Size.Small"
+                                                             Color="Color.Warning">
+
+                                                        منتشر نشده
+
+                                                    </MudChip>
+                                                }
+
+                                            </MudStack>
+
+                                        </MudPaper>
+                                    }
+
+                                </MudStack>
+                            }
+
+                        </MudStack>
+
+                    </MudPaper>
+
+                }
+
+            </MudStack>
+
+        </MudContainer>
+
+    </Authorized>
+
+
+    <NotAuthorized>
+
+        <MudContainer MaxWidth="MaxWidth.Medium"
+                      Class="pa-6">
+
+            <MudPaper Class="pa-8 text-center"
+                      Elevation="1">
+
+                <MudIcon Icon="@Icons.Material.Filled.Lock"
+                         Size="Size.Large"
+                         Color="Color.Error" />
+
+                <MudText Typo="Typo.h5"
+                         Class="mt-4">
+
+                    دسترسی غیرمجاز
+
+                </MudText>
+
+                <MudText Typo="Typo.body2"
+                         Color="Color.Secondary"
+                         Class="mt-2">
+
+                    شما اجازه دسترسی به پنل مدیریت را ندارید.
+
+                </MudText>
+
+                <MudButton Href="/"
+                           Variant="Variant.Outlined"
+                           Color="Color.Primary"
+                           Class="mt-4">
+
+                    بازگشت به سایت
+
+                </MudButton>
+
+            </MudPaper>
+
+        </MudContainer>
+
+    </NotAuthorized>
+
+</AuthorizeView>
+
+
+@code {
+
+    private IReadOnlyList<CourseDto> _courses = [];
+
+    private IReadOnlyList<OrderDto> _orders = [];
+
+    private bool _loading = true;
+
+    private string? _errorMessage;
+
+
+    private int _publishedCoursesCount =>
+        _courses.Count(x => x.IsPublished);
+
+
+    private int _newOrdersCount =>
+        _orders.Count(x =>
+            x.Status == "Pending" ||
+            x.Status == "New");
+
+
+    private IEnumerable<OrderDto> LatestOrders =>
+        _orders
+            .OrderByDescending(x => x.CreatedAt)
+            .Take(5);
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadDashboard();
+    }
+
+
+    private async Task LoadDashboard()
+    {
+        _loading = true;
+        _errorMessage = null;
+
+        try
+        {
+            var state =
+                await AuthenticationStateProvider
+                    .GetAuthenticationStateAsync();
+
+            if (state.User.Identity?.IsAuthenticated != true ||
+                !state.User.IsInRole("Admin"))
+            {
+                _errorMessage =
+                    "شما دسترسی مشاهده داشبورد مدیریت را ندارید.";
+
+                return;
+            }
+
+
+            var coursesTask =
+                CourseService.GetAllAsync();
+
+            var ordersTask =
+                OrderService.GetAllForAdminAsync();
+
+            await Task.WhenAll(
+                coursesTask,
+                ordersTask);
+
+
+            _courses =
+                await coursesTask;
+
+            _orders =
+                await ordersTask;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(
+                $"[ADMIN DASHBOARD] Load failed: {ex}");
+
+            _errorMessage =
+                "دریافت اطلاعات داشبورد با خطا مواجه شد.";
+
+            Snackbar.Add(
+                "دریافت اطلاعات داشبورد با خطا مواجه شد.",
+                Severity.Error);
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+
+
+    private static string GetTypeText(string type)
+    {
+        return type switch
+        {
+            "مجسمه" => "مجسمه",
+            "چهره" => "چهره",
+            "سفارشی" => "سفارش سفارشی",
+
+            "custom" => "سفارشی",
+            "statue" => "مجسمه",
+            "painting" => "نقاشی",
+
+            _ => type
+        };
+    }
+
+
+    private static Color GetStatusColor(string status)
+    {
+        return status switch
+        {
+            "Pending" =>
+                Color.Warning,
+
+            "InProgress" =>
+                Color.Info,
+
+            "Completed" =>
+                Color.Success,
+
+            "Cancelled" =>
+                Color.Error,
+
+            "New" =>
+                Color.Warning,
+
+            _ =>
+                Color.Default
+        };
+    }
+
+
+    private static string GetStatusText(string status)
+    {
+        return status switch
+        {
+            "Pending" =>
+                "جدید",
+
+            "InProgress" =>
+                "در حال ساخت",
+
+            "Completed" =>
+                "تکمیل شده",
+
+            "Cancelled" =>
+                "لغو شده",
+
+            "New" =>
+                "جدید",
+
+            _ =>
+                status
+        };
+    }
+
+}

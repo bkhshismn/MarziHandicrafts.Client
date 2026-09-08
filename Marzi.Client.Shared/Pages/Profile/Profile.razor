@@ -1,7 +1,32 @@
 @page "/profile"
+
 @using MudBlazor
+@using Marzi.Client.Infrastructure.Services
 
-<MudText Typo="Typo.h4" Class="mb-2">پروفایل کاربری</MudText>
-<MudText Typo="Typo.body1" Color="Color.Secondary">اطلاعات حساب و دوره‌های من اینجا نمایش داده می‌شود.</MudText>
+@inject AuthService AuthService
+@inject NavigationManager Navigation
 
+<MudText Typo="Typo.h4" Class="mb-2">
+    پروفایل کاربری
+</MudText>
 
+<MudText Typo="Typo.body1"
+         Color="Color.Secondary"
+         Class="mb-4">
+    اطلاعات حساب و دوره‌های من اینجا نمایش داده می‌شود.
+</MudText>
+
+<MudButton Variant="Variant.Outlined"
+           Color="Color.Error"
+           StartIcon="@Icons.Material.Filled.Logout"
+           OnClick="Logout">
+    خروج از حساب
+</MudButton>
+
+@code {
+    private async Task Logout()
+    {
+        await AuthService.LogoutAsync();
+        Navigation.NavigateTo("/login", forceLoad: true);
+    }
+}

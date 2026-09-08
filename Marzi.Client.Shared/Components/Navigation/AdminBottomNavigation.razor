@@ -1,0 +1,89 @@
+@using MudBlazor
+
+<div class="admin-mobile-bottom-navigation">
+    <MudButton Href="/admin"
+               Class="admin-mobile-nav-item"
+               Variant="Variant.Text"
+               Color="Color.Inherit"
+               StartIcon="@Icons.Material.Filled.Dashboard">
+
+        <span>داشبورد</span>
+
+    </MudButton>
+
+    <MudButton Href="/admin/courses"
+               Class="admin-mobile-nav-item"
+               Variant="Variant.Text"
+               Color="Color.Inherit"
+               StartIcon="@Icons.Material.Filled.School">
+
+        <span>دوره‌ها</span>
+
+    </MudButton>
+
+
+    <MudButton Href="/admin/orders"
+               Class="admin-mobile-nav-item"
+               Variant="Variant.Text"
+               Color="Color.Inherit"
+               StartIcon="@Icons.Material.Filled.ShoppingCart">
+
+        <span>سفارش‌ها</span>
+
+    </MudButton>
+
+
+    <MudButton Href="/portfolio"
+               Class="admin-mobile-nav-item"
+               Variant="Variant.Text"
+               Color="Color.Inherit"
+               StartIcon="@Icons.Material.Filled.Palette">
+
+        <span>نمونه‌کارها</span>
+
+    </MudButton>
+
+
+    <MudButton Href="/"
+               Class="admin-mobile-nav-item"
+               Variant="Variant.Text"
+               Color="Color.Inherit"
+               StartIcon="@Icons.Material.Filled.Home">
+
+        <span>سایت</span>
+
+    </MudButton>
+
+
+    <MudButton Class="admin-mobile-nav-item"
+               Variant="Variant.Text"
+               Color="Color.Inherit"
+               StartIcon="@Icons.Material.Filled.Logout"
+               OnClick="LogoutAsync">
+
+        <span>خروج</span>
+
+    </MudButton>
+
+</div>
+
+
+@code {
+
+    [Inject]
+    private Marzi.Client.Infrastructure.Services.AuthService AuthService { get; set; } = default!;
+
+    [Inject]
+    private NavigationManager NavigationManager { get; set; } = default!;
+
+
+    private async Task LogoutAsync()
+    {
+        await AuthService.LogoutAsync();
+
+        NavigationManager.NavigateTo(
+            "/",
+            forceLoad: true);
+    }
+
+}

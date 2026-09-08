@@ -595,3 +595,137 @@ h6 {
             max-width: 100% !important;
         }
 }
+/* ============================================================
+   Admin Mobile Bottom Navigation
+   ============================================================ */
+
+.admin-mobile-bottom-navigation {
+    display: none;
+}
+
+
+/* ============================================================
+   Mobile
+   ============================================================ */
+
+@media (max-width: 768px) {
+
+    .admin-mobile-bottom-navigation {
+        position: fixed;
+        right: 0;
+        bottom: 0;
+        left: 0;
+        z-index: 1100;
+        display: flex;
+        align-items: stretch;
+        justify-content: space-around;
+        height: 64px;
+        padding: 6px 8px env(safe-area-inset-bottom);
+        background: var(--mud-palette-surface);
+        border-top: 1px solid var(--mud-palette-lines-default);
+        box-shadow: 0 -2px 12px rgba(0, 0, 0, 0.08);
+    }
+
+
+    .admin-mobile-nav-item {
+        min-width: 0 !important;
+        flex: 1 1 0;
+        height: 52px;
+        padding: 4px 2px !important;
+        border-radius: 8px;
+        font-size: 11px;
+    }
+
+
+        .admin-mobile-nav-item .mud-button-label {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 2px;
+            line-height: 1.2;
+        }
+
+
+        .admin-mobile-nav-item .mud-button-start-icon {
+            margin: 0 !important;
+            font-size: 20px;
+        }
+
+
+        .admin-mobile-nav-item span {
+            white-space: nowrap;
+        }
+
+
+    /* فضای پایین صفحه برای Bottom Navigation */
+
+    .admin-mobile-bottom-navigation ~ * {
+        padding-bottom: 0;
+    }
+
+
+    .main-content {
+        padding-bottom: 76px;
+    }
+}
+
+
+/* ============================================================
+   Desktop
+   ============================================================ */
+
+@media (min-width: 769px) {
+
+    .admin-mobile-bottom-navigation {
+        display: none !important;
+    }
+}
+
+/* ============================================================
+   Admin Dashboard
+   ============================================================ */
+
+.admin-dashboard-container {
+    padding-top: 24px;
+    padding-bottom: 32px;
+}
+
+
+.admin-stat-card {
+    height: 100%;
+    border-radius: 14px;
+}
+
+
+.admin-order-row,
+.admin-course-row {
+    border-radius: 10px;
+    background: rgba(0, 0, 0, 0.025);
+}
+
+
+    .admin-order-row:hover,
+    .admin-course-row:hover {
+        background: rgba(0, 0, 0, 0.045);
+    }
+
+
+@media (max-width: 768px) {
+
+    .admin-dashboard-container {
+        padding-top: 16px;
+        padding-bottom: 88px;
+    }
+
+
+    .admin-stat-card {
+        min-height: 135px;
+    }
+
+
+    .admin-order-row,
+    .admin-course-row {
+        padding: 12px !important;
+    }
+}

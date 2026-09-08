@@ -16,6 +16,10 @@ public sealed class CourseService
     // Courses
     // ============================================================
 
+    // ============================================================
+    // Courses
+    // ============================================================
+
     public async Task<IReadOnlyList<CourseDto>> GetPublishedAsync()
     {
         try
@@ -64,6 +68,22 @@ public sealed class CourseService
         {
             throw new InvalidOperationException(
                 "دریافت دوره‌ها با خطا مواجه شد.");
+        }
+
+        return response.Content;
+    }
+
+    public async Task<CourseDto> CreateAsync(
+        CourseCreateRequest request)
+    {
+        var response =
+            await _api.CreateAsync(request);
+
+        if (!response.IsSuccessStatusCode ||
+            response.Content is null)
+        {
+            throw new InvalidOperationException(
+                "ایجاد دوره با خطا مواجه شد.");
         }
 
         return response.Content;
@@ -152,6 +172,28 @@ public sealed class CourseService
         {
             throw new InvalidOperationException(
                 "ایجاد درس با خطا مواجه شد.");
+        }
+
+        return response.Content;
+    }
+
+    public async Task<CourseDto> SetPublishedAsync(
+      Guid id,
+      bool isPublished)
+    {
+        var response =
+            await _api.SetPublishedAsync(
+                id,
+                new SetCoursePublishedRequest
+                {
+                    IsPublished = isPublished
+                });
+
+        if (!response.IsSuccessStatusCode ||
+            response.Content is null)
+        {
+            throw new InvalidOperationException(
+                "تغییر وضعیت انتشار دوره با خطا مواجه شد.");
         }
 
         return response.Content;
