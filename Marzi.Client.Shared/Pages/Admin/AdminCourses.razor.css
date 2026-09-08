@@ -1,10 +1,14 @@
 .course-info-header {
+    display: flex !important;
+    flex-direction: column !important;
     gap: 1rem;
 }
 
 .course-info-title {
     min-width: 0;
     flex: 1 1 auto;
+    overflow-wrap: break-word;
+    word-break: normal;
 }
 
 .course-info-controls {
@@ -17,12 +21,13 @@
     white-space: nowrap;
 }
 
-@media (max-width: 600px) {
+@media (min-width: 601px) {
     .course-info-header {
-        align-items: stretch !important;
-        flex-direction: column !important;
+        flex-direction: row !important;
     }
+}
 
+@media (max-width: 600px) {
     .course-info-title {
         width: 100%;
     }
