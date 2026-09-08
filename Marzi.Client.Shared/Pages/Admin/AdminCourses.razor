@@ -319,7 +319,7 @@
                                                     <MudButton Variant="Variant.Outlined"
                                                                Color="Color.Warning"
                                                                Size="Size.Small"
-                                                               Class="course-action-button"
+                                                               Class="course-action-button course-action-secondary"
                                                                StartIcon="@Icons.Material.Filled.VisibilityOff"
                                                                OnClick="TogglePublishedAsync"
                                                                Disabled="_publishingCourse">
@@ -341,7 +341,7 @@
                                                     <MudButton Variant="Variant.Filled"
                                                                Color="Color.Success"
                                                                Size="Size.Small"
-                                                               Class="course-action-button"
+                                                               Class="course-action-button course-action-primary"
                                                                StartIcon="@Icons.Material.Filled.Publish"
                                                                OnClick="TogglePublishedAsync"
                                                                Disabled="_publishingCourse">
@@ -354,6 +354,7 @@
                                                 <MudButton Variant="Variant.Outlined"
                                                            Color="Color.Error"
                                                            Size="Size.Small"
+                                                           Class="course-action-button course-action-danger"
                                                            StartIcon="@Icons.Material.Filled.Delete"
                                                            OnClick="DeleteSelectedCourseAsync"
                                                            Disabled="_deletingCourse">
