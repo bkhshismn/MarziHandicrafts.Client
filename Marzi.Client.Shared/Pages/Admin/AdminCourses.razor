@@ -168,7 +168,7 @@
                 <!-- ================================================= -->
                 @if (!_loading && _courses.Count > 0)
                 {
-                    <MudGrid>
+                    <MudGrid Class="admin-course-layout">
 
                         <!-- ================================================= -->
                         <!-- Course List -->
@@ -176,7 +176,8 @@
 
                         <MudItem xs="12"
                                  md="4"
-                                 lg="3">
+                                 lg="3"
+                                 Class="admin-course-list-column">
 
                             <MudPaper Class="pa-3"
                                       Elevation="1">
@@ -228,7 +229,8 @@
 
                         <MudItem xs="12"
                                  md="8"
-                                 lg="9">
+                                 lg="9"
+                                 Class="admin-course-content-column">
 
                             @if (_selectedCourse is null)
                             {
@@ -393,6 +395,7 @@
                                               Elevation="1">
 
                                         <MudStack Row="true"
+                                                  Class="section-header"
                                                   AlignItems="AlignItems.Center"
                                                   Justify="Justify.SpaceBetween">
 
@@ -476,11 +479,13 @@
                                                     <TitleContent>
 
                                                         <MudStack Row="true"
+                                                                  Class="section-title-row"
                                                                   AlignItems="AlignItems.Center"
                                                                   Justify="Justify.SpaceBetween"
                                                                   Style="width:100%;">
 
                                                             <MudStack Row="true"
+                                                                      Class="lesson-header"
                                                                       AlignItems="AlignItems.Center"
                                                                       Spacing="2">
 

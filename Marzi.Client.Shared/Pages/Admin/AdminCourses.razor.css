@@ -21,6 +21,30 @@
     white-space: nowrap;
 }
 
+.admin-course-layout,
+.admin-course-layout :deep(.mud-grid-item),
+.admin-course-content-column {
+    min-width: 0;
+    max-width: 100%;
+    box-sizing: border-box;
+}
+
+.admin-course-content-column > :deep(.mud-stack) {
+    min-width: 0;
+}
+
+.section-header,
+.section-title-row,
+.lesson-header {
+    min-width: 0;
+    max-width: 100%;
+}
+
+.lesson-header > :deep(.mud-stack) {
+    min-width: 0;
+    overflow-wrap: anywhere;
+}
+
 @media (min-width: 601px) {
     .course-info-header {
         flex-direction: row !important;
@@ -28,6 +52,33 @@
 }
 
 @media (max-width: 600px) {
+    .admin-course-layout {
+        margin-left: 0 !important;
+        margin-right: 0 !important;
+    }
+
+    .admin-course-list-column,
+    .admin-course-content-column {
+        padding-left: 0 !important;
+        padding-right: 0 !important;
+    }
+
+    .section-header {
+        align-items: stretch !important;
+        gap: 0.75rem;
+    }
+
+    .section-header,
+    .section-title-row,
+    .lesson-header {
+        flex-wrap: wrap !important;
+    }
+
+    .section-header > :deep(.mud-button),
+    .lesson-header > :deep(.mud-chip) {
+        max-width: 100%;
+    }
+
     .course-info-title {
         width: 100%;
     }
