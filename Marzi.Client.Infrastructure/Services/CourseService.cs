@@ -198,4 +198,15 @@ public sealed class CourseService
 
         return response.Content;
     }
+
+    public async Task DeleteAsync(Guid id)
+    {
+        var response = await _api.DeleteAsync(id);
+
+        if (!response.IsSuccessStatusCode)
+        {
+            throw new InvalidOperationException(
+                "حذف دوره با خطا مواجه شد.");
+        }
+    }
 }

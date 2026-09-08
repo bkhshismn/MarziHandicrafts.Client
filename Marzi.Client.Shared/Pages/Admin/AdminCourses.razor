@@ -7,11 +7,13 @@
 @using Marzi.Client.Shared.Components.Courses
 @using Marzi.Client.Shared.Layouts
 @using Microsoft.AspNetCore.Components.Authorization
+@using Microsoft.JSInterop
 @using MudBlazor
 
 @inject CourseService CourseService
 @inject ISnackbar Snackbar
 @inject AuthenticationStateProvider AuthenticationStateProvider
+@inject IJSRuntime JS
 
 
 <AuthorizeView Roles="Admin,Instructor">
@@ -343,6 +345,25 @@
 
                                                     </MudButton>
                                                 }
+
+                                                <MudButton Variant="Variant.Outlined"
+                                                           Color="Color.Error"
+                                                           Size="Size.Small"
+                                                           StartIcon="@Icons.Material.Filled.Delete"
+                                                           OnClick="DeleteSelectedCourseAsync"
+                                                           Disabled="_deletingCourse">
+
+                                                    @if (_deletingCourse)
+                                                    {
+                                                        <MudProgressCircular Size="Size.Small"
+                                                                             Indeterminate="true" />
+                                                    }
+                                                    else
+                                                    {
+                                                        <span>حذف دوره</span>
+                                                    }
+
+                                                </MudButton>
 
 
                                                 <MudChip T="string"
@@ -1018,6 +1039,7 @@
 
     private string? _errorMessage;
     private bool _publishingCourse;
+    private bool _deletingCourse;
 
     // ============================================================
     // Create Course
@@ -1724,6 +1746,41 @@
         finally
         {
             _publishingCourse = false;
+        }
+    }
+
+    private async Task DeleteSelectedCourseAsync()
+    {
+        if (_selectedCourse is null || _deletingCourse)
+            return;
+
+        var courseTitle = _selectedCourse.Title;
+        var confirmed = await JS.InvokeAsync<bool>(
+            "confirm",
+            $"آیا از حذف دوره «{courseTitle}» و تمام فصل‌ها، درس‌ها و ویدئوهای آن مطمئن هستید؟");
+
+        if (!confirmed)
+            return;
+
+        _deletingCourse = true;
+
+        try
+        {
+            await CourseService.DeleteAsync(_selectedCourse.Id);
+            _selectedCourse = null;
+            _sections = [];
+
+            Snackbar.Add("دوره و محتوای آن با موفقیت حذف شد.", Severity.Success);
+            await LoadCourses();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[ADMIN COURSES] Delete failed: {ex}");
+            Snackbar.Add(ex.Message, Severity.Error);
+        }
+        finally
+        {
+            _deletingCourse = false;
         }
     }
 }

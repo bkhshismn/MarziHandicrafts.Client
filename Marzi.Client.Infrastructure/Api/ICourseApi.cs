@@ -27,6 +27,9 @@ public interface ICourseApi
     Task<ApiResponse<CourseDto>> SetPublishedAsync(
     Guid id,
     [Body] SetCoursePublishedRequest request);
+
+    [Delete("/api/courses/{id}")]
+    Task<ApiResponse<object>> DeleteAsync(Guid id);
     // ============================================================
     // Admin - Course Sections
     // ============================================================
