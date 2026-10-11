@@ -349,6 +349,10 @@ h6 {
     min-width: 0;
 }
 
+.mobile-auth-action {
+    display: none;
+}
+
 
 /* =========================================================
    13. MOBILE BOTTOM NAVIGATION
@@ -379,6 +383,11 @@ h6 {
 
     .desktop-navigation {
         display: none;
+    }
+
+    .mobile-auth-action {
+        display: flex;
+        align-items: center;
     }
 
     .main-content {
@@ -588,14 +597,12 @@ h6 {
     }
 
     .video-player-wrapper {
-        width: 100% !important;
         max-width: 100% !important;
         max-height: min(70vh, 720px) !important;
     }
 
         .video-player-wrapper .video-player,
         video.video-player {
-            width: 100% !important;
             max-width: 100% !important;
         }
 }

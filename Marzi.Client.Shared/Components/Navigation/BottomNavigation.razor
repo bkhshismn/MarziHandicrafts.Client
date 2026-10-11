@@ -1,4 +1,5 @@
 @using MudBlazor
+@using Microsoft.AspNetCore.Components.Authorization
 
 <div class="bottom-nav">
 
@@ -47,14 +48,23 @@
     </NavLink>
 
 
-    <NavLink href="/profile"
-             class="nav-link">
-
-        <MudIcon Icon="@Icons.Material.Filled.Person"
-                 Size="Size.Small" />
-
-        <span>پروفایل</span>
-
-    </NavLink>
+    <AuthorizeView>
+        <Authorized>
+            <NavLink href="/profile"
+                     class="nav-link">
+                <MudIcon Icon="@Icons.Material.Filled.Person"
+                         Size="Size.Small" />
+                <span>پروفایل</span>
+            </NavLink>
+        </Authorized>
+        <NotAuthorized>
+            <NavLink href="/login"
+                     class="nav-link">
+                <MudIcon Icon="@Icons.Material.Filled.Login"
+                         Size="Size.Small" />
+                <span>ورود</span>
+            </NavLink>
+        </NotAuthorized>
+    </AuthorizeView>
 
 </div>

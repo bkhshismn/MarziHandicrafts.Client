@@ -1,8 +1,13 @@
 @inherits LayoutComponentBase
 
 @using MudBlazor
+@using Microsoft.AspNetCore.Components.Authorization
 @using Marzi.Client.Shared.Components.Navigation
 @using Marzi.Client.Shared.Theme
+@using Marzi.Client.Infrastructure.Services
+
+@inject AuthService AuthService
+@inject NavigationManager Navigation
 
 <MudRTLProvider RightToLeft="true">
 
@@ -50,12 +55,46 @@
                     سفارش
                 </MudButton>
 
-                <MudButton Href="/profile"
-                           Color="Color.Inherit"
-                           StartIcon="@Icons.Material.Filled.Person">
-                    پروفایل
-                </MudButton>
+                <AuthorizeView>
+                    <Authorized>
+                        <MudButton Href="/profile"
+                                   Color="Color.Inherit"
+                                   StartIcon="@Icons.Material.Filled.Person">
+                            پروفایل
+                        </MudButton>
 
+                        <MudButton Color="Color.Inherit"
+                                   StartIcon="@Icons.Material.Filled.Logout"
+                                   OnClick="LogoutAsync">
+                            خروج
+                        </MudButton>
+                    </Authorized>
+                    <NotAuthorized>
+                        <MudButton Href="/login"
+                                   Color="Color.Inherit"
+                                   StartIcon="@Icons.Material.Filled.Login">
+                            ورود
+                        </MudButton>
+                    </NotAuthorized>
+                </AuthorizeView>
+
+            </div>
+
+            <div class="mobile-auth-action">
+                <AuthorizeView>
+                    <Authorized>
+                        <MudIconButton Icon="@Icons.Material.Filled.Logout"
+                                       Color="Color.Inherit"
+                                       title="خروج"
+                                       OnClick="LogoutAsync" />
+                    </Authorized>
+                    <NotAuthorized>
+                        <MudIconButton Href="/login"
+                                       Icon="@Icons.Material.Filled.Login"
+                                       Color="Color.Inherit"
+                                       title="ورود" />
+                    </NotAuthorized>
+                </AuthorizeView>
             </div>
 
             <MudIconButton Icon="@Icons.Material.Filled.Notifications"
@@ -84,3 +123,11 @@
     </MudLayout>
 
 </MudRTLProvider>
+
+@code {
+    private async Task LogoutAsync()
+    {
+        await AuthService.LogoutAsync();
+        Navigation.NavigateTo("/", replace: true);
+    }
+}

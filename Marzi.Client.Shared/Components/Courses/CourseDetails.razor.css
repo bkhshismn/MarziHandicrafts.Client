@@ -85,9 +85,20 @@
    ========================================= */
 
     .course-video-section .video-player-wrapper {
-        width: 100%;
+        width: min(100%, calc(min(70vh, 720px) * var(--video-ratio, 1.7778)));
         max-width: 100%;
         min-width: 0;
+        max-height: min(70vh, 720px);
+        aspect-ratio: var(--video-ratio, 1.7778);
+        margin-inline: auto;
+    }
+
+    .course-video-section .video-player {
+        width: 100%;
+        height: 100%;
+        max-width: 100%;
+        max-height: min(70vh, 720px);
+        object-fit: contain;
     }
 
 
@@ -219,9 +230,10 @@
         /* Video player */
 
         .course-video-section .video-player-wrapper {
-            width: 100%;
+            width: min(100%, calc(min(70vh, 720px) * var(--video-ratio, 1.7778)));
             border-radius: 12px;
-            aspect-ratio: 16 / 9;
+            aspect-ratio: var(--video-ratio, 1.7778);
+            margin-inline: auto;
         }
 
 
