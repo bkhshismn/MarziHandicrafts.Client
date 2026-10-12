@@ -47,6 +47,17 @@
 
     </NavLink>
 
+    <AuthorizeView Roles="Admin">
+        <Authorized>
+            <NavLink href="/admin"
+                     class="nav-link">
+                <MudIcon Icon="@Icons.Material.Filled.AdminPanelSettings"
+                         Size="Size.Small" />
+                <span>مدیریت</span>
+            </NavLink>
+        </Authorized>
+    </AuthorizeView>
+
 
     <AuthorizeView>
         <Authorized>

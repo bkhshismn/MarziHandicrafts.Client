@@ -4,6 +4,7 @@
 @using Marzi.Client.Shared.Theme
 @using Marzi.Client.Shared.Components.Navigation
 @using Marzi.Client.Infrastructure.Services
+@using Microsoft.AspNetCore.Components.Authorization
 
 @inject AuthService AuthService
 @inject NavigationManager NavigationManager
@@ -34,7 +35,11 @@
 
             <MudSpacer />
 
-            <div class="desktop-navigation">
+            <AuthorizeView Roles="Admin,Instructor">
+                <Authorized Context="staffContext">
+                    <div class="desktop-navigation">
+                <AuthorizeView Roles="Admin">
+                    <Authorized Context="adminContext">
                 <MudButton Href="/admin"
                            Color="Color.Inherit"
                            StartIcon="@Icons.Material.Filled.Dashboard">
@@ -42,15 +47,19 @@
                     داشبورد
 
                 </MudButton>
+                    </Authorized>
+                </AuthorizeView>
                 <MudButton Href="/admin/courses"
                            Color="Color.Inherit"
                            StartIcon="@Icons.Material.Filled.School">
 
-                    دوره‌ها
+                    دوره‌ها و ویدئوها
 
                 </MudButton>
 
 
+                <AuthorizeView Roles="Admin">
+                    <Authorized Context="adminContext">
                 <MudButton Href="/admin/orders"
                            Color="Color.Inherit"
                            StartIcon="@Icons.Material.Filled.ShoppingCart">
@@ -58,6 +67,8 @@
                     سفارش‌ها
 
                 </MudButton>
+                    </Authorized>
+                </AuthorizeView>
 
 
                 <MudButton Href="/portfolio"
@@ -77,16 +88,28 @@
 
                 </MudButton>
 
+                <MudButton Href="/profile"
+                           Color="Color.Inherit"
+                           StartIcon="@Icons.Material.Filled.Person">
+
+                    پروفایل
+
+                </MudButton>
+
 
                 <MudIconButton Icon="@Icons.Material.Filled.Logout"
                                Color="Color.Inherit"
                                OnClick="LogoutAsync" />
 
-            </div>
+                    </div>
+                </Authorized>
+            </AuthorizeView>
 
         </MudAppBar>
 
 
+        <AuthorizeView Roles="Admin,Instructor">
+            <Authorized Context="staffContext">
         <aside class="admin-sidebar">
             <div class="admin-sidebar-heading">
                 <span class="admin-sidebar-kicker">Marzi Admin</span>
@@ -94,35 +117,60 @@
             </div>
 
             <nav class="admin-sidebar-nav" aria-label="ناوبری مدیریت">
-                <a href="/admin" class="admin-sidebar-link">
+                <AuthorizeView Roles="Admin">
+                    <Authorized Context="adminContext">
+                <NavLink href="/admin"
+                         Match="NavLinkMatch.All"
+                         class="admin-sidebar-link"
+                         ActiveClass="admin-sidebar-link-active">
                     <MudIcon Icon="@Icons.Material.Filled.Dashboard" Class="admin-sidebar-icon" />
                     <span>داشبورد</span>
-                </a>
-                <a href="/admin/courses" class="admin-sidebar-link admin-sidebar-link-active">
+                </NavLink>
+                    </Authorized>
+                </AuthorizeView>
+                <NavLink href="/admin/courses"
+                         class="admin-sidebar-link"
+                         ActiveClass="admin-sidebar-link-active">
                     <MudIcon Icon="@Icons.Material.Filled.School" Class="admin-sidebar-icon" />
-                    <span>مدیریت دوره‌ها</span>
-                </a>
-                <a href="/admin/orders" class="admin-sidebar-link">
+                    <span>دوره‌ها و آپلود ویدئو</span>
+                </NavLink>
+                <AuthorizeView Roles="Admin">
+                    <Authorized Context="adminContext">
+                <NavLink href="/admin/orders"
+                         class="admin-sidebar-link"
+                         ActiveClass="admin-sidebar-link-active">
                     <MudIcon Icon="@Icons.Material.Filled.ShoppingCart" Class="admin-sidebar-icon" />
                     <span>سفارش‌ها</span>
-                </a>
-                <a href="/portfolio" class="admin-sidebar-link">
+                </NavLink>
+                    </Authorized>
+                </AuthorizeView>
+                <NavLink href="/portfolio"
+                         class="admin-sidebar-link"
+                         ActiveClass="admin-sidebar-link-active">
                     <MudIcon Icon="@Icons.Material.Filled.Palette" Class="admin-sidebar-icon" />
                     <span>نمونه‌کارها</span>
-                </a>
+                </NavLink>
             </nav>
 
             <div class="admin-sidebar-footer">
-                <a href="/" class="admin-sidebar-link">
+                <NavLink href="/profile"
+                         class="admin-sidebar-link"
+                         ActiveClass="admin-sidebar-link-active">
+                    <MudIcon Icon="@Icons.Material.Filled.Person" Class="admin-sidebar-icon" />
+                    <span>پروفایل من</span>
+                </NavLink>
+                <NavLink href="/" class="admin-sidebar-link">
                     <MudIcon Icon="@Icons.Material.Filled.Home" Class="admin-sidebar-icon" />
                     <span>مشاهده سایت</span>
-                </a>
+                </NavLink>
                 <button type="button" class="admin-sidebar-logout" @onclick="LogoutAsync">
                     <MudIcon Icon="@Icons.Material.Filled.Logout" Class="admin-sidebar-icon" />
                     <span>خروج از حساب</span>
                 </button>
             </div>
         </aside>
+            </Authorized>
+        </AuthorizeView>
 
 
         <!-- ================================================= -->
@@ -148,7 +196,11 @@
         <!-- Mobile Admin Navigation -->
         <!-- ================================================= -->
 
-        <AdminBottomNavigation />
+        <AuthorizeView Roles="Admin,Instructor">
+            <Authorized Context="staffContext">
+                <AdminBottomNavigation />
+            </Authorized>
+        </AuthorizeView>
 
     </MudLayout>
 

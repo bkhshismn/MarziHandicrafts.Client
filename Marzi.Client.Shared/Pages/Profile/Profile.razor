@@ -1,32 +1,333 @@
 @page "/profile"
 
-@using MudBlazor
+@using Marzi.Client.Core.Models
+@using Marzi.Client.Core.Requests
 @using Marzi.Client.Infrastructure.Services
+@using MudBlazor
 
 @inject AuthService AuthService
 @inject NavigationManager Navigation
+@inject ISnackbar Snackbar
 
-<MudText Typo="Typo.h4" Class="mb-2">
-    پروفایل کاربری
-</MudText>
+<PageTitle>پروفایل | Marzi Handicrafts</PageTitle>
 
-<MudText Typo="Typo.body1"
-         Color="Color.Secondary"
-         Class="mb-4">
-    اطلاعات حساب و دوره‌های من اینجا نمایش داده می‌شود.
-</MudText>
+<MudContainer MaxWidth="MaxWidth.Large" Class="my-6">
+    <MudStack Spacing="4">
+        <div>
+            <MudText Typo="Typo.h4">پروفایل من</MudText>
+            <MudText Typo="Typo.body1" Color="Color.Secondary">
+                اطلاعات حساب و تنظیمات امنیتی خود را مدیریت کنید.
+            </MudText>
+        </div>
 
-<MudButton Variant="Variant.Outlined"
-           Color="Color.Error"
-           StartIcon="@Icons.Material.Filled.Logout"
-           OnClick="Logout">
-    خروج از حساب
-</MudButton>
+        @if (_loading)
+        {
+            <MudProgressLinear Indeterminate="true" Color="Color.Primary" />
+        }
+        else if (!string.IsNullOrWhiteSpace(_loadError))
+        {
+            <MudAlert Severity="Severity.Error" Variant="Variant.Outlined">
+                @_loadError
+            </MudAlert>
+            <MudButton Variant="Variant.Outlined"
+                       StartIcon="@Icons.Material.Filled.Refresh"
+                       OnClick="LoadProfileAsync">
+                تلاش دوباره
+            </MudButton>
+        }
+        else if (_profile is not null)
+        {
+            <MudGrid>
+                <MudItem xs="12" md="4">
+                    <MudPaper Class="pa-5" Elevation="1">
+                        <MudStack AlignItems="AlignItems.Center" Spacing="2">
+                            <MudAvatar Color="Color.Primary" Size="Size.Large">
+                                @GetInitials(_profile.Name)
+                            </MudAvatar>
+                            <MudText Typo="Typo.h5">@_profile.Name</MudText>
+                            <MudChip T="string" Color="Color.Primary" Variant="Variant.Outlined">
+                                @GetRoleName(_profile.Role)
+                            </MudChip>
+                            <MudDivider Class="my-2" />
+                            <MudStack Spacing="1" Style="width: 100%">
+                                <MudText Typo="Typo.caption" Color="Color.Secondary">شماره همراه</MudText>
+                                <MudText Typo="Typo.body1" dir="ltr" Align="Align.Center">@_profile.Phone</MudText>
+                                <MudText Typo="Typo.caption" Color="Color.Secondary" Class="mt-3">عضویت از</MudText>
+                                <MudText Typo="Typo.body1" Align="Align.Center">@_profile.CreatedAt.ToLocalTime().ToString("yyyy/MM/dd")</MudText>
+                                <MudText Typo="Typo.caption" Color="Color.Secondary" Class="mt-3">وضعیت حساب</MudText>
+                                <MudText Typo="Typo.body1" Align="Align.Center">
+                                    @(_profile.IsActive ? "فعال" : "غیرفعال")
+                                </MudText>
+                            </MudStack>
+                        </MudStack>
+                    </MudPaper>
+                </MudItem>
+
+                <MudItem xs="12" md="8">
+                    <MudStack Spacing="4">
+                        <MudPaper Class="pa-5" Elevation="1">
+                            <MudText Typo="Typo.h6" Class="mb-1">اطلاعات حساب</MudText>
+                            <MudText Typo="Typo.body2" Color="Color.Secondary" Class="mb-4">
+                                نام نمایشی قابل ویرایش است. تغییر شماره همراه فعلاً به‌دلیل نیاز به تأیید شماره پشتیبانی نمی‌شود.
+                            </MudText>
+
+                            <MudForm @ref="_profileForm">
+                                <MudTextField T="string"
+                                              @bind-Value="_name"
+                                              Label="نام و نام خانوادگی"
+                                              Variant="Variant.Outlined"
+                                              Required="true"
+                                              RequiredError="نام را وارد کنید."
+                                              MaxLength="100"
+                                              Counter="100"
+                                              Immediate="true" />
+                                <MudTextField T="string"
+                                              Value="@_profile.Phone"
+                                              Label="شماره همراه"
+                                              Variant="Variant.Outlined"
+                                              ReadOnly="true"
+                                              Class="mt-3" />
+                                <MudButton Variant="Variant.Filled"
+                                           Color="Color.Primary"
+                                           StartIcon="@Icons.Material.Filled.Save"
+                                           Disabled="_savingProfile"
+                                           OnClick="SaveProfileAsync"
+                                           Class="mt-4">
+                                    @(_savingProfile ? "در حال ذخیره..." : "ذخیره اطلاعات")
+                                </MudButton>
+                            </MudForm>
+                        </MudPaper>
+
+                        <MudPaper Class="pa-5" Elevation="1">
+                            <MudText Typo="Typo.h6" Class="mb-1">تغییر رمز عبور</MudText>
+                            <MudText Typo="Typo.body2" Color="Color.Secondary" Class="mb-4">
+                                رمز جدید باید حداقل ۸ نویسه داشته باشد. پس از تغییر، برای امنیت از حساب خارج می‌شوید.
+                            </MudText>
+
+                            <MudForm @ref="_passwordForm">
+                                <MudTextField T="string"
+                                              @bind-Value="_oldPassword"
+                                              Label="رمز عبور فعلی"
+                                              Variant="Variant.Outlined"
+                                              InputType="InputType.Password"
+                                              Required="true"
+                                              RequiredError="رمز فعلی را وارد کنید." />
+                                <MudTextField T="string"
+                                              @bind-Value="_newPassword"
+                                              Label="رمز عبور جدید"
+                                              Variant="Variant.Outlined"
+                                              InputType="@(_showNewPassword ? InputType.Text : InputType.Password)"
+                                              Adornment="Adornment.End"
+                                              AdornmentIcon="@(_showNewPassword ? Icons.Material.Filled.VisibilityOff : Icons.Material.Filled.Visibility)"
+                                              OnAdornmentClick="@(() => _showNewPassword = !_showNewPassword)"
+                                              Required="true"
+                                              RequiredError="رمز جدید را وارد کنید."
+                                              Class="mt-3" />
+                                <MudTextField T="string"
+                                              @bind-Value="_confirmPassword"
+                                              Label="تکرار رمز عبور جدید"
+                                              Variant="Variant.Outlined"
+                                              InputType="InputType.Password"
+                                              Required="true"
+                                              RequiredError="رمز جدید را دوباره وارد کنید."
+                                              Class="mt-3" />
+                                <MudButton Variant="Variant.Filled"
+                                           Color="Color.Secondary"
+                                           StartIcon="@Icons.Material.Filled.LockReset"
+                                           Disabled="_changingPassword"
+                                           OnClick="ChangePasswordAsync"
+                                           Class="mt-4">
+                                    @(_changingPassword ? "در حال تغییر..." : "تغییر رمز عبور")
+                                </MudButton>
+                            </MudForm>
+                        </MudPaper>
+
+                        <MudPaper Class="pa-5" Elevation="1">
+                            <MudText Typo="Typo.h6" Class="mb-1">خروج از حساب</MudText>
+                            <MudText Typo="Typo.body2" Color="Color.Secondary" Class="mb-4">
+                                از حساب کاربری خود در این دستگاه خارج شوید.
+                            </MudText>
+                            <MudButton Variant="Variant.Outlined"
+                                       Color="Color.Error"
+                                       StartIcon="@Icons.Material.Filled.Logout"
+                                       OnClick="LogoutAsync">
+                                خروج از حساب
+                            </MudButton>
+                        </MudPaper>
+                    </MudStack>
+                </MudItem>
+            </MudGrid>
+        }
+    </MudStack>
+</MudContainer>
 
 @code {
-    private async Task Logout()
+    private MudForm? _profileForm;
+    private MudForm? _passwordForm;
+    private ProfileDto? _profile;
+    private string _name = string.Empty;
+    private string _oldPassword = string.Empty;
+    private string _newPassword = string.Empty;
+    private string _confirmPassword = string.Empty;
+    private string _loadError = string.Empty;
+    private bool _loading = true;
+    private bool _savingProfile;
+    private bool _changingPassword;
+    private bool _showNewPassword;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+            await LoadProfileAsync();
+    }
+
+    private async Task LoadProfileAsync()
+    {
+        _loading = true;
+        _loadError = string.Empty;
+
+        try
+        {
+            _profile = await AuthService.GetProfileAsync();
+            _name = _profile.Name;
+        }
+        catch (InvalidOperationException ex)
+        {
+            if (ex.Message.Contains("وارد حساب", StringComparison.Ordinal))
+            {
+                Navigation.NavigateTo("/login?returnUrl=%2Fprofile", forceLoad: true);
+                return;
+            }
+
+            _loadError = ex.Message;
+        }
+        catch (Refit.ApiException)
+        {
+            _loadError = "دریافت اطلاعات حساب ممکن نشد. دوباره وارد شوید و مجدداً تلاش کنید.";
+        }
+        catch (HttpRequestException)
+        {
+            _loadError = "ارتباط با سرور برقرار نشد. اتصال را بررسی و دوباره تلاش کنید.";
+        }
+        finally
+        {
+            _loading = false;
+            await InvokeAsync(StateHasChanged);
+        }
+    }
+
+    private async Task SaveProfileAsync()
+    {
+        if (_profileForm is null || _profile is null)
+            return;
+
+        await _profileForm.ValidateAsync();
+        if (!_profileForm.IsValid)
+            return;
+
+        _savingProfile = true;
+
+        try
+        {
+            await AuthService.UpdateProfileAsync(
+                new UpdateProfileRequest { Name = _name });
+
+            _profile.Name = _name.Trim();
+            Snackbar.Add("اطلاعات پروفایل ذخیره شد.", Severity.Success);
+        }
+        catch (InvalidOperationException ex)
+        {
+            Snackbar.Add(ex.Message, Severity.Error);
+        }
+        catch (Refit.ApiException)
+        {
+            Snackbar.Add("ذخیره اطلاعات پروفایل ممکن نشد.", Severity.Error);
+        }
+        catch (HttpRequestException)
+        {
+            Snackbar.Add("ارتباط با سرور برقرار نشد؛ اطلاعات ذخیره نشد.", Severity.Error);
+        }
+        finally
+        {
+            _savingProfile = false;
+        }
+    }
+
+    private async Task ChangePasswordAsync()
+    {
+        if (_passwordForm is null)
+            return;
+
+        await _passwordForm.ValidateAsync();
+        if (!_passwordForm.IsValid)
+            return;
+
+        if (_newPassword.Length < 8)
+        {
+            Snackbar.Add("رمز جدید باید حداقل ۸ نویسه داشته باشد.", Severity.Warning);
+            return;
+        }
+
+        if (_newPassword != _confirmPassword)
+        {
+            Snackbar.Add("رمز جدید و تکرار آن یکسان نیستند.", Severity.Warning);
+            return;
+        }
+
+        _changingPassword = true;
+
+        try
+        {
+            await AuthService.ChangePasswordAsync(
+                new ChangePasswordRequest
+                {
+                    OldPassword = _oldPassword,
+                    NewPassword = _newPassword
+                });
+
+            await AuthService.LogoutAsync();
+            Navigation.NavigateTo("/login?passwordChanged=true", forceLoad: true);
+        }
+        catch (InvalidOperationException ex)
+        {
+            Snackbar.Add(ex.Message, Severity.Error);
+        }
+        catch (Refit.ApiException)
+        {
+            Snackbar.Add("تغییر رمز عبور ممکن نشد. دوباره تلاش کنید.", Severity.Error);
+        }
+        catch (HttpRequestException)
+        {
+            Snackbar.Add("ارتباط با سرور برقرار نشد؛ رمز تغییر نکرد.", Severity.Error);
+        }
+        finally
+        {
+            _changingPassword = false;
+        }
+    }
+
+    private async Task LogoutAsync()
     {
         await AuthService.LogoutAsync();
         Navigation.NavigateTo("/login", forceLoad: true);
     }
+
+    private static string GetInitials(string name)
+    {
+        var parts = name.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+        return parts.Length switch
+        {
+            0 => "?",
+            1 => parts[0][..1],
+            _ => string.Concat(parts[0][..1], parts[^1][..1])
+        };
+    }
+
+    private static string GetRoleName(string role) =>
+        role switch
+        {
+            "Admin" => "مدیر",
+            "Instructor" => "مدرس",
+            _ => "کاربر"
+        };
 }

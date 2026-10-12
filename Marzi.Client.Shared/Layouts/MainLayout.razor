@@ -55,6 +55,16 @@
                     سفارش
                 </MudButton>
 
+                <AuthorizeView Roles="Admin">
+                    <Authorized>
+                        <MudButton Href="/admin"
+                                   Color="Color.Inherit"
+                                   StartIcon="@Icons.Material.Filled.AdminPanelSettings">
+                            مدیریت
+                        </MudButton>
+                    </Authorized>
+                </AuthorizeView>
+
                 <AuthorizeView>
                     <Authorized>
                         <MudButton Href="/profile"

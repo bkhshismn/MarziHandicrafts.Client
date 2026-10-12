@@ -16,6 +16,13 @@
 
     <MudPaper Elevation="4" Class="login-card">
 
+        @if (PasswordChanged)
+        {
+            <MudAlert Severity="Severity.Success" Variant="Variant.Outlined" Class="mb-4">
+                رمز عبور با موفقیت تغییر کرد. با رمز جدید وارد شوید.
+            </MudAlert>
+        }
+
         <div class="login-logo"></div>
 
         <MudText Typo="Typo.h5"
@@ -105,6 +112,12 @@
 </MudContainer>
 
 @code {
+    [SupplyParameterFromQuery(Name = "passwordChanged")]
+    public bool PasswordChanged { get; set; }
+
+    [SupplyParameterFromQuery(Name = "returnUrl")]
+    public string? ReturnUrl { get; set; }
+
     private MudForm? _form;
     private readonly LoginRequest _model = new();
 
@@ -145,7 +158,9 @@
                 "با موفقیت وارد شدید.",
                 Severity.Success);
 
-            Navigation.NavigateTo("/", replace: true);
+            Navigation.NavigateTo(
+                GetSafeReturnUrl(),
+                replace: true);
         }
         catch (Exception)
         {
@@ -157,5 +172,17 @@
         {
             _loading = false;
         }
+    }
+
+    private string GetSafeReturnUrl()
+    {
+        return ReturnUrl switch
+        {
+            "/profile" => "/profile",
+            "/admin" => "/admin",
+            "/admin/courses" => "/admin/courses",
+            "/admin/orders" => "/admin/orders",
+            _ => "/"
+        };
     }
 }

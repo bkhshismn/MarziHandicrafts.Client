@@ -1,5 +1,6 @@
 @page "/admin/courses"
 @layout AdminLayout
+@implements IDisposable
 
 @using Marzi.Client.Core.Models.Courses
 @using Marzi.Client.Infrastructure.Api
@@ -77,6 +78,14 @@
                     </MudStack>
 
                 </MudStack>
+
+                <MudAlert Severity="Severity.Info"
+                          Variant="Variant.Outlined"
+                          Icon="@Icons.Material.Filled.VideoLibrary">
+                    برای بارگذاری ویدئو: یک دوره را انتخاب کنید، سرفصل و درس بسازید یا باز کنید؛
+                    فرم «آپلود ویدئوی درس» داخل کارت همان درس نمایش داده می‌شود.
+                    فایل ویدئو حداکثر ۵۰۰ مگابایت باشد.
+                </MudAlert>
 
 
                 <!-- ================================================= -->
@@ -724,6 +733,12 @@
                     بازگشت به سایت
 
                 </MudButton>
+                <MudButton Href="/login?returnUrl=%2Fadmin%2Fcourses"
+                           Variant="Variant.Filled"
+                           Color="Color.Primary"
+                           Class="mt-4">
+                    ورود به حساب ادمین
+                </MudButton>
 
             </MudPaper>
 
@@ -1050,6 +1065,7 @@
     private string? _errorMessage;
     private bool _publishingCourse;
     private bool _deletingCourse;
+    private bool _coursesLoadStarted;
 
     // ============================================================
     // Create Course
@@ -1123,9 +1139,48 @@
     // Initialization
     // ============================================================
 
-    protected override async Task OnInitializedAsync()
+    protected override void OnInitialized()
     {
+        AuthenticationStateProvider.AuthenticationStateChanged += OnAuthenticationStateChanged;
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+            await LoadCoursesForAuthorizedUserAsync(
+                await AuthenticationStateProvider.GetAuthenticationStateAsync());
+    }
+
+    private void OnAuthenticationStateChanged(Task<AuthenticationState> stateTask)
+    {
+        _ = InvokeAsync(async () =>
+        {
+            await LoadCoursesForAuthorizedUserAsync(await stateTask);
+            StateHasChanged();
+        });
+    }
+
+    private async Task LoadCoursesForAuthorizedUserAsync(AuthenticationState state)
+    {
+        var user = state.User;
+
+        if (user.Identity?.IsAuthenticated != true ||
+            (!user.IsInRole("Admin") && !user.IsInRole("Instructor")))
+        {
+            _loading = false;
+            return;
+        }
+
+        if (_coursesLoadStarted)
+            return;
+
+        _coursesLoadStarted = true;
         await LoadCourses();
+    }
+
+    public void Dispose()
+    {
+        AuthenticationStateProvider.AuthenticationStateChanged -= OnAuthenticationStateChanged;
     }
 
 

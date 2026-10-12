@@ -1,4 +1,5 @@
 @page "/admin"
+@implements IDisposable
 
 @using Marzi.Client.Core.Models.Courses
 @using Marzi.Client.Core.Models.Orders
@@ -613,6 +614,12 @@
                     بازگشت به سایت
 
                 </MudButton>
+                <MudButton Href="/login?returnUrl=%2Fadmin"
+                           Variant="Variant.Filled"
+                           Color="Color.Primary"
+                           Class="mt-4">
+                    ورود به حساب ادمین
+                </MudButton>
 
             </MudPaper>
 
@@ -630,6 +637,7 @@
     private IReadOnlyList<OrderDto> _orders = [];
 
     private bool _loading = true;
+    private bool _dashboardLoadStarted;
 
     private string? _errorMessage;
 
@@ -650,9 +658,46 @@
             .Take(5);
 
 
-    protected override async Task OnInitializedAsync()
+    protected override void OnInitialized()
     {
+        AuthenticationStateProvider.AuthenticationStateChanged += OnAuthenticationStateChanged;
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+            await LoadDashboardForAdminAsync(
+                await AuthenticationStateProvider.GetAuthenticationStateAsync());
+    }
+
+    private void OnAuthenticationStateChanged(Task<AuthenticationState> stateTask)
+    {
+        _ = InvokeAsync(async () =>
+        {
+            await LoadDashboardForAdminAsync(await stateTask);
+            StateHasChanged();
+        });
+    }
+
+    private async Task LoadDashboardForAdminAsync(AuthenticationState state)
+    {
+        if (state.User.Identity?.IsAuthenticated != true ||
+            !state.User.IsInRole("Admin"))
+        {
+            _loading = false;
+            return;
+        }
+
+        if (_dashboardLoadStarted)
+            return;
+
+        _dashboardLoadStarted = true;
         await LoadDashboard();
+    }
+
+    public void Dispose()
+    {
+        AuthenticationStateProvider.AuthenticationStateChanged -= OnAuthenticationStateChanged;
     }
 
 

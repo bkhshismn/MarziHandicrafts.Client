@@ -1,4 +1,5 @@
 @page "/admin/orders"
+@implements IDisposable
 
 @using Marzi.Client.Core.Models.Orders
 @using Marzi.Client.Infrastructure.Services
@@ -106,6 +107,14 @@
                 تلاش مجدد
 
             </MudButton>
+            @if (!_isAdmin)
+            {
+                <MudButton Href="/login?returnUrl=%2Fadmin%2Forders"
+                           Variant="Variant.Filled"
+                           Color="Color.Primary">
+                    ورود به حساب ادمین
+                </MudButton>
+            }
         }
         else if (_orders.Count == 0)
         {
@@ -329,13 +338,57 @@
     private IReadOnlyList<OrderDto> _orders = [];
 
     private bool _loading = true;
+    private bool _ordersLoadStarted;
+    private bool _isAdmin;
 
     private string? _errorMessage;
 
 
-    protected override async Task OnInitializedAsync()
+    protected override void OnInitialized()
     {
+        AuthenticationStateProvider.AuthenticationStateChanged += OnAuthenticationStateChanged;
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+            await LoadOrdersForAdminAsync(
+                await AuthenticationStateProvider.GetAuthenticationStateAsync());
+    }
+
+    private void OnAuthenticationStateChanged(Task<AuthenticationState> stateTask)
+    {
+        _ = InvokeAsync(async () =>
+        {
+            await LoadOrdersForAdminAsync(await stateTask);
+            StateHasChanged();
+        });
+    }
+
+    private async Task LoadOrdersForAdminAsync(AuthenticationState state)
+    {
+        _isAdmin =
+            state.User.Identity?.IsAuthenticated == true &&
+            state.User.IsInRole("Admin");
+
+        if (state.User.Identity?.IsAuthenticated != true ||
+            !_isAdmin)
+        {
+            _loading = false;
+            _errorMessage = "برای مشاهده سفارش‌های مدیریت باید با حساب ادمین وارد شوید.";
+            return;
+        }
+
+        if (_ordersLoadStarted)
+            return;
+
+        _ordersLoadStarted = true;
         await LoadOrders();
+    }
+
+    public void Dispose()
+    {
+        AuthenticationStateProvider.AuthenticationStateChanged -= OnAuthenticationStateChanged;
     }
 
 
@@ -527,4 +580,3 @@
         };
     }
 }
-
