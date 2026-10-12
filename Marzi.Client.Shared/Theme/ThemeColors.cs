@@ -12,12 +12,12 @@
 //}
 public static class ThemeColors
 {
-    public const string Primary = "#7A8F6B";        // Soft Pastel Mocha Green
-    public const string Secondary = "#D4C4A8";      // Light Mocha Cream
-    public const string Background = "#F9F7F2";
-    public const string Surface = "#FFFFFF";
-    public const string Success = "#6A8A5F";
-    public const string Error = "#C06B6B";
-    public const string TextPrimary = "#3F3A32";
-    public const string TextSecondary = "#857C70";
+    public const string Primary = "#925640";       // سفالی
+    public const string Secondary = "#737B52";     // زیتونی
+    public const string Background = "#F7F3EC";     // کرم گرم
+    public const string Surface = "#FFFDFA";
+    public const string Success = "#65784D";
+    public const string Error = "#B85F52";
+    public const string TextPrimary = "#382C25";
+    public const string TextSecondary = "#75675C";
 }

@@ -27,8 +27,8 @@ public static class AppTheme
             DrawerBackground = ThemeColors.Surface,
             DrawerText = "#5A3E2B",
 
-            TextPrimary = "#3B2A1F",
-            TextSecondary = "#7A6657",
+            TextPrimary = ThemeColors.TextPrimary,
+            TextSecondary = ThemeColors.TextSecondary,
 
             Success = ThemeColors.Success,
             Error = ThemeColors.Error

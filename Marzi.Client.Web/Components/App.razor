@@ -13,10 +13,13 @@
     <base href="/" />
 
     <link rel="stylesheet"
-          href="_content/MudBlazor/MudBlazor.min.css" />
+          href="@Assets["_content/MudBlazor/MudBlazor.min.css"]" />
 
     <link rel="stylesheet"
-          href="app.css" />
+          href="@Assets["app.css"]" />
+
+    <link rel="stylesheet"
+          href="@Assets["Marzi.Client.Web.styles.css"]" />
 
     <HeadOutlet @rendermode="@(new InteractiveServerRenderMode(prerender: false))" />
 
@@ -25,6 +28,8 @@
 <body>
 
     <Routes @rendermode="@(new InteractiveServerRenderMode(prerender: false))" />
+
+    <script src="@Assets["js/versionUpdate.js"]"></script>
 
     <script src="_framework/blazor.web.js"></script>
 
