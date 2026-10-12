@@ -26,6 +26,7 @@
 .login-title {
     margin-bottom: 8px;
     line-height: 1.7;
+    overflow-wrap: anywhere;
 }
 
 .login-subtitle {
@@ -54,18 +55,14 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 8px 16px;
     margin-top: 18px;
 }
 
 /* MudBlazor outlined fields */
 .login-card ::deep .mud-input-control {
     margin-top: 10px;
-}
-
-.login-card ::deep .mud-input-label {
-    right: 14px;
-    left: auto;
-    transform-origin: top right;
 }
 
 .login-card ::deep .mud-input-slot {
