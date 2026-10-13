@@ -1,0 +1,30 @@
+@using Marzi.Client.Shared.Theme
+@inject ThemePreferenceService ThemePreference
+
+<MudMenu Icon="@Icons.Material.Filled.Palette"
+         Color="Color.Inherit"
+         AriaLabel="انتخاب تم سایت"
+         AnchorOrigin="Origin.BottomRight"
+         TransformOrigin="Origin.TopRight">
+    <MudMenuItem Disabled="true" Class="theme-picker-heading">انتخاب رنگ‌بندی</MudMenuItem>
+    @foreach (var theme in AppTheme.Options)
+    {
+        <MudMenuItem OnClick="@(() => SelectThemeAsync(theme.Id))">
+            <span class="theme-picker-option">
+                <span class="theme-picker-swatches" aria-hidden="true">
+                    <span style="background-color:@theme.Primary"></span>
+                    <span style="background-color:@theme.Secondary"></span>
+                </span>
+                <span>@theme.Name</span>
+                @if (ThemePreference.SelectedThemeId == theme.Id)
+                {
+                    <MudIcon Icon="@Icons.Material.Filled.Check" Size="Size.Small" Class="theme-picker-check" />
+                }
+            </span>
+        </MudMenuItem>
+    }
+</MudMenu>
+
+@code {
+    private Task SelectThemeAsync(string themeId) => ThemePreference.SelectAsync(themeId);
+}
