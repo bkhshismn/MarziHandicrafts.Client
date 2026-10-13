@@ -1147,8 +1147,12 @@
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (firstRender)
+        {
             await LoadCoursesForAuthorizedUserAsync(
                 await AuthenticationStateProvider.GetAuthenticationStateAsync());
+
+            await InvokeAsync(StateHasChanged);
+        }
     }
 
     private void OnAuthenticationStateChanged(Task<AuthenticationState> stateTask)

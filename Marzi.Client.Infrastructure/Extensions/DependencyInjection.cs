@@ -72,12 +72,34 @@ public static class DependencyInjection
             return RestService.For<ICourseApi>(httpClient);
         });
 
-        services
-            .AddRefitClient<IPortfolioApi>()
-            .ConfigureHttpClient(c =>
-            {
-                c.BaseAddress = new Uri(baseUrl);
-            });
+        services.AddScoped<IPortfolioApi>(sp =>
+        {
+            var tokenStorage =
+                sp.GetRequiredService<ITokenStorage>();
+
+            var authHandler =
+                new AuthorizationHandler(tokenStorage)
+                {
+                    InnerHandler = new HttpClientHandler()
+                };
+
+            var refreshHandler =
+                new RefreshTokenHandler(
+                    sp.GetRequiredService<AuthService>(),
+                    tokenStorage,
+                    sp.GetRequiredService<TokenRefreshCoordinator>())
+                {
+                    InnerHandler = authHandler
+                };
+
+            var httpClient =
+                new HttpClient(refreshHandler)
+                {
+                    BaseAddress = new Uri(baseUrl)
+                };
+
+            return RestService.For<IPortfolioApi>(httpClient);
+        });
 
         // ==========================
         // Protected APIs — Scoped Refit Client

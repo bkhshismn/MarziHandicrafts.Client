@@ -70,8 +70,13 @@ public static class JwtClaimsParser
         {
             "sub" => ClaimTypes.NameIdentifier,
             "unique_name" => ClaimTypes.Name,
+            "name" => ClaimTypes.Name,
             "role" => ClaimTypes.Role,
             "roles" => ClaimTypes.Role,
+            "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier" => ClaimTypes.NameIdentifier,
+            "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name" => ClaimTypes.Name,
+            "http://schemas.microsoft.com/ws/2008/06/identity/claims/role" => ClaimTypes.Role,
+            "http://schemas.microsoft.com/ws/2008/06/identity/claims/primarysid" => ClaimTypes.PrimarySid,
             _ => type
         };
     }

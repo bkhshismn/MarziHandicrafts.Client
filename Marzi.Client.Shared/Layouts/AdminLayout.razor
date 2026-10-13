@@ -82,6 +82,14 @@
 
                 </MudButton>
 
+                <MudButton Href="/admin/portfolio/add"
+                           Color="Color.Inherit"
+                           StartIcon="@Icons.Material.Filled.AddPhotoAlternate">
+
+                    افزودن نمونه‌کار
+
+                </MudButton>
+
 
                 <MudButton Href="/"
                            Color="Color.Inherit"
@@ -152,6 +160,12 @@
                          ActiveClass="admin-sidebar-link-active">
                     <MudIcon Icon="@Icons.Material.Filled.Palette" Class="admin-sidebar-icon" />
                     <span>نمونه‌کارها</span>
+                </NavLink>
+                <NavLink href="/admin/portfolio/add"
+                         class="admin-sidebar-link"
+                         ActiveClass="admin-sidebar-link-active">
+                    <MudIcon Icon="@Icons.Material.Filled.AddPhotoAlternate" Class="admin-sidebar-icon" />
+                    <span>افزودن نمونه‌کار</span>
                 </NavLink>
             </nav>
 

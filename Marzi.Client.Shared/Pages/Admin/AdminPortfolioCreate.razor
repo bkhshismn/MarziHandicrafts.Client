@@ -1,0 +1,279 @@
+@page "/admin/portfolio/add"
+@layout AdminLayout
+
+@using Marzi.Client.Infrastructure.Api
+@using Marzi.Client.Infrastructure.Services
+@using Marzi.Client.Shared.Layouts
+@using Microsoft.AspNetCore.Components.Authorization
+@using MudBlazor
+
+@inject PortfolioService PortfolioService
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject ISnackbar Snackbar
+@inject NavigationManager Navigation
+
+<AuthorizeView Roles="Admin,Instructor">
+    <Authorized>
+        <MudContainer MaxWidth="MaxWidth.Medium" Class="py-6">
+            <MudStack Spacing="4">
+                <div>
+                    <MudText Typo="Typo.h4">افزودن نمونه‌کار</MudText>
+                    <MudText Typo="Typo.body2" Color="Color.Secondary" Class="mt-1">
+                        مشخصات اثر و آدرس تصویرهای آن را وارد کنید.
+                    </MudText>
+                </div>
+
+                <MudPaper Class="pa-4 pa-md-6" Elevation="1">
+                    @if (!string.IsNullOrWhiteSpace(_saveWarning))
+                    {
+                        <MudAlert Severity="Severity.Warning" Class="mb-4">
+                            @_saveWarning
+                            @if (_createdItemId.HasValue)
+                            {
+                                <MudButton Href="@($"/portfolio/{_createdItemId}")"
+                                           Variant="Variant.Text"
+                                           Color="Color.Inherit">
+                                    مشاهده نمونه‌کار ثبت‌شده
+                                </MudButton>
+                            }
+                        </MudAlert>
+                    }
+
+                    <MudForm @ref="_form">
+                        <MudStack Spacing="3">
+                            <MudTextField T="string"
+                                          @bind-Value="_title"
+                                          Label="عنوان نمونه‌کار"
+                                          Variant="Variant.Outlined"
+                                          Required="true"
+                                          RequiredError="عنوان نمونه‌کار را وارد کنید."
+                                          MaxLength="200" />
+
+                            <MudTextField T="string"
+                                          @bind-Value="_category"
+                                          Label="دسته‌بندی"
+                                          Placeholder="مثلاً مجسمه، چهره یا دکوراسیون"
+                                          Variant="Variant.Outlined"
+                                          Required="true"
+                                          RequiredError="دسته‌بندی را وارد کنید."
+                                          MaxLength="50" />
+
+                            <MudTextField T="string"
+                                          @bind-Value="_description"
+                                          Label="توضیحات"
+                                          Variant="Variant.Outlined"
+                                          Lines="5"
+                                          Required="true"
+                                          RequiredError="توضیحات نمونه‌کار را وارد کنید."
+                                          MaxLength="1000" />
+
+                            <MudDivider />
+
+                            <MudStack Row="true"
+                                      AlignItems="AlignItems.Center"
+                                      Justify="Justify.SpaceBetween">
+                                <MudText Typo="Typo.h6">تصویرها</MudText>
+                                <MudButton Variant="Variant.Outlined"
+                                           StartIcon="@Icons.Material.Filled.AddPhotoAlternate"
+                                           OnClick="AddImageField">
+                                    افزودن آدرس تصویر
+                                </MudButton>
+                            </MudStack>
+
+                            <MudAlert Severity="Severity.Info" Variant="Variant.Outlined">
+                                برای هر تصویر، آدرس مستقیم و قابل‌دسترسی آن را وارد کنید؛
+                                سامانه فعلاً بارگذاری فایل تصویر را پشتیبانی نمی‌کند.
+                            </MudAlert>
+
+                            @for (var index = 0; index < _imageUrls.Count; index++)
+                            {
+                                var imageIndex = index;
+                                <MudStack Row="true" AlignItems="AlignItems.Center">
+                                    <MudTextField T="string"
+                                                  @bind-Value="_imageUrls[imageIndex]"
+                                                  Label="@($"آدرس تصویر {imageIndex + 1}")"
+                                                  Placeholder="https://..."
+                                                  Variant="Variant.Outlined"
+                                                  InputType="InputType.Url"
+                                                  Immediate="true"
+                                                  Class="flex-grow-1" />
+                                    @if (_imageUrls.Count > 1)
+                                    {
+                                        <MudIconButton Icon="@Icons.Material.Filled.DeleteOutline"
+                                                       Color="Color.Error"
+                                                       aria-label="حذف آدرس تصویر"
+                                                       OnClick="@(() => RemoveImageField(imageIndex))" />
+                                    }
+                                </MudStack>
+                            }
+
+                            <MudSwitch T="bool"
+                                       @bind-Value="_isVisible"
+                                       Color="Color.Primary">
+                                نمایش نمونه‌کار در سایت
+                            </MudSwitch>
+
+                            <MudStack Row="true" Justify="Justify.FlexEnd" Spacing="2">
+                                <MudButton Variant="Variant.Text"
+                                           Href="/portfolio">
+                                    انصراف
+                                </MudButton>
+                                <MudButton Variant="Variant.Filled"
+                                           Color="Color.Primary"
+                                           Disabled="_saving || _createdItemId.HasValue"
+                                           OnClick="SaveAsync">
+                                    @if (_saving)
+                                    {
+                                        <MudProgressCircular Indeterminate="true"
+                                                             Size="Size.Small"
+                                                             Class="me-2" />
+                                    }
+                                    ثبت نمونه‌کار
+                                </MudButton>
+                            </MudStack>
+                        </MudStack>
+                    </MudForm>
+                </MudPaper>
+            </MudStack>
+        </MudContainer>
+    </Authorized>
+
+    <NotAuthorized>
+        <MudContainer MaxWidth="MaxWidth.Small" Class="py-8">
+            <MudAlert Severity="Severity.Error">
+                برای افزودن نمونه‌کار باید با حساب مدیر یا مربی وارد شوید.
+            </MudAlert>
+            <MudButton Href="/login?returnUrl=%2Fadmin%2Fportfolio%2Fadd"
+                       Variant="Variant.Filled"
+                       Color="Color.Primary"
+                       Class="mt-4">
+                ورود
+            </MudButton>
+        </MudContainer>
+    </NotAuthorized>
+</AuthorizeView>
+
+@code {
+    private MudForm? _form;
+    private string _title = string.Empty;
+    private string _category = string.Empty;
+    private string _description = string.Empty;
+    private List<string> _imageUrls = [string.Empty];
+    private bool _isVisible = true;
+    private bool _saving;
+    private Guid? _createdItemId;
+    private string? _saveWarning;
+
+    private void AddImageField()
+    {
+        _imageUrls.Add(string.Empty);
+    }
+
+    private void RemoveImageField(int index)
+    {
+        if (_imageUrls.Count > 1)
+            _imageUrls.RemoveAt(index);
+    }
+
+    private async Task SaveAsync()
+    {
+        if (_saving || _createdItemId.HasValue || _form is null)
+            return;
+
+        await _form.ValidateAsync();
+        if (!_form.IsValid)
+            return;
+
+        var imageUrls = _imageUrls
+            .Select(url => url.Trim())
+            .Where(url => !string.IsNullOrWhiteSpace(url))
+            .ToList();
+
+        if (imageUrls.Count == 0)
+        {
+            Snackbar.Add(
+                "حداقل یک آدرس تصویر وارد کنید.",
+                Severity.Error);
+            return;
+        }
+
+        if (imageUrls.Any(url =>
+                !Uri.TryCreate(url, UriKind.Absolute, out var uri) ||
+                (uri.Scheme != Uri.UriSchemeHttp &&
+                 uri.Scheme != Uri.UriSchemeHttps)))
+        {
+            Snackbar.Add(
+                "آدرس تصویر باید با http:// یا https:// شروع شود.",
+                Severity.Error);
+            return;
+        }
+
+        var authState =
+            await AuthenticationStateProvider.GetAuthenticationStateAsync();
+
+        if (authState.User.Identity?.IsAuthenticated != true ||
+            (!authState.User.IsInRole("Admin") &&
+             !authState.User.IsInRole("Instructor")))
+        {
+            Snackbar.Add(
+                "برای افزودن نمونه‌کار دسترسی لازم را ندارید.",
+                Severity.Error);
+            return;
+        }
+
+        _saving = true;
+        try
+        {
+            var item = await PortfolioService.CreateAsync(
+                new PortfolioCreateRequest(
+                    _title.Trim(),
+                    _category.Trim(),
+                    _description.Trim(),
+                    _isVisible));
+
+            _createdItemId = item.Id;
+            var imageErrors = new List<string>();
+
+            for (var index = 0; index < imageUrls.Count; index++)
+            {
+                try
+                {
+                    await PortfolioService.AddImageAsync(
+                        item.Id,
+                        imageUrls[index]);
+                }
+                catch (Exception ex)
+                {
+                    imageErrors.Add(
+                        $"تصویر {index + 1}: {ex.Message}");
+                }
+            }
+
+            if (imageErrors.Count > 0)
+            {
+                _saveWarning =
+                    $"نمونه‌کار ثبت شد، اما افزودن تصویرها کامل نشد: " +
+                    $"{string.Join("؛ ", imageErrors)} " +
+                    "برای جلوگیری از ثبت تکراری، فرم قفل شده است.";
+
+                return;
+            }
+
+            Snackbar.Add(
+                "نمونه‌کار با موفقیت ثبت شد.",
+                Severity.Success);
+
+            Navigation.NavigateTo($"/portfolio/{item.Id}");
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add(
+                ex.Message,
+                Severity.Error);
+        }
+        finally
+        {
+            _saving = false;
+        }
+    }
+}

@@ -12,6 +12,37 @@ public sealed class PortfolioService
         _api = api;
     }
 
+    public async Task<PortfolioItemDto> CreateAsync(
+        PortfolioCreateRequest request)
+    {
+        var response = await _api.CreateAsync(request);
+
+        if (!response.IsSuccessStatusCode ||
+            response.Content is null)
+        {
+            throw new InvalidOperationException(
+                "ایجاد نمونه‌کار با خطا مواجه شد.");
+        }
+
+        return response.Content;
+    }
+
+    public async Task AddImageAsync(
+        Guid portfolioId,
+        string imageUrl)
+    {
+        var response = await _api.AddImageAsync(
+            portfolioId,
+            new PortfolioImageCreateRequest(imageUrl));
+
+        if (!response.IsSuccessStatusCode ||
+            response.Content is null)
+        {
+            throw new InvalidOperationException(
+                "افزودن تصویر نمونه‌کار با خطا مواجه شد.");
+        }
+    }
+
     public async Task<IReadOnlyList<PortfolioItemDto>> GetPublishedAsync()
     {
         var response = await _api.GetPublishedAsync();

@@ -159,7 +159,9 @@ public sealed class CustomAuthenticationStateProvider
         var identity =
             new ClaimsIdentity(
                 claims,
-                authenticationType: "jwt");
+                authenticationType: "jwt",
+                nameType: ClaimTypes.Name,
+                roleType: ClaimTypes.Role);
 
         var principal =
             new ClaimsPrincipal(identity);
