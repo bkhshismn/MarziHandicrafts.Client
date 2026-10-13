@@ -2,12 +2,15 @@
 @using Marzi.Client.Core.Models.Courses
 @using Marzi.Client.Infrastructure.Services
 @using Microsoft.JSInterop
+@using Microsoft.AspNetCore.Components.Authorization
 
 @implements IAsyncDisposable
 
 @inject ITokenStorage TokenStorage
 @inject CourseLessonProgressService ProgressService
 @inject IJSRuntime JS
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject NavigationManager Navigation
 
 @if (Lesson is null)
 {
@@ -34,6 +37,16 @@ else if (!Lesson.HasVideo)
         برای این درس هنوز ویدئویی قرار نگرفته است.
 
     </MudAlert>
+}
+else if (!Lesson.IsFreePreview && !_isAuthenticated)
+{
+    <MudPaper Class="pa-6 text-center" Elevation="1">
+        <MudIcon Icon="@Icons.Material.Filled.Lock" Color="Color.Warning" Size="Size.Large" />
+        <MudText Typo="Typo.h6" Class="mt-3">برای تماشای این ویدیوی پولی وارد حساب کاربری‌تان شوید</MudText>
+        <MudText Typo="Typo.body2" Class="mt-2 mb-4">پس از ورود، اگر در این دوره ثبت‌نام کرده باشید ویدیو برایتان پخش می‌شود.</MudText>
+        <MudButton Href="@LoginUrl" Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Login">ورود به حساب</MudButton>
+        <MudButton Href="/register" Variant="Variant.Text" Color="Color.Primary" Class="ms-2">ثبت‌نام</MudButton>
+    </MudPaper>
 }
 else
 {
@@ -108,6 +121,16 @@ else
 
     private bool _loading;
 
+    private bool _isAuthenticated;
+
+    private string LoginUrl => $"/login?returnUrl={Uri.EscapeDataString(new Uri(Navigation.Uri).PathAndQuery)}";
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        _isAuthenticated = authState.User.Identity?.IsAuthenticated == true;
+    }
+
     private bool _initializing;
 
     private bool _disposed;
@@ -122,6 +145,26 @@ else
     // ============================================================
 
     private string? _error;
+
+    [JSInvokable]
+    public async Task PlaybackFailed(int statusCode, string details)
+    {
+        if (_disposed)
+            return;
+
+        _error = statusCode switch
+        {
+            401 => "برای پخش این ویدئو وارد حساب کاربری شوید.",
+            403 => "دسترسی لازم برای پخش این ویدئو را ندارید.",
+            404 => "فایل ویدئو پیدا نشد؛ لطفاً به مدیر سایت اطلاع دهید.",
+            _ => "پخش ویدئو با خطا مواجه شد. لطفاً دوباره تلاش کنید."
+        };
+
+        Console.WriteLine(
+            $"[VIDEO PLAYER] Playback failed. Status={statusCode}, Details={details}");
+
+        await InvokeAsync(StateHasChanged);
+    }
 
 
     // ============================================================
@@ -234,6 +277,9 @@ else
         {
             return;
         }
+
+        if (!Lesson.IsFreePreview && !_isAuthenticated)
+            return;
 
 
         /*

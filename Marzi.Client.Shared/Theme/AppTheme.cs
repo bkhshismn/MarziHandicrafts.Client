@@ -12,26 +12,43 @@ public static class AppTheme
         "sans-serif"
       ];
 
-    public static MudTheme Default => new()
+    public static MudTheme Default => For("terracotta");
+
+    public static IReadOnlyList<ThemeOption> Options { get; } =
+    [
+        new("terracotta", "سفالی و زیتونی", "#925640", "#737B52", "#F7F3EC", "#FFFDFA", "#382C25", "#75675C", "#65784D", "#B85F52"),
+        new("mocha", "سبز موکا (تم قبلی)", "#6B7F5A", "#C8B89A", "#F7F5F0", "#FFFFFF", "#3A342C", "#7A7165", "#5A7A4F", "#B85C5C"),
+        new("ocean", "آبی اقیانوسی", "#315B70", "#4F8A86", "#EFF5F5", "#FFFFFF", "#263B45", "#60747A", "#4B8068", "#B95757"),
+        new("rose", "رز و یاسی", "#87536C", "#A17B91", "#F8F1F5", "#FFFCFE", "#3D2D37", "#786875", "#648064", "#B6535F"),
+        new("midnight", "شبِ لاجوردی", "#34466F", "#7183AD", "#F1F3F9", "#FFFFFF", "#293149", "#68718A", "#4F806A", "#B5535C")
+    ];
+
+    public static ThemeOption GetOption(string? id) =>
+        Options.FirstOrDefault(option => option.Id == id) ?? Options[0];
+
+    public static MudTheme For(string? id)
     {
+        var colors = GetOption(id);
+        return new MudTheme
+        {
         PaletteLight = new PaletteLight
         {
-            Primary = ThemeColors.Primary,
-            Secondary = ThemeColors.Secondary,
-            Background = ThemeColors.Background,
-            Surface = ThemeColors.Surface,
+            Primary = colors.Primary,
+            Secondary = colors.Secondary,
+            Background = colors.Background,
+            Surface = colors.Surface,
 
-            AppbarBackground = ThemeColors.Primary,
+            AppbarBackground = colors.Primary,
             AppbarText = "#FFFFFF",
 
-            DrawerBackground = ThemeColors.Surface,
-            DrawerText = "#5A3E2B",
+            DrawerBackground = colors.Surface,
+            DrawerText = colors.TextPrimary,
 
-            TextPrimary = ThemeColors.TextPrimary,
-            TextSecondary = ThemeColors.TextSecondary,
+            TextPrimary = colors.TextPrimary,
+            TextSecondary = colors.TextSecondary,
 
-            Success = ThemeColors.Success,
-            Error = ThemeColors.Error
+            Success = colors.Success,
+            Error = colors.Error
         },
 
         Typography = new Typography
@@ -128,5 +145,18 @@ public static class AppTheme
         {
             DefaultBorderRadius = "12px"
         }
-    };
+        };
+    }
 }
+
+public sealed record ThemeOption(
+    string Id,
+    string Name,
+    string Primary,
+    string Secondary,
+    string Background,
+    string Surface,
+    string TextPrimary,
+    string TextSecondary,
+    string Success,
+    string Error);

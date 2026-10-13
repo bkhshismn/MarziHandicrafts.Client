@@ -3,6 +3,7 @@ using Marzi.Client.Core.Interfaces;
 using Marzi.Client.Infrastructure.Extensions;
 using Marzi.Client.Infrastructure.Storage;
 using Marzi.Client.Shared.Layouts;
+using Marzi.Client.Shared.Theme;
 using Marzi.Client.Web.Authentication;
 using Marzi.Client.Web.Components;
 using Microsoft.AspNetCore.Components.Authorization;
@@ -37,6 +38,7 @@ var apiBaseUrl =
         "Api:BaseUrl is not configured.");
 
 builder.Services.AddScoped<ILocalStorage, LocalStorage>();
+builder.Services.AddScoped<ThemePreferenceService>();
 
 builder.Services.AddInfrastructure(apiBaseUrl);
 

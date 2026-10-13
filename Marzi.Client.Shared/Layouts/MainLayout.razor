@@ -1,4 +1,5 @@
 @inherits LayoutComponentBase
+@implements IDisposable
 
 @using MudBlazor
 @using Microsoft.AspNetCore.Components.Authorization
@@ -11,7 +12,7 @@
 
 <MudRTLProvider RightToLeft="true">
 
-    <MudThemeProvider Theme="@AppTheme.Default" />
+    <MudThemeProvider Theme="@ThemePreference.CurrentTheme" />
     <MudPopoverProvider />
     <MudDialogProvider />
     <MudSnackbarProvider />
@@ -28,6 +29,8 @@
             </MudText>
 
             <MudSpacer />
+
+            <ThemePicker />
 
             <div class="desktop-navigation">
 
@@ -135,6 +138,23 @@
 </MudRTLProvider>
 
 @code {
+    [Inject] private ThemePreferenceService ThemePreference { get; set; } = default!;
+
+    protected override void OnInitialized()
+    {
+        ThemePreference.Changed += OnThemeChanged;
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+            await ThemePreference.InitializeAsync();
+    }
+
+    private void OnThemeChanged() => _ = InvokeAsync(StateHasChanged);
+
+    public void Dispose() => ThemePreference.Changed -= OnThemeChanged;
+
     private async Task LogoutAsync()
     {
         await AuthService.LogoutAsync();

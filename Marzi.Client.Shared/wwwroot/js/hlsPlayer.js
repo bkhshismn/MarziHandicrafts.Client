@@ -96,7 +96,7 @@ export async function initialize(video, url, token, dotNetHelper) {
 
         hls.on(
             window.Hls.Events.ERROR,
-            function (event, data) {
+            async function (event, data) {
 
                 console.error(
                     "[HLS ERROR]",
@@ -109,6 +109,21 @@ export async function initialize(video, url, token, dotNetHelper) {
                     switch (data.type) {
 
                         case window.Hls.ErrorTypes.NETWORK_ERROR:
+
+                            if ([401, 403, 404].includes(data.response?.code)) {
+                                try {
+                                    await dotNetHelper?.invokeMethodAsync(
+                                        "PlaybackFailed",
+                                        data.response.code,
+                                        data.details || "HLS request was rejected."
+                                    );
+                                } catch (error) {
+                                    console.error("Could not report video error:", error);
+                                }
+
+                                hls.destroy();
+                                break;
+                            }
 
                             console.log(
                                 "[HLS] Recovering network error..."
@@ -131,6 +146,16 @@ export async function initialize(video, url, token, dotNetHelper) {
 
 
                         default:
+
+                            try {
+                                await dotNetHelper?.invokeMethodAsync(
+                                    "PlaybackFailed",
+                                    data.response?.code || 0,
+                                    data.details || "Fatal HLS playback error."
+                                );
+                            } catch (error) {
+                                console.error("Could not report video error:", error);
+                            }
 
                             console.error(
                                 "[HLS] Fatal error. Destroying player."
