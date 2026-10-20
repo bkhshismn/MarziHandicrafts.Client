@@ -4,9 +4,11 @@
 @using Marzi.Client.Core.Models.Orders
 @using Marzi.Client.Infrastructure.Services
 @using Microsoft.AspNetCore.Components.Authorization
+@using Microsoft.AspNetCore.Components.Forms
 @using MudBlazor
 
 @inject OrderService OrderService
+@inject MediaService MediaService
 @inject AuthenticationStateProvider AuthenticationStateProvider
 
 <MudContainer MaxWidth="MaxWidth.Large" Class="py-6">
@@ -99,14 +101,39 @@
                                           Class="mb-4" />
 
 
-                            <!-- Image URL -->
+                            <!-- Image from device -->
 
-                            <MudTextField T="string"
-                                          @bind-Value="_request.ImageUrl"
-                                          Label="لینک تصویر مرجع"
-                                          Placeholder="https://..."
-                                          Variant="Variant.Outlined"
-                                          Class="mb-4" />
+                            <div class="mb-4">
+
+                                <MudText Typo="Typo.body2" Class="mb-2">
+                                    تصویر مرجع از گوشی (اختیاری)
+                                </MudText>
+
+                                <InputFile OnChange="OnImageSelected"
+                                           accept="image/*"
+                                           class="mobile-file-input"
+                                           disabled="@_submitting" />
+
+                                @if (!string.IsNullOrWhiteSpace(_imageName))
+                                {
+                                    <MudText Typo="Typo.caption" Color="Color.Secondary">
+                                        @_imageName
+                                    </MudText>
+                                }
+
+                                @if (!string.IsNullOrWhiteSpace(_imageError))
+                                {
+                                    <MudAlert Severity="Severity.Warning"
+                                              Variant="Variant.Outlined"
+                                              Dense="true"
+                                              Class="mt-2">
+
+                                        @_imageError
+
+                                    </MudAlert>
+                                }
+
+                            </div>
 
 
                             @if (!string.IsNullOrWhiteSpace(_submitError))
@@ -376,6 +403,45 @@
     // Submit Order
     // ============================================================
 
+    private const long MaxImageBytes = 10 * 1024 * 1024;
+
+    private IBrowserFile? _imageFile;
+
+    private string? _imageName;
+
+    private string? _imageError;
+
+    private void OnImageSelected(InputFileChangeEventArgs e)
+    {
+        _imageError = null;
+        _imageName = null;
+        _imageFile = null;
+
+        var file = e.File;
+
+        if (file is null)
+            return;
+
+        if (!file.ContentType.StartsWith("image/", StringComparison.OrdinalIgnoreCase))
+        {
+            _imageError = "فقط فایل تصویر مجاز است.";
+
+            return;
+        }
+
+        if (file.Size > MaxImageBytes)
+        {
+            _imageError = "حجم تصویر نباید بیشتر از ۱۰ مگابایت باشد.";
+
+            return;
+        }
+
+        _imageFile = file;
+
+        _imageName =
+            $"{file.Name} — {file.Size / 1024d / 1024d:0.##} مگابایت";
+    }
+
     private async Task SubmitOrder()
     {
         _submitError = null;
@@ -412,6 +478,36 @@
             }
 
 
+            // ----------------------------------------------------
+            // تصویر مرجع از دستگاه: اول آپلود، بعد ثبت سفارش
+            // ----------------------------------------------------
+
+            if (_imageFile is not null)
+            {
+                try
+                {
+                    await using var stream =
+                        _imageFile.OpenReadStream(MaxImageBytes);
+
+                    _request.ImageUrl =
+                        await MediaService.UploadImageAsync(
+                            stream,
+                            _imageFile.Name,
+                            _imageFile.ContentType);
+                }
+                catch (Exception imageEx)
+                {
+                    Console.WriteLine(
+                        $"[ORDERS] Image upload failed: {imageEx}");
+
+                    _submitError =
+                        "بارگذاری تصویر ناموفق بود. تصویر دیگری انتخاب کن.";
+
+                    return;
+                }
+            }
+
+
             // ====================================================
             // مهم:
             // UserId، Status و Price از Client ارسال نمی‌شوند.
@@ -434,6 +530,10 @@
 
             _request =
                 new CreateOrderRequest();
+
+            _imageFile = null;
+            _imageName = null;
+            _imageError = null;
 
 
             _submitSuccess = true;

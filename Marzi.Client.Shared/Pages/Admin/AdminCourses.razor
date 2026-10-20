@@ -88,7 +88,7 @@
                           Icon="@Icons.Material.Filled.VideoLibrary">
                     برای بارگذاری ویدئو: یک دوره را انتخاب کنید، سرفصل و درس بسازید یا باز کنید؛
                     فرم «آپلود ویدئوی درس» داخل کارت همان درس نمایش داده می‌شود.
-                    فایل ویدئو حداکثر ۵۰۰ مگابایت باشد.
+                    فایل ویدئو حداکثر ۳ گیگابایت باشد.
                 </MudAlert>
 
 
@@ -363,6 +363,18 @@
 
                                                     </MudButton>
                                                 }
+
+                                                <MudButton Variant="Variant.Outlined"
+                                                           Color="@(_selectedCourse.IsFree ? Color.Warning : Color.Info)"
+                                                           Size="Size.Small"
+                                                           Class="course-action-button course-action-secondary"
+                                                           StartIcon="@Icons.Material.Filled.CardGiftcard"
+                                                           OnClick="ToggleFreeAsync"
+                                                           Disabled="_togglingFree">
+
+                                                    @(_selectedCourse.IsFree ? "غیررایگان کن" : "رایگان کن")
+
+                                                </MudButton>
 
                                                 <MudButton Variant="Variant.Outlined"
                                                            Color="Color.Error"
@@ -774,17 +786,17 @@
                           Label="عنوان دوره"
                           Variant="Variant.Outlined"
                           FullWidth="true"
-                          Required="true" />
+                          Required="true"
+                          RequiredError="عنوان دوره را وارد کنید." />
 
 
             <MudTextField @bind-Value="_courseDescription"
-                          Label="توضیحات دوره"
+                          Label="توضیحات دوره (اختیاری)"
                           Variant="Variant.Outlined"
                           Lines="4"
-                          FullWidth="true"
-                          Required="true" />
+                          FullWidth="true" />
 
-            <MudSelect T="string" @bind-Value="_courseCategory" Label="دسته‌بندی ویدیو" Variant="Variant.Outlined" FullWidth="true" Required="true">
+            <MudSelect T="string" @bind-Value="_courseCategory" Label="دسته‌بندی ویدیو" Variant="Variant.Outlined" FullWidth="true" Required="true" RequiredError="دسته‌بندی را انتخاب کنید.">
                 @foreach (var category in CourseCategoryOptions)
                 {
                     <MudSelectItem T="string" Value="category">@category</MudSelectItem>
@@ -905,10 +917,9 @@
         <MudStack Spacing="3">
 
             <MudTextField @bind-Value="_sectionTitle"
-                          Label="عنوان سرفصل"
+                          Label="عنوان سرفصل (اختیاری)"
                           Variant="Variant.Outlined"
-                          FullWidth="true"
-                          Required="true" />
+                          FullWidth="true" />
 
 
             <MudNumericField T="int"
@@ -996,7 +1007,8 @@
                           Label="عنوان درس"
                           Variant="Variant.Outlined"
                           FullWidth="true"
-                          Required="true" />
+                          Required="true"
+                          RequiredError="عنوان درس را وارد کنید." />
 
 
             <MudTextField @bind-Value="_lessonDescription"
@@ -1491,13 +1503,10 @@
             return;
         }
 
-        if (string.IsNullOrWhiteSpace(
-            _courseDescription))
+        // توضیحات اختیاری است؛ اگر خالی بماند از عنوان دوره پر می‌شود.
+        if (string.IsNullOrWhiteSpace(_courseDescription))
         {
-            _courseDialogError =
-                "توضیحات دوره را وارد کنید.";
-
-            return;
+            _courseDescription = _courseTitle.Trim();
         }
 
         _courseCreating =
@@ -1594,14 +1603,15 @@
         if (_selectedCourse is null)
             return;
 
-        _sectionTitle =
-            string.Empty;
-
         _sectionOrder =
             _sections.Count == 0
                 ? 1
                 : _sections.Max(
                     x => x.OrderIndex) + 1;
+
+        // عنوان از پیش پر می‌شود تا مدیر مجبور به تایپ نباشد.
+        _sectionTitle =
+            $"سرفصل {_sectionOrder}";
 
         _dialogError =
             null;
@@ -1629,13 +1639,10 @@
         if (_selectedCourse is null)
             return;
 
-        if (string.IsNullOrWhiteSpace(
-            _sectionTitle))
+        if (string.IsNullOrWhiteSpace(_sectionTitle))
         {
-            _dialogError =
-                "عنوان سرفصل را وارد کنید.";
-
-            return;
+            _sectionTitle =
+                $"سرفصل {_sectionOrder}";
         }
 
         _dialogSaving =
@@ -1714,6 +1721,10 @@
         _lessonIsFreePreview =
             false;
 
+        // عنوان از پیش پر می‌شود تا مدیر مجبور به تایپ نباشد.
+        _lessonTitle =
+            $"درس {_lessonOrder}";
+
         _dialogError =
             null;
 
@@ -1743,13 +1754,10 @@
         if (_selectedSectionForLesson is null)
             return;
 
-        if (string.IsNullOrWhiteSpace(
-            _lessonTitle))
+        if (string.IsNullOrWhiteSpace(_lessonTitle))
         {
-            _dialogError =
-                "عنوان درس را وارد کنید.";
-
-            return;
+            _lessonTitle =
+                $"درس {_lessonOrder}";
         }
 
         _dialogSaving =
@@ -1833,6 +1841,46 @@
         return InvokeAsync(
             StateHasChanged);
     }
+    private bool _togglingFree;
+
+    private async Task ToggleFreeAsync()
+    {
+        if (_selectedCourse is null || _togglingFree)
+            return;
+
+        _togglingFree = true;
+
+        try
+        {
+            var updated =
+                await CourseService.SetFreeAsync(
+                    _selectedCourse.Id,
+                    !_selectedCourse.IsFree);
+
+            _selectedCourse = updated;
+
+            _courses = _courses
+                .Select(x => x.Id == updated.Id ? updated : x)
+                .ToList();
+
+            Snackbar.Add(
+                updated.IsFree
+                    ? "دوره رایگان شد."
+                    : "دوره غیررایگان شد.",
+                Severity.Success);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add(ex.Message, Severity.Error);
+        }
+        finally
+        {
+            _togglingFree = false;
+        }
+
+        await InvokeAsync(StateHasChanged);
+    }
+
     private async Task TogglePublishedAsync()
     {
         if (_selectedCourse is null)

@@ -1,3 +1,4 @@
+@using Marzi.Client.Core.Authentication
 @using Marzi.Client.Core.Models.Courses
 @using Marzi.Client.Infrastructure.Services
 @using Microsoft.AspNetCore.Components.Forms
@@ -9,6 +10,7 @@
 @inject ISnackbar Snackbar
 @inject IConfiguration Configuration
 @inject IJSRuntime JS
+@inject ITokenStorage TokenStorage
 
 <MudPaper Class="admin-lesson-video-upload pa-4"
           Elevation="0">
@@ -164,28 +166,16 @@
 
     <MudStack Spacing="3">
 
-        <!-- Order -->
+        <!-- عنوان خودکار: از نام درس و ترتیب ساخته می‌شود -->
 
-        <MudTextField @bind-Value="_episodeTitle"
-                      Label="عنوان این ویدیو"
-                      Variant="Variant.Outlined"
-                      FullWidth="true"
-                      Disabled="_uploading" />
+        <MudAlert Severity="Severity.Info"
+                  Variant="Variant.Outlined"
+                  Dense="true">
 
-        <MudTextField @bind-Value="_episodeDescription"
-                      Label="توضیحات ویدیو"
-                      Variant="Variant.Outlined"
-                      Lines="2"
-                      FullWidth="true"
-                      Disabled="_uploading" />
+            عنوان این ویدیو خودکار ثبت می‌شود:
+            <strong>@_episodeTitle</strong>
 
-        <MudNumericField T="int"
-                         @bind-Value="_order"
-                         Label="ترتیب"
-                         Variant="Variant.Outlined"
-                         Min="1"
-                         FullWidth="true"
-                         Disabled="_uploading" />
+        </MudAlert>
 
 
         <!-- Free Preview -->
@@ -208,16 +198,17 @@
 
             </MudText>
 
-            <InputFile OnChange="OnFileSelected"
-                       accept="video/*"
-                       class="mobile-file-input"
-                       disabled="@_uploading" />
+            <input type="file"
+                   accept="video/*"
+                   class="mobile-file-input"
+                   @ref="_fileInput"
+                   @onchange="OnFileSelected" />
 
         </div>
 
 
         <!-- Selected File -->
-        @if (_selectedFile is not null)
+        @if (_hasSelectedFile)
         {
             <MudPaper Class="pa-3"
                       Elevation="0">
@@ -237,7 +228,7 @@
 
                             <MudText Typo="Typo.body2">
 
-                                @_selectedFile.Name
+                                @_selectedFileName
 
                             </MudText>
 
@@ -245,7 +236,7 @@
                                      Color="Color.Secondary">
 
                                 @FormatFileSize(
-                                    _selectedFile.Size)
+                                    _selectedFileSize)
 
                             </MudText>
 
@@ -283,25 +274,56 @@
         <!-- Upload Progress -->
         @if (_uploading)
         {
-            <MudAlert Severity="Severity.Info"
-                      Variant="Variant.Outlined">
+            <MudPaper Class="pa-4" Elevation="0">
 
                 <MudStack Spacing="2">
 
                     <MudStack Row="true"
                               AlignItems="AlignItems.Center"
-                              Spacing="2">
+                              Justify="Justify.SpaceBetween">
 
-                        <MudProgressCircular Size="Size.Small"
-                                             Indeterminate="true" />
+                        <MudText Typo="Typo.body2">
 
-                        <span>
                             در حال آپلود ویدئو...
-                        </span>
+
+                        </MudText>
+
+                        <MudText Typo="Typo.body2" Color="Color.Primary">
+
+                            @_uploadPercent٪
+
+                        </MudText>
 
                     </MudStack>
 
-                    <MudText Typo="Typo.caption">
+                    <MudProgressLinear Value="@_uploadPercent"
+                                       Color="Color.Primary"
+                                       Rounded="true" />
+
+                    <MudStack Row="true"
+                              Justify="Justify.SpaceBetween">
+
+                        <MudText Typo="Typo.caption" Color="Color.Secondary">
+
+                            @FormatFileSize(_uploadLoaded) از @FormatFileSize(_uploadTotal)
+
+                        </MudText>
+
+                        <MudText Typo="Typo.caption" Color="Color.Secondary">
+
+                            سرعت: @FormatSpeed(_uploadSpeedBps)
+
+                        </MudText>
+
+                        <MudText Typo="Typo.caption" Color="Color.Secondary">
+
+                            زمان باقی‌مانده: @FormatEta(_uploadEta)
+
+                        </MudText>
+
+                    </MudStack>
+
+                    <MudText Typo="Typo.caption" Color="Color.Secondary">
 
                         پس از پایان آپلود، پردازش ویدئو روی سرور انجام می‌شود.
 
@@ -309,7 +331,7 @@
 
                 </MudStack>
 
-            </MudAlert>
+            </MudPaper>
         }
 
 
@@ -336,6 +358,13 @@
             }
 
         </MudButton>
+
+        @if (!_hasSelectedFile && !_uploading)
+        {
+            <MudText Typo="Typo.caption" Color="Color.Secondary">
+                برای فعال شدن دکمه، ابتدا فایل ویدیو را انتخاب کنید.
+            </MudText>
+        }
 
     </MudStack>
 
@@ -364,7 +393,34 @@
 
     private CourseEpisodeDto? _latestEpisode;
 
-    private IBrowserFile? _selectedFile;
+    // فایل مستقیماً از مرورگر به API فرستاده می‌شود (fetch + FormData)؛
+    // خواندن فایل از طریق استریم Blazor روی اندروید با NotReadableError شکست می‌خورد.
+    private ElementReference _fileInput;
+
+    private IJSObjectReference? _uploadModule;
+
+    private bool _hasSelectedFile;
+
+    private string _selectedFileName = string.Empty;
+
+    private long _selectedFileSize;
+
+    // آمار زندهٔ آپلود برای نوار پیشرفت
+    private DotNetObjectReference<LessonVideoUpload>? _dotNetReference;
+
+    private long _uploadLoaded;
+
+    private long _uploadTotal;
+
+    private double _uploadSpeedBps;
+
+    private int _uploadPercent;
+
+    private TimeSpan _uploadEta;
+
+    private DateTime _uploadStartedUtc;
+
+    private DateTime _lastProgressRenderUtc;
 
     private bool _loadingExistingVideo;
 
@@ -395,6 +451,15 @@
         ?? Configuration["Api:BaseUrl"]
         ?? string.Empty;
 
+    // با هر تغییر در videoUpload.js این مقدار را بالا ببر؛ وگرنه مرورگر/CDN
+    // نسخهٔ کش‌شدهٔ قدیمی را اجرا می‌کند.
+    private const string UploadModuleVersion = "20261020-3";
+
+    private ValueTask<IJSObjectReference> GetUploadModuleAsync() =>
+        JS.InvokeAsync<IJSObjectReference>(
+            "import",
+            $"./_content/Marzi.Client.Shared/js/videoUpload.js?v={UploadModuleVersion}");
+
 
     // =========================================================
     // Computed
@@ -407,8 +472,9 @@
             if (_uploading)
                 return false;
 
-            if (_selectedFile is null)
+            if (!_hasSelectedFile)
                 return false;
+
             if (string.IsNullOrWhiteSpace(_episodeTitle))
                 return false;
             if (_order < 1)
@@ -582,37 +648,78 @@
     // File Selected
     // =========================================================
 
-    private void OnFileSelected(
-        InputFileChangeEventArgs e)
+    private async Task OnFileSelected()
     {
         _error = null;
 
+        _hasSelectedFile = false;
+
+        _selectedFileName = string.Empty;
+
+        _selectedFileSize = 0;
+
         try
         {
-            _selectedFile =
-                e.File;
+            _uploadModule ??= await GetUploadModuleAsync();
 
-            if (_selectedFile is null)
+            var info = await _uploadModule.InvokeAsync<SelectedFileInfo?>(
+                "getSelectedFile",
+                _fileInput);
+
+            if (info is null)
                 return;
 
-            Console.WriteLine(
-                $"[LESSON VIDEO] File selected: {_selectedFile.Name}");
+            // فایل‌های ابری/گالری روی اندروید گاهی فقط متادیتا دارند و
+            // خواندن محتوا شکست می‌خورد؛ قبل از آپلود بررسی می‌کنیم.
+            // اگر نسخهٔ ماژول قدیمی باشد این تابع نیست؛ در آن صورت رد می‌شویم.
+            try
+            {
+                var probe = await _uploadModule.InvokeAsync<ReadableProbe?>(
+                    "verifyReadable",
+                    _fileInput);
+
+                if (probe is not null && !probe.Ok)
+                {
+                    Console.WriteLine(
+                        $"[LESSON VIDEO] File content not readable: {probe.Error}");
+
+                    _error =
+                        "مرورگر نمی‌تواند محتوای این فایل را بخواند. " +
+                        "فایل را در حافظهٔ گوشی ذخیره کن یا فایل دیگری انتخاب کن.";
+
+                    return;
+                }
+            }
+            catch (JSException ex)
+            {
+                Console.WriteLine(
+                    $"[LESSON VIDEO] Readability probe unavailable: {ex.Message}");
+            }
+
+            _selectedFileName =
+                string.IsNullOrWhiteSpace(info.Name)
+                    ? "video"
+                    : info.Name;
+
+            _selectedFileSize = info.Size;
+
+            _hasSelectedFile = true;
 
             Console.WriteLine(
-                $"[LESSON VIDEO] File size: {_selectedFile.Size}");
-
-            Console.WriteLine(
-                $"[LESSON VIDEO] Content type: {_selectedFile.ContentType}");
+                $"[LESSON VIDEO] File selected: {_selectedFileName} ({_selectedFileSize} bytes)");
         }
         catch (Exception ex)
         {
             Console.WriteLine(
                 $"[LESSON VIDEO] File selection failed: {ex}");
 
-            _selectedFile = null;
-
             _error =
-                "انتخاب فایل ویدئو ناموفق بود.";
+                "مرورگر نتوانست فایل انتخاب‌شده را بخواند. " +
+                "لطفاً فایل را دوباره انتخاب کنید.";
+        }
+        finally
+        {
+            await InvokeAsync(StateHasChanged);
         }
     }
 
@@ -621,14 +728,33 @@
     // Clear File
     // =========================================================
 
-    private void ClearFile()
+    private async Task ClearFile()
     {
         if (_uploading)
             return;
 
-        _selectedFile = null;
+        _hasSelectedFile = false;
+
+        _selectedFileName = string.Empty;
+
+        _selectedFileSize = 0;
 
         _error = null;
+
+        try
+        {
+            if (_uploadModule is not null)
+            {
+                await _uploadModule.InvokeVoidAsync(
+                    "clearInput",
+                    _fileInput);
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(
+                $"[LESSON VIDEO] Clear input failed: {ex}");
+        }
     }
 
 
@@ -645,100 +771,116 @@
 
         _error = null;
 
+        ResetUploadProgress();
+
         try
         {
-            var file =
-                _selectedFile!;
+            var token = await TokenStorage.GetAccessTokenAsync();
+
+            if (string.IsNullOrWhiteSpace(token))
+            {
+                throw new InvalidOperationException(
+                    "برای آپلود ویدئو باید وارد حساب کاربری شوید.");
+            }
+
+            var uploadUrl =
+                $"{ApiBaseUrl.TrimEnd('/')}/api/admin/lessons/{Lesson.Id}/video";
+
+            var healthUrl =
+                $"{ApiBaseUrl.TrimEnd('/')}/api/courses/published";
+
+            _uploadModule ??= await GetUploadModuleAsync();
 
             Console.WriteLine(
-                "[LESSON VIDEO] Starting upload...");
+                $"[LESSON VIDEO] Uploading to {uploadUrl}");
+
+            _dotNetReference ??= DotNetObjectReference.Create(this);
+
+            // فایل مستقیماً از مرورگر به API می‌رود؛ هیچ بایتی از SignalR
+            // عبور نمی‌کند تا خطای NotReadableError اندروید تکرار نشود.
+            var result = await _uploadModule.InvokeAsync<VideoUploadResult>(
+                "uploadVideo",
+                _fileInput,
+                uploadUrl,
+                token,
+                _episodeTitle.Trim(),
+                _episodeDescription.Trim(),
+                _order,
+                _isFree,
+                healthUrl,
+                _dotNetReference);
 
             Console.WriteLine(
-                $"[LESSON VIDEO] LessonId: {Lesson.Id}");
+                $"[LESSON VIDEO] Upload status: {result?.Status}");
 
-            Console.WriteLine(
-                $"[LESSON VIDEO] File: {file.Name}");
+            if (result is null || result.Status != 200)
+            {
+                Console.WriteLine(
+                    $"[LESSON VIDEO] Response body: {result?.Body}");
 
-            Console.WriteLine(
-                $"[LESSON VIDEO] Size: {file.Size}");
+                throw new InvalidOperationException(
+                    result?.Status switch
+                    {
+                        401 or 403 =>
+                            "دسترسی لازم برای آپلود را ندارید؛ دوباره وارد شوید.",
+                        413 =>
+                            "حجم فایل بیشتر از حد مجاز سرور است.",
+                        -2 =>
+                            "اتصال به سرور برقرار نشد. اینترنت گوشی را بررسی کن و دوباره تلاش کن.",
+                        -1 =>
+                            "آپلود قطع شد؛ معمولاً به‌خاطر خوانده‌نشدن فایل توسط مرورگر. " +
+                            "فایل را دوباره انتخاب کن.",
+                        _ =>
+                            $"آپلود ویدئو ناموفق بود. کد: {result?.Status}"
+                    });
+            }
 
-            await using var stream =
-                file.OpenReadStream(
-                    maxAllowedSize: 3_000_000_000L);
+            _hasSelectedFile = false;
 
-            var episode =
-                await EpisodeService.UploadAsync(
-                    Lesson.Id,
-                    _episodeTitle.Trim(),
-                    _episodeDescription.Trim(),
-                    _order,
-                    _isFree,
-                    stream,
-                    file.Name,
-                    file.ContentType);
+            _selectedFileName = string.Empty;
 
+            _selectedFileSize = 0;
 
-            Console.WriteLine(
-                $"[LESSON VIDEO] Upload response Id: {episode.Id}");
-
-            Console.WriteLine(
-                $"[LESSON VIDEO] Upload response Status: {episode.Status}");
-
-
-            // =================================================
-            // Update lesson immediately
-            // =================================================
-
-            Lesson.HasVideo = true;
-
-
-            // =================================================
-            // Update local episode list
-            // =================================================
-
-            _episodes.RemoveAll(
-                x => x.Id == episode.Id);
-
-            _episodes.Add(
-                episode);
-
-            _latestEpisode =
-                _episodes
-                    .OrderByDescending(x => x.Order)
-                    .FirstOrDefault();
-
-            _order = Math.Max(1, _episodes.Max(x => x.Order) + 1);
-            _episodeTitle = $"{Lesson.Title} - ویدیو {_order}";
-            _episodeDescription = string.Empty;
-
-
-            _selectedFile = null;
-
+            await _uploadModule.InvokeVoidAsync(
+                "clearInput",
+                _fileInput);
 
             Snackbar.Add(
                 "ویدئو با موفقیت آپلود شد و پردازش آن آغاز شد.",
                 Severity.Success);
 
+            Lesson.HasVideo = true;
 
-            // =================================================
-            // Notify parent
-            // =================================================
+            // لیست به‌روزرسانی و در صورت لزوم polling پردازش آغاز می‌شود.
+            await LoadExistingVideos();
 
-            await OnUploaded.InvokeAsync(
-                episode);
-
-
-            // =================================================
-            // Poll processing status
-            // =================================================
-
-            if (IsProcessing(episode))
+            if (_latestEpisode is not null)
             {
-                StartPolling(
-                    episode.Id);
+                await OnUploaded.InvokeAsync(
+                    _latestEpisode);
             }
 
             StateHasChanged();
+        }
+        catch (TaskCanceledException)
+        {
+            // اگر مدار Blazor قطع شود، انتظار برای نتیجه لغو می‌شود ولی
+            // آپلود در مرورگر ادامه دارد؛ چند بار لیست را چک می‌کنیم.
+            Console.WriteLine(
+                "[LESSON VIDEO] Await canceled; checking if upload completed anyway.");
+
+            if (await TryDetectCompletedUploadAsync())
+            {
+                Snackbar.Add(
+                    "ویدئو با موفقیت آپلود شد و پردازش آن آغاز شد.",
+                    Severity.Success);
+
+                return;
+            }
+
+            _error =
+                "ارتباط صفحه قطع شد و نتیجهٔ آپلود مشخص نیست. " +
+                "صفحه را دوباره باز کن و ببین ویدئو در لیست اضافه شده یا نه.";
         }
         catch (Exception ex)
         {
@@ -959,6 +1101,124 @@
     // Formatting
     // =========================================================
 
+    // =========================================================
+    // Upload progress
+    // =========================================================
+
+    private void ResetUploadProgress()
+    {
+        _uploadLoaded = 0;
+
+        _uploadTotal = _selectedFileSize;
+
+        _uploadSpeedBps = 0;
+
+        _uploadPercent = 0;
+
+        _uploadEta = TimeSpan.Zero;
+
+        _uploadStartedUtc = DateTime.UtcNow;
+
+        _lastProgressRenderUtc = DateTime.MinValue;
+    }
+
+    [JSInvokable]
+    public Task OnUploadProgress(long loaded, long total)
+    {
+        if (!_uploading)
+            return Task.CompletedTask;
+
+        _uploadLoaded = Math.Max(0, loaded);
+
+        _uploadTotal = total > 0
+            ? total
+            : Math.Max(_uploadLoaded, 1);
+
+        _uploadPercent = (int)Math.Clamp(
+            _uploadLoaded * 100 / _uploadTotal,
+            0,
+            100);
+
+        var elapsed =
+            (DateTime.UtcNow - _uploadStartedUtc).TotalSeconds;
+
+        if (elapsed > 0.5 && _uploadLoaded > 0)
+        {
+            _uploadSpeedBps = _uploadLoaded / elapsed;
+
+            var remaining =
+                Math.Max(0, _uploadTotal - _uploadLoaded);
+
+            _uploadEta = _uploadSpeedBps > 1
+                ? TimeSpan.FromSeconds(remaining / _uploadSpeedBps)
+                : TimeSpan.Zero;
+        }
+
+        var now = DateTime.UtcNow;
+
+        // حداکثر چهار بار در ثانیه رندر می‌کنیم تا مدار اشباع نشود.
+        if ((now - _lastProgressRenderUtc).TotalMilliseconds < 250)
+            return Task.CompletedTask;
+
+        _lastProgressRenderUtc = now;
+
+        return InvokeAsync(StateHasChanged);
+    }
+
+    private async Task<bool> TryDetectCompletedUploadAsync()
+    {
+        var previousId = _latestEpisode?.Id;
+
+        for (var attempt = 0; attempt < 10; attempt++)
+        {
+            try
+            {
+                await Task.Delay(TimeSpan.FromSeconds(3));
+
+                await LoadExistingVideos();
+
+                if (_latestEpisode is not null &&
+                    _latestEpisode.Id != previousId)
+                {
+                    return true;
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(
+                    $"[LESSON VIDEO] Completion check failed: {ex.Message}");
+            }
+        }
+
+        return false;
+    }
+
+
+    // =========================================================
+    // Formatting
+    // =========================================================
+
+    private static string FormatSpeed(double bytesPerSecond) =>
+        bytesPerSecond <= 0
+            ? "—"
+            : bytesPerSecond >= 1024 * 1024
+                ? $"{bytesPerSecond / (1024d * 1024d):0.##} MB/s"
+                : $"{bytesPerSecond / 1024d:0.#} KB/s";
+
+    private static string FormatEta(TimeSpan eta)
+    {
+        if (eta <= TimeSpan.Zero)
+            return "—";
+
+        if (eta.TotalHours >= 1)
+            return $"حدود {eta.Hours} ساعت و {eta.Minutes} دقیقه";
+
+        if (eta.TotalMinutes >= 1)
+            return $"حدود {eta.Minutes} دقیقه و {eta.Seconds} ثانیه";
+
+        return $"حدود {Math.Max(1, (int)eta.TotalSeconds)} ثانیه";
+    }
+
     private static string FormatFileSize(
         long bytes)
     {
@@ -1006,6 +1266,36 @@
         _pollCancellation?.Cancel();
 
         _pollCancellation?.Dispose();
+
+        _dotNetReference?.Dispose();
+    }
+
+
+    // =========================================================
+    // JS payloads
+    // =========================================================
+
+    private sealed class SelectedFileInfo
+    {
+        public string? Name { get; set; }
+
+        public long Size { get; set; }
+
+        public string? Type { get; set; }
+    }
+
+    private sealed class VideoUploadResult
+    {
+        public int Status { get; set; }
+
+        public string? Body { get; set; }
+    }
+
+    private sealed class ReadableProbe
+    {
+        public bool Ok { get; set; }
+
+        public string? Error { get; set; }
     }
 
 }

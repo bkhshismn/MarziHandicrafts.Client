@@ -27,16 +27,22 @@
                     <MudItem xs="12" md="2"><MudButton FullWidth="true" Size="Size.Large" Color="Color.Primary" Variant="Variant.Filled" OnClick="CreateUserAsync">ساخت کاربر</MudButton></MudItem>
                 </MudGrid>
                 <MudTable Items="_users" Hover="true" Dense="true" Breakpoint="Breakpoint.Sm">
-                    <HeaderContent><MudTh>نام</MudTh><MudTh>نام کاربری</MudTh><MudTh>دسته‌های مجاز</MudTh><MudTh></MudTh></HeaderContent>
+                    <HeaderContent><MudTh>نام</MudTh><MudTh>نام کاربری</MudTh><MudTh>نقش</MudTh><MudTh>دسته‌های مجاز</MudTh><MudTh></MudTh></HeaderContent>
                     <RowTemplate Context="user">
                         <MudTd DataLabel="نام"><MudTextField @bind-Value="user.Name" Label="نام نمایشی" Variant="Variant.Outlined" Dense="true" /></MudTd>
                         <MudTd DataLabel="نام کاربری" dir="ltr">@user.Username</MudTd>
+                        <MudTd DataLabel="نقش">
+                            <MudSelect T="string" @bind-Value="user.Role" Label="نقش" Variant="Variant.Outlined" Dense="true">
+                                <MudSelectItem T="string" Value="@("User")">کاربر</MudSelectItem>
+                                <MudSelectItem T="string" Value="@("Admin")">مدیر</MudSelectItem>
+                            </MudSelect>
+                        </MudTd>
                         <MudTd DataLabel="دسته‌ها" Style="min-width:280px">
                             <MudSelect T="string" MultiSelection="true" SelectedValues="user.Categories" SelectedValuesChanged="@(values => OnCategoriesChanged(user, values))" Label="انتخاب دسته‌ها" Variant="Variant.Outlined" Dense="true">
                                 @foreach (var category in _categories) { <MudSelectItem T="string" Value="category">@category</MudSelectItem> }
                             </MudSelect>
                         </MudTd>
-                        <MudTd><MudStack Row="true" Spacing="1"><MudButton Color="Color.Primary" Variant="Variant.Outlined" OnClick="@(() => SaveNameAsync(user))">ذخیره نام</MudButton><MudButton Color="Color.Secondary" Variant="Variant.Outlined" OnClick="@(() => SaveCategoriesAsync(user))">ذخیره دسترسی</MudButton></MudStack></MudTd>
+                        <MudTd><MudStack Row="true" Spacing="1"><MudButton Color="Color.Primary" Variant="Variant.Outlined" OnClick="@(() => SaveNameAsync(user))">ذخیره نام</MudButton><MudButton Color="Color.Tertiary" Variant="Variant.Outlined" OnClick="@(() => SaveRoleAsync(user))">ذخیره نقش</MudButton><MudButton Color="Color.Secondary" Variant="Variant.Outlined" OnClick="@(() => SaveCategoriesAsync(user))">ذخیره دسترسی</MudButton></MudStack></MudTd>
                     </RowTemplate>
                     <NoRecordsContent><MudText Class="pa-4">هنوز کاربری ساخته نشده است.</MudText></NoRecordsContent>
                 </MudTable>
@@ -76,8 +82,7 @@
         if (string.IsNullOrWhiteSpace(_newUser.Username) || _newUser.Password.Length < 8) { Snackbar.Add("نام کاربری را وارد کنید و برای رمز حداقل ۸ نویسه بگذارید.", Severity.Warning); return; }
         var response = await UsersApi.CreateAsync(_newUser);
         if (!response.IsSuccessStatusCode || response.Content is null) { Snackbar.Add(response.StatusCode == System.Net.HttpStatusCode.Conflict ? "این نام کاربری قبلاً استفاده شده است." : "ساخت کاربر انجام نشد.", Severity.Error); return; }
-        if (response.Content.Role != "Admin")
-            _users.Insert(0, response.Content);
+        _users.Insert(0, response.Content);
         _newUser = new() { Role = "User" };
         Snackbar.Add(response.Content.Role == "Admin" ? "حساب مدیر ساخته شد." : "کاربر ساخته شد.", Severity.Success);
     }
@@ -92,6 +97,15 @@
     {
         var response = await UsersApi.SetNameAsync(user.Id, new SetUserNameRequest { Name = user.Name });
         Snackbar.Add(response.IsSuccessStatusCode ? "نام نمایشی ذخیره شد." : "ذخیره نام انجام نشد.", response.IsSuccessStatusCode ? Severity.Success : Severity.Error);
+    }
+
+    private async Task SaveRoleAsync(ManagedUserDto user)
+    {
+        var response = await UsersApi.SetRoleAsync(user.Id, new SetUserRoleRequest { Role = user.Role });
+
+        Snackbar.Add(
+            response.IsSuccessStatusCode ? "نقش کاربر ذخیره شد." : "ذخیره نقش انجام نشد.",
+            response.IsSuccessStatusCode ? Severity.Success : Severity.Error);
     }
 
     private static void OnCategoriesChanged(ManagedUserDto user, IEnumerable<string> values) => user.Categories = values.ToList();

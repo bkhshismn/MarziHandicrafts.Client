@@ -1,4 +1,4 @@
-﻿using Marzi.Client.Core.Authentication;
+using Marzi.Client.Core.Authentication;
 using Marzi.Client.Infrastructure.Api;
 using Marzi.Client.Infrastructure.Authentication;
 using Marzi.Client.Infrastructure.Http;
@@ -86,6 +86,22 @@ public static class DependencyInjection
             var authHandler = new AuthorizationHandler(tokenStorage) { InnerHandler = new HttpClientHandler() };
             var refreshHandler = new RefreshTokenHandler(sp.GetRequiredService<AuthService>(), tokenStorage, sp.GetRequiredService<TokenRefreshCoordinator>()) { InnerHandler = authHandler };
             return RestService.For<ICourseCategoriesApi>(new HttpClient(refreshHandler) { BaseAddress = new Uri(baseUrl) });
+        });
+
+        services.AddScoped<ISystemApi>(sp =>
+        {
+            var tokenStorage = sp.GetRequiredService<ITokenStorage>();
+            var authHandler = new AuthorizationHandler(tokenStorage) { InnerHandler = new HttpClientHandler() };
+            var refreshHandler = new RefreshTokenHandler(sp.GetRequiredService<AuthService>(), tokenStorage, sp.GetRequiredService<TokenRefreshCoordinator>()) { InnerHandler = authHandler };
+            return RestService.For<ISystemApi>(new HttpClient(refreshHandler) { BaseAddress = new Uri(baseUrl) });
+        });
+
+        services.AddScoped<IAnalyticsApi>(sp =>
+        {
+            var tokenStorage = sp.GetRequiredService<ITokenStorage>();
+            var authHandler = new AuthorizationHandler(tokenStorage) { InnerHandler = new HttpClientHandler() };
+            var refreshHandler = new RefreshTokenHandler(sp.GetRequiredService<AuthService>(), tokenStorage, sp.GetRequiredService<TokenRefreshCoordinator>()) { InnerHandler = authHandler };
+            return RestService.For<IAnalyticsApi>(new HttpClient(refreshHandler) { BaseAddress = new Uri(baseUrl) });
         });
 
         services.AddScoped<IPortfolioApi>(sp =>

@@ -9,6 +9,7 @@ using Marzi.Client.Web.Components;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.DataProtection;
 using MudBlazor.Services;
+using System.Net.Http.Json;
 using System.Security.Cryptography;
 using System.Text;
 
@@ -109,4 +110,75 @@ app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode()
     .AddAdditionalAssemblies(typeof(MainLayout).Assembly);
 
+
+// ========================================
+// SEO: sitemap.xml
+// ========================================
+
+app.MapGet("/sitemap.xml", async (IConfiguration configuration) =>
+{
+    var apiBaseUrl = configuration["Api:BaseUrl"];
+
+    var publicBaseUrl =
+        configuration["Media:PublicBaseUrl"]?.TrimEnd('/')
+        ?? "https://www.marzihandicrafts.ir";
+
+    var urls = new List<string>
+    {
+        "/",
+        "/courses",
+        "/portfolio"
+    };
+
+    try
+    {
+        if (!string.IsNullOrWhiteSpace(apiBaseUrl))
+        {
+            using var http = new HttpClient
+            {
+                BaseAddress = new Uri(apiBaseUrl)
+            };
+
+            var courses =
+                await http.GetFromJsonAsync<List<CourseSitemapItem>>(
+                    "/api/courses/published");
+
+            if (courses is not null)
+                urls.AddRange(courses.Select(c => $"/courses/{c.Id}"));
+
+            var items =
+                await http.GetFromJsonAsync<List<PortfolioSitemapItem>>(
+                    "/api/portfolio/published");
+
+            if (items is not null)
+                urls.AddRange(items.Select(p => $"/portfolio/{p.Id}"));
+        }
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"[SITEMAP] Could not load content: {ex.Message}");
+    }
+
+    var xml = new StringBuilder();
+
+    xml.AppendLine("<?xml version=\"1.0\" encoding=\"UTF-8\"?>");
+    xml.AppendLine("<urlset xmlns=\"http://www.sitemaps.org/schemas/sitemap/0.9\">");
+
+    foreach (var url in urls.Distinct())
+    {
+        xml.AppendLine("  <url>");
+        xml.AppendLine($"    <loc>{publicBaseUrl}{url}</loc>");
+        xml.AppendLine("  </url>");
+    }
+
+    xml.AppendLine("</urlset>");
+
+    return Results.Content(xml.ToString(), "application/xml", Encoding.UTF8);
+});
+
+
 app.Run();
+
+public sealed record CourseSitemapItem(Guid Id);
+
+public sealed record PortfolioSitemapItem(Guid Id);

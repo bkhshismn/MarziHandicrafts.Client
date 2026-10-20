@@ -1,4 +1,4 @@
-﻿using Marzi.Client.Core.Models.Courses;
+using Marzi.Client.Core.Models.Courses;
 using Marzi.Client.Infrastructure.Api;
 
 namespace Marzi.Client.Infrastructure.Services;
@@ -194,6 +194,25 @@ public sealed class CourseService
         {
             throw new InvalidOperationException(
                 "تغییر وضعیت انتشار دوره با خطا مواجه شد.");
+        }
+
+        return response.Content;
+    }
+
+    public async Task<CourseDto> SetFreeAsync(
+        Guid id,
+        bool isFree)
+    {
+        var response =
+            await _api.SetFreeAsync(
+                id,
+                new SetCourseFreeRequest { IsFree = isFree });
+
+        if (!response.IsSuccessStatusCode ||
+            response.Content is null)
+        {
+            throw new InvalidOperationException(
+                "تغییر وضعیت رایگان بودن دوره با خطا مواجه شد.");
         }
 
         return response.Content;

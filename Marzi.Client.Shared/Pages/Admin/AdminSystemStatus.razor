@@ -1,0 +1,330 @@
+@page "/admin/system"
+@layout AdminLayout
+
+@using Marzi.Client.Core.Models
+@using Marzi.Client.Infrastructure.Api
+@using Microsoft.AspNetCore.Components.Authorization
+@using MudBlazor
+
+@inject ISystemApi SystemApi
+@implements IAsyncDisposable
+
+<AuthorizeView Roles="Admin">
+    <Authorized>
+        <MudContainer MaxWidth="MaxWidth.Large" Class="py-6">
+
+            <MudStack Row="true"
+                      AlignItems="AlignItems.Center"
+                      Justify="Justify.SpaceBetween"
+                      Class="mb-4">
+
+                <div>
+                    <MudText Typo="Typo.h4">وضعیت سرور</MudText>
+                    <MudText Typo="Typo.body2" Color="Color.Secondary">
+                        منابع مصرفی و فضای خالی سرور، هر ۵ ثانیه به‌روز می‌شود.
+                    </MudText>
+                </div>
+
+                <MudButton Variant="Variant.Outlined"
+                           Color="Color.Primary"
+                           StartIcon="@Icons.Material.Filled.Refresh"
+                           Disabled="_loading"
+                           OnClick="LoadAsync">
+                    به‌روزرسانی
+                </MudButton>
+
+            </MudStack>
+
+            @if (!string.IsNullOrWhiteSpace(_error))
+            {
+                <MudAlert Severity="Severity.Error" Class="mb-4">
+                    @_error
+                </MudAlert>
+            }
+
+            @if (_status is null)
+            {
+                <MudProgressLinear Indeterminate="true" />
+            }
+            else
+            {
+                <MudGrid Spacing="3">
+
+                    <!-- CPU -->
+                    <MudItem xs="12" sm="6" md="4">
+                        <MudPaper Class="pa-4" Elevation="1">
+                            <MudStack Spacing="2">
+                                <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+                                    <MudIcon Icon="@Icons.Material.Filled.Memory" Color="Color.Primary" />
+                                    <MudText Typo="Typo.subtitle1">پردازنده (CPU)</MudText>
+                                </MudStack>
+
+                                <MudText Typo="Typo.h4">
+                                    @FormatPercent(_status.CpuPercent)
+                                </MudText>
+
+                                <MudProgressLinear Value="@_status.CpuPercent"
+                                                   Color="@LoadColor(_status.CpuPercent)"
+                                                   Rounded="true"
+                                                   Class="my-2" />
+
+                                <MudText Typo="Typo.caption" Color="Color.Secondary">
+                                    @_status.ProcessorCount هسته —
+                                    میانگین بار: @_status.Load1.ToString("0.00") /
+                                    @_status.Load5.ToString("0.00") /
+                                    @_status.Load15.ToString("0.00")
+                                </MudText>
+                            </MudStack>
+                        </MudPaper>
+                    </MudItem>
+
+                    <!-- RAM -->
+                    <MudItem xs="12" sm="6" md="4">
+                        <MudPaper Class="pa-4" Elevation="1">
+                            <MudStack Spacing="2">
+                                <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+                                    <MudIcon Icon="@Icons.Material.Filled.Memory" Color="Color.Secondary" />
+                                    <MudText Typo="Typo.subtitle1">حافظه (RAM)</MudText>
+                                </MudStack>
+
+                                <MudText Typo="Typo.h4">
+                                    @FormatPercent(_memoryPercent)
+                                </MudText>
+
+                                <MudProgressLinear Value="@_memoryPercent"
+                                                   Color="@LoadColor(_memoryPercent)"
+                                                   Rounded="true"
+                                                   Class="my-2" />
+
+                                <MudText Typo="Typo.caption" Color="Color.Secondary">
+                                    مصرف‌شده: @FormatMb(_status.MemoryUsedMb) —
+                                    آزاد: @FormatMb(_status.MemoryFreeMb) —
+                                    کل: @FormatMb(_status.MemoryTotalMb)
+                                </MudText>
+                            </MudStack>
+                        </MudPaper>
+                    </MudItem>
+
+                    <!-- Disk -->
+                    <MudItem xs="12" sm="6" md="4">
+                        <MudPaper Class="pa-4" Elevation="1">
+                            <MudStack Spacing="2">
+                                <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+                                    <MudIcon Icon="@Icons.Material.Filled.Storage" Color="Color.Tertiary" />
+                                    <MudText Typo="Typo.subtitle1">فضای دیسک</MudText>
+                                </MudStack>
+
+                                <MudText Typo="Typo.h4" Color="@DiskColor">
+                                    @FormatGb(_status.DiskFreeGb) خالی
+                                </MudText>
+
+                                <MudProgressLinear Value="@_diskPercent"
+                                                   Color="@LoadColor(_diskPercent)"
+                                                   Rounded="true"
+                                                   Class="my-2" />
+
+                                <MudText Typo="Typo.caption" Color="Color.Secondary">
+                                    مصرف‌شده: @FormatGb(_status.DiskUsedGb) —
+                                    کل: @FormatGb(_status.DiskTotalGb)
+                                </MudText>
+                            </MudStack>
+                        </MudPaper>
+                    </MudItem>
+
+                    <!-- Uptime -->
+                    <MudItem xs="12" sm="6" md="4">
+                        <MudPaper Class="pa-4" Elevation="1">
+                            <MudStack Spacing="2">
+                                <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+                                    <MudIcon Icon="@Icons.Material.Filled.Schedule" Color="Color.Info" />
+                                    <MudText Typo="Typo.subtitle1">مدت روشن بودن سرور</MudText>
+                                </MudStack>
+
+                                <MudText Typo="Typo.h5">
+                                    @FormatUptime(_status.UptimeHours)
+                                </MudText>
+
+                                <MudText Typo="Typo.caption" Color="Color.Secondary">
+                                    نام سرور: @_status.MachineName
+                                </MudText>
+                            </MudStack>
+                        </MudPaper>
+                    </MudItem>
+
+                    <!-- Last update -->
+                    <MudItem xs="12" sm="6" md="4">
+                        <MudPaper Class="pa-4" Elevation="1">
+                            <MudStack Spacing="2">
+                                <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+                                    <MudIcon Icon="@Icons.Material.Filled.Update" Color="Color.Default" />
+                                    <MudText Typo="Typo.subtitle1">آخرین به‌روزرسانی</MudText>
+                                </MudStack>
+
+                                <MudText Typo="Typo.h5">
+                                    @_lastUpdated.ToString("HH:mm:ss")
+                                </MudText>
+
+                                <MudText Typo="Typo.caption" Color="Color.Secondary">
+                                    ساعت سرور (UTC): @_status.ServerTimeUtc.ToString("HH:mm:ss")
+                                </MudText>
+                            </MudStack>
+                        </MudPaper>
+                    </MudItem>
+
+                </MudGrid>
+
+                @if (_diskPercent >= 85 || _memoryPercent >= 90 || _status.CpuPercent >= 90)
+                {
+                    <MudAlert Severity="Severity.Warning" Class="mt-4">
+                        یکی از منابع سرور به حد هشدار رسیده است؛ در صورت نیاز فضای دیسک یا بار پردازنده را بررسی کنید.
+                    </MudAlert>
+                }
+            }
+
+        </MudContainer>
+    </Authorized>
+
+    <NotAuthorized>
+        <MudAlert Severity="Severity.Error" Class="ma-6">
+            این بخش فقط برای مدیر سیستم است.
+        </MudAlert>
+    </NotAuthorized>
+</AuthorizeView>
+
+@code {
+    private SystemStatusDto? _status;
+
+    private string? _error;
+
+    private bool _loading;
+
+    private DateTime _lastUpdated;
+
+    private CancellationTokenSource? _cancellation;
+
+    private double _memoryPercent =>
+        _status is null || _status.MemoryTotalMb <= 0
+            ? 0
+            : Math.Round(_status.MemoryUsedMb / _status.MemoryTotalMb * 100, 1);
+
+    private double _diskPercent =>
+        _status is null || _status.DiskTotalGb <= 0
+            ? 0
+            : Math.Round(_status.DiskUsedGb / _status.DiskTotalGb * 100, 1);
+
+    private Color DiskColor =>
+        _status is null
+            ? Color.Default
+            : _status.DiskFreeGb < 2
+                ? Color.Error
+                : _status.DiskFreeGb < 5
+                    ? Color.Warning
+                    : Color.Success;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadAsync();
+
+        _cancellation = new CancellationTokenSource();
+
+        _ = RefreshLoopAsync(_cancellation.Token);
+    }
+
+    private async Task RefreshLoopAsync(CancellationToken cancellationToken)
+    {
+        try
+        {
+            while (!cancellationToken.IsCancellationRequested)
+            {
+                await Task.Delay(TimeSpan.FromSeconds(5), cancellationToken);
+
+                if (cancellationToken.IsCancellationRequested)
+                    break;
+
+                await LoadAsync();
+            }
+        }
+        catch (OperationCanceledException)
+        {
+            // طبیعی است.
+        }
+    }
+
+    private async Task LoadAsync()
+    {
+        _loading = true;
+
+        try
+        {
+            var response = await SystemApi.GetStatusAsync();
+
+            if (response.IsSuccessStatusCode && response.Content is not null)
+            {
+                _status = response.Content;
+                _error = null;
+                _lastUpdated = DateTime.Now;
+            }
+            else
+            {
+                _error =
+                    $"دریافت وضعیت سرور ناموفق بود. کد: {response.StatusCode}";
+            }
+        }
+        catch (Exception ex)
+        {
+            _error = ex.Message;
+        }
+        finally
+        {
+            _loading = false;
+
+            await InvokeAsync(StateHasChanged);
+        }
+    }
+
+    private static string FormatPercent(double value) =>
+        $"{value:0.#}٪";
+
+    private static string FormatMb(double mb) =>
+        mb >= 1024
+            ? $"{mb / 1024:0.##} گیگابایت"
+            : $"{mb:0} مگابایت";
+
+    private static string FormatGb(double gb) =>
+        gb >= 1024
+            ? $"{gb / 1024:0.##} ترابایت"
+            : $"{gb:0.##} گیگابایت";
+
+    private static string FormatUptime(double hours)
+    {
+        if (hours <= 0)
+            return "نامشخص";
+
+        var days = (int)(hours / 24);
+        var remaining = hours - days * 24;
+
+        return days > 0
+            ? $"{days} روز و {remaining:0} ساعت"
+            : $"{remaining:0.#} ساعت";
+    }
+
+    private static Color LoadColor(double percent) =>
+        percent >= 90
+            ? Color.Error
+            : percent >= 70
+                ? Color.Warning
+                : Color.Success;
+
+    public void Dispose()
+    {
+        _cancellation?.Cancel();
+        _cancellation?.Dispose();
+    }
+
+    public ValueTask DisposeAsync()
+    {
+        Dispose();
+
+        return ValueTask.CompletedTask;
+    }
+}

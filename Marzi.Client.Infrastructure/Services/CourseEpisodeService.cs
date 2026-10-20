@@ -1,4 +1,4 @@
-﻿using Marzi.Client.Core.Authentication;
+using Marzi.Client.Core.Authentication;
 using Marzi.Client.Core.Models.Courses;
 using Marzi.Client.Infrastructure.Api;
 using Refit;
@@ -108,8 +108,10 @@ public sealed class CourseEpisodeService
                     isFree,
                     filePart);
 
+            // Refit 14 نوع StatusCode را nullable برمی‌گرداند؛ کست (int) روی آن
+            // وقتی پاسخی دریافت نشده باشد «Nullable object must have a value» می‌دهد.
             Console.WriteLine(
-                $"[EPISODE UPLOAD] Status: {(int)response.StatusCode} {response.StatusCode}");
+                $"[EPISODE UPLOAD] Status: {response.StatusCode}");
 
             Console.WriteLine(
                 $"[EPISODE UPLOAD] Has Content: {response.Content is not null}");
@@ -160,8 +162,8 @@ public sealed class CourseEpisodeService
 
                 throw new InvalidOperationException(
                     $"آپلود ویدئو ناموفق بود. " +
-                    $"کد وضعیت: {(int)response.StatusCode} " +
-                    $"{response.StatusCode}");
+                    $"کد وضعیت: {response.StatusCode} " +
+                    $"{response.Error?.Message}");
             }
 
             if (response.Content is null)
@@ -199,7 +201,7 @@ public sealed class CourseEpisodeService
                 await _api.GetByLessonIdAsync(lessonId);
 
             Console.WriteLine(
-                $"[EPISODE LIST] Status: {(int)response.StatusCode} {response.StatusCode}");
+                $"[EPISODE LIST] Status: {response.StatusCode}");
 
             Console.WriteLine(
                 $"[EPISODE LIST] Has Content: {response.Content is not null}");
@@ -209,7 +211,7 @@ public sealed class CourseEpisodeService
             {
                 throw new InvalidOperationException(
                     $"دریافت ویدئوهای درس با خطا مواجه شد. " +
-                    $"کد وضعیت: {(int)response.StatusCode}");
+                    $"کد وضعیت: {response.StatusCode}");
             }
 
             Console.WriteLine(
@@ -241,7 +243,7 @@ public sealed class CourseEpisodeService
                     episodeId);
 
             Console.WriteLine(
-                $"[EPISODE STATUS] HTTP: {(int)response.StatusCode} {response.StatusCode}");
+                $"[EPISODE STATUS] HTTP: {response.StatusCode}");
 
             Console.WriteLine(
                 $"[EPISODE STATUS] Content null: {response.Content is null}");
@@ -290,7 +292,7 @@ public sealed class CourseEpisodeService
             throw new InvalidOperationException(
                 $"سرور وضعیت ویدئو را با موفقیت برگرداند، " +
                 $"اما اطلاعات قابل خواندن نبودند. " +
-                $"HTTP: {(int)response.StatusCode} {response.StatusCode}");
+                $"HTTP: {response.StatusCode}");
         }
         catch (ApiException ex)
         {
@@ -299,7 +301,7 @@ public sealed class CourseEpisodeService
 
             throw new InvalidOperationException(
                 $"دریافت وضعیت ویدئو ناموفق بود. " +
-                $"کد وضعیت: {(int)ex.StatusCode} {ex.StatusCode}",
+                $"کد وضعیت: {ex.StatusCode}",
                 ex);
         }
     }

@@ -1,5 +1,6 @@
 @using Marzi.Client.Core.Authentication
 @using Marzi.Client.Core.Models.Courses
+@using Marzi.Client.Infrastructure.Api
 @using Marzi.Client.Infrastructure.Services
 @using Microsoft.JSInterop
 @using Microsoft.AspNetCore.Components.Authorization
@@ -11,6 +12,7 @@
 @inject IJSRuntime JS
 @inject AuthenticationStateProvider AuthenticationStateProvider
 @inject NavigationManager Navigation
+@inject IAnalyticsApi AnalyticsApi
 
 @if (Lesson is null)
 {
@@ -55,9 +57,19 @@ else
         <video @ref="_videoElement"
                class="video-player"
                controls
+               controlsList="nodownload noplaybackrate noremoteplayback"
+               disablePictureInPicture="true"
                playsinline
-               preload="metadata">
+               preload="metadata"
+               @oncontextmenu:preventDefault="true">
         </video>
+
+        @if (!string.IsNullOrWhiteSpace(_watermarkText))
+        {
+            <div class="video-watermark" aria-hidden="true">
+                <span>@_watermarkText</span>
+            </div>
+        }
 
         @if (_loading)
         {
@@ -123,12 +135,24 @@ else
 
     private bool _isAuthenticated;
 
+    // واترمارک متحرک نام کاربر: بازدارندهٔ ضبط/اسکرین‌شات و قابل ردیابی
+    private string? _watermarkText;
+
     private string LoginUrl => $"/login?returnUrl={Uri.EscapeDataString(new Uri(Navigation.Uri).PathAndQuery)}";
 
     protected override async Task OnInitializedAsync()
     {
         var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
         _isAuthenticated = authState.User.Identity?.IsAuthenticated == true;
+
+        var identity =
+            authState.User.Identity?.Name
+            ?? authState.User.FindFirst("nameid")?.Value;
+
+        _watermarkText =
+            string.IsNullOrWhiteSpace(identity)
+                ? null
+                : $"{identity} · marzihandicrafts.ir";
     }
 
     private bool _initializing;
@@ -526,6 +550,21 @@ else
             }
 
 
+            // ----------------------------------------------------
+            // iOS / Safari: پخش بومی HLS هدر نمی‌فرستد؛ توکن را
+            // در آدرس پلی‌لیست هم قرار می‌دهیم.
+            // ----------------------------------------------------
+
+            if (!string.IsNullOrWhiteSpace(token))
+            {
+                playlistUrl +=
+                    $"&access_token={Uri.EscapeDataString(token)}";
+
+                Console.WriteLine(
+                    "[VIDEO PLAYER] Token appended to playlist URL.");
+            }
+
+
             // ====================================================
             // Load JS module
             // ====================================================
@@ -624,6 +663,9 @@ else
             Console.WriteLine(
                 $"[VIDEO PLAYER] Initialized successfully. " +
                 $"EpisodeId={episodeId}");
+
+            // ثبت بازدید ویدیو (بی‌صدا؛ نباید پخش را متوقف کند)
+            _ = TrackVideoViewAsync(episodeId);
 
             Console.WriteLine(
                 "[VIDEO PLAYER] =============================");
@@ -949,6 +991,25 @@ else
             return;
 
         await SaveCurrentProgressAsync(Lesson.Id, episodeId, false);
+    }
+
+
+    private async Task TrackVideoViewAsync(Guid episodeId)
+    {
+        try
+        {
+            await AnalyticsApi.TrackVideoViewAsync(
+                new VideoViewRequest
+                {
+                    LessonId = Lesson.Id,
+                    EpisodeId = episodeId
+                });
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(
+                $"[ANALYTICS] Video view failed: {ex.Message}");
+        }
     }
 
 

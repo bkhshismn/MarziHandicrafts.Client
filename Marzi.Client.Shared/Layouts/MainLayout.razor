@@ -6,9 +6,11 @@
 @using Marzi.Client.Shared.Components.Navigation
 @using Marzi.Client.Shared.Theme
 @using Marzi.Client.Infrastructure.Services
+@using Marzi.Client.Infrastructure.Api
 
 @inject AuthService AuthService
 @inject NavigationManager Navigation
+@inject IAnalyticsApi AnalyticsApi
 
 <MudRTLProvider RightToLeft="true">
 
@@ -148,12 +150,45 @@
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (firstRender)
+        {
             await ThemePreference.InitializeAsync();
+
+            Navigation.LocationChanged += OnLocationChanged;
+
+            await TrackPageViewAsync();
+        }
+    }
+
+    private void OnLocationChanged(object? sender, LocationChangedEventArgs e) =>
+        _ = TrackPageViewAsync();
+
+    private async Task TrackPageViewAsync()
+    {
+        try
+        {
+            var path = new Uri(Navigation.Uri).AbsolutePath;
+
+            // صفحات مدیریتی در آمار عمومی شمرده نمی‌شوند.
+            if (path.StartsWith("/admin", StringComparison.OrdinalIgnoreCase))
+                return;
+
+            await AnalyticsApi.TrackPageViewAsync(
+                new PageViewRequest { Path = path });
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[ANALYTICS] Page view failed: {ex.Message}");
+        }
     }
 
     private void OnThemeChanged() => _ = InvokeAsync(StateHasChanged);
 
-    public void Dispose() => ThemePreference.Changed -= OnThemeChanged;
+    public void Dispose()
+    {
+        ThemePreference.Changed -= OnThemeChanged;
+
+        Navigation.LocationChanged -= OnLocationChanged;
+    }
 
     private async Task LogoutAsync()
     {

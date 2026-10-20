@@ -1,4 +1,4 @@
-﻿using Marzi.Client.Core.Models.Courses;
+using Marzi.Client.Core.Models.Courses;
 using Refit;
 
 namespace Marzi.Client.Infrastructure.Api;
@@ -30,6 +30,11 @@ public interface ICourseApi
 
     [Delete("/api/courses/{id}")]
     Task<ApiResponse<object>> DeleteAsync(Guid id);
+
+    [Put("/api/courses/{id}/free")]
+    Task<ApiResponse<CourseDto>> SetFreeAsync(
+        Guid id,
+        [Body] SetCourseFreeRequest request);
     // ============================================================
     // Admin - Course Sections
     // ============================================================
@@ -113,4 +118,9 @@ public sealed class CourseLessonCreateRequest
 public sealed class SetCoursePublishedRequest
 {
     public bool IsPublished { get; set; }
+}
+
+public sealed class SetCourseFreeRequest
+{
+    public bool IsFree { get; set; }
 }

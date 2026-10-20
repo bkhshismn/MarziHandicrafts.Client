@@ -1,0 +1,191 @@
+@page "/admin/analytics"
+@layout AdminLayout
+
+@using Marzi.Client.Core.Models
+@using Marzi.Client.Infrastructure.Api
+@using Microsoft.AspNetCore.Components.Authorization
+@using MudBlazor
+
+@inject IAnalyticsApi AnalyticsApi
+@implements IAsyncDisposable
+
+<AuthorizeView Roles="Admin">
+    <Authorized>
+        <MudContainer MaxWidth="MaxWidth.Large" Class="py-6">
+
+            <MudStack Row="true"
+                      AlignItems="AlignItems.Center"
+                      Justify="Justify.SpaceBetween"
+                      Class="mb-4">
+
+                <div>
+                    <MudText Typo="Typo.h4">آمار بازدید</MudText>
+                    <MudText Typo="Typo.body2" Color="Color.Secondary">
+                        بازدید صفحات سایت و ویدیوها (۳۰ روز اخیر)
+                    </MudText>
+                </div>
+
+                <MudButton Variant="Variant.Outlined"
+                           Color="Color.Primary"
+                           StartIcon="@Icons.Material.Filled.Refresh"
+                           OnClick="LoadAsync">
+                    به‌روزرسانی
+                </MudButton>
+
+            </MudStack>
+
+            @if (!string.IsNullOrWhiteSpace(_error))
+            {
+                <MudAlert Severity="Severity.Error" Class="mb-4">@_error</MudAlert>
+            }
+
+            @if (_data is null)
+            {
+                <MudProgressLinear Indeterminate="true" />
+            }
+            else
+            {
+                <MudGrid Spacing="3" Class="mb-2">
+
+                    <MudItem xs="6" md="3">
+                        <MudPaper Class="pa-4" Elevation="1">
+                            <MudText Typo="Typo.caption" Color="Color.Secondary">بازدید امروز</MudText>
+                            <MudText Typo="Typo.h5">@_data.PageViewsToday.ToString("N0")</MudText>
+                        </MudPaper>
+                    </MudItem>
+
+                    <MudItem xs="6" md="3">
+                        <MudPaper Class="pa-4" Elevation="1">
+                            <MudText Typo="Typo.caption" Color="Color.Secondary">بازدید ۷ روز</MudText>
+                            <MudText Typo="Typo.h5">@_data.PageViews7Days.ToString("N0")</MudText>
+                        </MudPaper>
+                    </MudItem>
+
+                    <MudItem xs="6" md="3">
+                        <MudPaper Class="pa-4" Elevation="1">
+                            <MudText Typo="Typo.caption" Color="Color.Secondary">بازدید ۳۰ روز</MudText>
+                            <MudText Typo="Typo.h5">@_data.PageViews30Days.ToString("N0")</MudText>
+                        </MudPaper>
+                    </MudItem>
+
+                    <MudItem xs="6" md="3">
+                        <MudPaper Class="pa-4" Elevation="1">
+                            <MudText Typo="Typo.caption" Color="Color.Secondary">کاربران یکتای ۳۰ روز</MudText>
+                            <MudText Typo="Typo.h5">@_data.UniqueVisitors30Days.ToString("N0")</MudText>
+                        </MudPaper>
+                    </MudItem>
+
+                    <MudItem xs="6" md="3">
+                        <MudPaper Class="pa-4" Elevation="1">
+                            <MudText Typo="Typo.caption" Color="Color.Secondary">بازدید ویدیو امروز</MudText>
+                            <MudText Typo="Typo.h5">@_data.VideoViewsToday.ToString("N0")</MudText>
+                        </MudPaper>
+                    </MudItem>
+
+                    <MudItem xs="6" md="3">
+                        <MudPaper Class="pa-4" Elevation="1">
+                            <MudText Typo="Typo.caption" Color="Color.Secondary">بازدید ویدیو ۷ روز</MudText>
+                            <MudText Typo="Typo.h5">@_data.VideoViews7Days.ToString("N0")</MudText>
+                        </MudPaper>
+                    </MudItem>
+
+                    <MudItem xs="6" md="3">
+                        <MudPaper Class="pa-4" Elevation="1">
+                            <MudText Typo="Typo.caption" Color="Color.Secondary">بازدید ویدیو ۳۰ روز</MudText>
+                            <MudText Typo="Typo.h5">@_data.VideoViews30Days.ToString("N0")</MudText>
+                        </MudPaper>
+                    </MudItem>
+
+                </MudGrid>
+
+                <MudGrid Spacing="3">
+
+                    <MudItem xs="12" md="6">
+                        <MudPaper Class="pa-4" Elevation="1">
+                            <MudText Typo="Typo.subtitle1" Class="mb-3">پربازدیدترین صفحات</MudText>
+
+                            @if (_data.TopPages.Count == 0)
+                            {
+                                <MudText Typo="Typo.body2" Color="Color.Secondary">هنوز داده‌ای ثبت نشده.</MudText>
+                            }
+                            else
+                            {
+                                @foreach (var visit in _data.TopPages)
+                                {
+                                    <MudStack Row="true" Justify="Justify.SpaceBetween" Class="py-1">
+                                        <MudText Typo="Typo.body2" Class="text-truncate" Style="max-width:70%">@visit.Label</MudText>
+                                        <MudChip T="string" Size="Size.Small" Color="Color.Primary">@visit.Count</MudChip>
+                                    </MudStack>
+                                }
+                            }
+                        </MudPaper>
+                    </MudItem>
+
+                    <MudItem xs="12" md="6">
+                        <MudPaper Class="pa-4" Elevation="1">
+                            <MudText Typo="Typo.subtitle1" Class="mb-3">پربازدیدترین ویدیوها</MudText>
+
+                            @if (_data.TopVideos.Count == 0)
+                            {
+                                <MudText Typo="Typo.body2" Color="Color.Secondary">هنوز داده‌ای ثبت نشده.</MudText>
+                            }
+                            else
+                            {
+                                @foreach (var video in _data.TopVideos)
+                                {
+                                    <MudStack Row="true" Justify="Justify.SpaceBetween" Class="py-1">
+                                        <div Style="max-width:70%">
+                                            <MudText Typo="Typo.body2" Class="text-truncate">@video.Label</MudText>
+                                            @if (!string.IsNullOrWhiteSpace(video.Subtitle))
+                                            {
+                                                <MudText Typo="Typo.caption" Color="Color.Secondary">@video.Subtitle</MudText>
+                                            }
+                                        </div>
+                                        <MudChip T="string" Size="Size.Small" Color="Color.Secondary">@video.Count</MudChip>
+                                    </MudStack>
+                                }
+                            }
+                        </MudPaper>
+                    </MudItem>
+
+                </MudGrid>
+            }
+
+        </MudContainer>
+    </Authorized>
+
+    <NotAuthorized>
+        <MudAlert Severity="Severity.Error" Class="ma-6">این بخش فقط برای مدیر است.</MudAlert>
+    </NotAuthorized>
+</AuthorizeView>
+
+@code {
+    private AnalyticsSummaryDto? _data;
+
+    private string? _error;
+
+    protected override Task OnInitializedAsync() => LoadAsync();
+
+    private async Task LoadAsync()
+    {
+        _error = null;
+
+        try
+        {
+            var response = await AnalyticsApi.GetSummaryAsync();
+
+            if (response.IsSuccessStatusCode && response.Content is not null)
+                _data = response.Content;
+            else
+                _error = $"دریافت آمار ناموفق بود. کد: {response.StatusCode}";
+        }
+        catch (Exception ex)
+        {
+            _error = ex.Message;
+        }
+
+        await InvokeAsync(StateHasChanged);
+    }
+
+    public ValueTask DisposeAsync() => ValueTask.CompletedTask;
+}
