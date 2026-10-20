@@ -78,6 +78,7 @@ public sealed class CourseCreateRequest
     public bool IsPublished { get; set; }
 
     public int DurationMinutes { get; set; }
+    public string Category { get; set; } = "عمومی";
 }
 
 

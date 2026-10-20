@@ -141,7 +141,8 @@ else
 
 
     private string ApiBaseUrl =>
-        Configuration["Api:BaseUrl"]
+        Configuration["Media:PublicBaseUrl"]
+        ?? Configuration["Api:BaseUrl"]
         ?? string.Empty;
 
 

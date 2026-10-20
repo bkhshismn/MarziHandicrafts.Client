@@ -34,19 +34,19 @@
         <MudText Typo="Typo.body2"
                  Align="Align.Center"
                  Class="login-subtitle">
-            با شماره موبایل و رمز عبور وارد شوید
+            با نام کاربری و رمز عبور وارد شوید
         </MudText>
 
         <MudForm @ref="_form">
 
             <MudTextField T="string"
                           @bind-Value="_model.Phone"
-                          Label="شماره موبایل"
+                          Label="نام کاربری"
                           Variant="Variant.Outlined"
                           Margin="Margin.Normal"
                           Adornment="Adornment.End"
-                          AdornmentIcon="@Icons.Material.Filled.Phone"
-                          InputType="InputType.Telephone"
+                          AdornmentIcon="@Icons.Material.Filled.Person"
+                          InputType="InputType.Text"
                           Required="true"
                           RequiredError="شماره موبایل را وارد کنید"
                           Class="login-field"

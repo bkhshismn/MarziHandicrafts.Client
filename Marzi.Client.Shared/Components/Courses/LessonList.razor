@@ -21,7 +21,7 @@
 
             @foreach (var section in Sections.OrderBy(x => x.OrderIndex))
             {
-                <MudExpansionPanel Text="@section.Title">
+                <MudExpansionPanel Text="@(section.Title)">
 
                     @if (section.Lessons.Any())
                     {
@@ -30,8 +30,19 @@
 
                             @foreach (var lesson in section.Lessons.OrderBy(x => x.OrderIndex))
                             {
-                                <LessonItem Lesson="lesson"
-                                            LessonSelected="OnLessonSelected" />
+                                @if (lesson.Episodes.Count > 0)
+                                {
+                                    @foreach (var episode in lesson.Episodes.OrderBy(x => x.Order))
+                                    {
+                                        <LessonItem Lesson="@ToEpisodeLesson(lesson, episode)"
+                                                    LessonSelected="OnLessonSelected" />
+                                    }
+                                }
+                                else
+                                {
+                                    <LessonItem Lesson="lesson"
+                                                LessonSelected="OnLessonSelected" />
+                                }
                             }
 
                         </MudList>
@@ -132,5 +143,21 @@ else
     {
         await LessonSelected.InvokeAsync(lesson);
     }
+
+    private static CourseLessonDto ToEpisodeLesson(
+        CourseLessonDto lesson,
+        CourseEpisodeDto episode) => new()
+    {
+        Id = lesson.Id,
+        Title = episode.Title,
+        Description = episode.Description,
+        DurationSeconds = episode.DurationSeconds,
+        IsFreePreview = episode.IsFree,
+        OrderIndex = episode.Order,
+        EpisodeId = episode.Id,
+        VideoStatus = episode.Status.ToString(),
+        ThumbnailUrl = lesson.ThumbnailUrl,
+        HasVideo = true
+    };
 
 }

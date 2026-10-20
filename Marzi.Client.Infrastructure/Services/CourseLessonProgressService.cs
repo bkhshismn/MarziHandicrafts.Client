@@ -38,4 +38,18 @@ public sealed class CourseLessonProgressService
             lessonId,
             request);
     }
+
+    public async Task<CourseLessonProgressDto?> GetEpisodeProgressAsync(Guid lessonId, Guid episodeId)
+        => await _api.GetEpisodeProgressAsync(lessonId, episodeId);
+
+    public async Task<CourseLessonProgressDto?> UpdateEpisodeProgressAsync(
+        Guid lessonId, Guid episodeId, int watchedSeconds, bool completed)
+    {
+        var request = new CourseLessonProgressRequest
+        {
+            WatchedSeconds = watchedSeconds,
+            Completed = completed
+        };
+        return await _api.UpdateEpisodeProgressAsync(lessonId, episodeId, request);
+    }
 }

@@ -63,6 +63,8 @@
 
                 <AuthorizeView Roles="Admin">
                     <Authorized Context="adminContext">
+                <MudButton Href="/admin/users" Color="Color.Inherit" StartIcon="@Icons.Material.Filled.ManageAccounts">کاربران و دسترسی ویدیو</MudButton>
+                <MudButton Href="/admin/categories" Color="Color.Inherit" StartIcon="@Icons.Material.Filled.Category">دسته‌بندی‌ها</MudButton>
                 <MudButton Href="/admin/orders"
                            Color="Color.Inherit"
                            StartIcon="@Icons.Material.Filled.ShoppingCart">
@@ -74,22 +76,13 @@
                 </AuthorizeView>
 
 
-                <MudButton Href="/portfolio"
+                <MudButton Href="/admin/portfolio"
                            Color="Color.Inherit"
                            StartIcon="@Icons.Material.Filled.Palette">
 
                     نمونه‌کارها
 
                 </MudButton>
-
-                <MudButton Href="/admin/portfolio/add"
-                           Color="Color.Inherit"
-                           StartIcon="@Icons.Material.Filled.AddPhotoAlternate">
-
-                    افزودن نمونه‌کار
-
-                </MudButton>
-
 
                 <MudButton Href="/"
                            Color="Color.Inherit"
@@ -147,6 +140,14 @@
                 </NavLink>
                 <AuthorizeView Roles="Admin">
                     <Authorized Context="adminContext">
+                <NavLink href="/admin/users" class="admin-sidebar-link" ActiveClass="admin-sidebar-link-active">
+                    <MudIcon Icon="@Icons.Material.Filled.ManageAccounts" Class="admin-sidebar-icon" />
+                    <span>کاربران و دسترسی ویدیو</span>
+                </NavLink>
+                <NavLink href="/admin/categories" class="admin-sidebar-link" ActiveClass="admin-sidebar-link-active">
+                    <MudIcon Icon="@Icons.Material.Filled.Category" Class="admin-sidebar-icon" />
+                    <span>دسته‌بندی‌ها</span>
+                </NavLink>
                 <NavLink href="/admin/orders"
                          class="admin-sidebar-link"
                          ActiveClass="admin-sidebar-link-active">
@@ -155,17 +156,11 @@
                 </NavLink>
                     </Authorized>
                 </AuthorizeView>
-                <NavLink href="/portfolio"
+                <NavLink href="/admin/portfolio"
                          class="admin-sidebar-link"
                          ActiveClass="admin-sidebar-link-active">
                     <MudIcon Icon="@Icons.Material.Filled.Palette" Class="admin-sidebar-icon" />
                     <span>نمونه‌کارها</span>
-                </NavLink>
-                <NavLink href="/admin/portfolio/add"
-                         class="admin-sidebar-link"
-                         ActiveClass="admin-sidebar-link-active">
-                    <MudIcon Icon="@Icons.Material.Filled.AddPhotoAlternate" Class="admin-sidebar-icon" />
-                    <span>افزودن نمونه‌کار</span>
                 </NavLink>
             </nav>
 

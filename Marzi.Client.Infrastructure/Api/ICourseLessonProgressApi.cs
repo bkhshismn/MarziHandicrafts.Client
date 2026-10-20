@@ -14,4 +14,13 @@ public interface ICourseLessonProgressApi
     Task<CourseLessonProgressDto> UpdateProgressAsync(
         Guid lessonId,
         [Body] CourseLessonProgressRequest request);
+
+    [Get("/api/lessons/{lessonId}/episodes/{episodeId}/progress")]
+    Task<CourseLessonProgressDto> GetEpisodeProgressAsync(Guid lessonId, Guid episodeId);
+
+    [Put("/api/lessons/{lessonId}/episodes/{episodeId}/progress")]
+    Task<CourseLessonProgressDto> UpdateEpisodeProgressAsync(
+        Guid lessonId,
+        Guid episodeId,
+        [Body] CourseLessonProgressRequest request);
 }

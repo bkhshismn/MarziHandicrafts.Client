@@ -12,6 +12,19 @@ public sealed class PortfolioService
         _api = api;
     }
 
+    public async Task<IReadOnlyList<PortfolioItemDto>> GetAllAsync()
+    {
+        var response = await _api.GetAllAsync();
+
+        if (!response.IsSuccessStatusCode || response.Content is null)
+        {
+            throw new InvalidOperationException(
+                "دریافت نمونه‌کارها با خطا مواجه شد.");
+        }
+
+        return response.Content;
+    }
+
     public async Task<PortfolioItemDto> CreateAsync(
         PortfolioCreateRequest request)
     {

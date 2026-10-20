@@ -1,4 +1,5 @@
 @using Marzi.Client.Core.Models.Courses
+@using System.Globalization
 @using MudBlazor
 
 <MudCard Class="course-card"
@@ -33,7 +34,7 @@
                          Size="Size.Small"
                          Variant="Variant.Filled">
 
-                    @($"{Course.Price:N0} تومان")
+                    @($"{Course.Price.ToString("N0", CultureInfo.GetCultureInfo("en-US"))} تومان")
 
                 </MudChip>
             }

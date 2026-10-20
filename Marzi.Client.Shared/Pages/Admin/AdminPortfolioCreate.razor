@@ -4,10 +4,13 @@
 @using Marzi.Client.Infrastructure.Api
 @using Marzi.Client.Infrastructure.Services
 @using Marzi.Client.Shared.Layouts
+@using Microsoft.AspNetCore.Components.Forms
 @using Microsoft.AspNetCore.Components.Authorization
 @using MudBlazor
 
 @inject PortfolioService PortfolioService
+@inject ICourseCategoriesApi CategoriesApi
+@inject MediaService MediaService
 @inject AuthenticationStateProvider AuthenticationStateProvider
 @inject ISnackbar Snackbar
 @inject NavigationManager Navigation
@@ -49,14 +52,24 @@
                                           RequiredError="عنوان نمونه‌کار را وارد کنید."
                                           MaxLength="200" />
 
-                            <MudTextField T="string"
-                                          @bind-Value="_category"
+                            <MudSelect T="string" @bind-Value="_category" Label="دسته‌بندی" Variant="Variant.Outlined" Required="true">
+                                @foreach (var category in _categories)
+                                {
+                                    <MudSelectItem T="string" Value="@category">@category</MudSelectItem>
+                                }
+                            </MudSelect>
+                            @if (_categories.Count == 0)
+                            {
+                                <MudText Typo="Typo.caption" Color="Color.Error">دسته‌بندی‌ای در سامانه پیدا نشد؛ ابتدا از بخش دسته‌بندی‌های دوره موردی اضافه کنید.</MudText>
+                            }
+                            @* Existing free text field replaced by the database-backed category list. *@
+                            @* <MudTextField T="string" @bind-Value="_category"
                                           Label="دسته‌بندی"
                                           Placeholder="مثلاً مجسمه، چهره یا دکوراسیون"
                                           Variant="Variant.Outlined"
                                           Required="true"
                                           RequiredError="دسته‌بندی را وارد کنید."
-                                          MaxLength="50" />
+                                          MaxLength="50" /> *@
 
                             <MudTextField T="string"
                                           @bind-Value="_description"
@@ -69,43 +82,30 @@
 
                             <MudDivider />
 
-                            <MudStack Row="true"
-                                      AlignItems="AlignItems.Center"
-                                      Justify="Justify.SpaceBetween">
-                                <MudText Typo="Typo.h6">تصویرها</MudText>
-                                <MudButton Variant="Variant.Outlined"
-                                           StartIcon="@Icons.Material.Filled.AddPhotoAlternate"
-                                           OnClick="AddImageField">
-                                    افزودن آدرس تصویر
-                                </MudButton>
-                            </MudStack>
-
-                            <MudAlert Severity="Severity.Info" Variant="Variant.Outlined">
-                                برای هر تصویر، آدرس مستقیم و قابل‌دسترسی آن را وارد کنید؛
-                                سامانه فعلاً بارگذاری فایل تصویر را پشتیبانی نمی‌کند.
-                            </MudAlert>
-
-                            @for (var index = 0; index < _imageUrls.Count; index++)
-                            {
-                                var imageIndex = index;
-                                <MudStack Row="true" AlignItems="AlignItems.Center">
-                                    <MudTextField T="string"
-                                                  @bind-Value="_imageUrls[imageIndex]"
-                                                  Label="@($"آدرس تصویر {imageIndex + 1}")"
-                                                  Placeholder="https://..."
-                                                  Variant="Variant.Outlined"
-                                                  InputType="InputType.Url"
-                                                  Immediate="true"
-                                                  Class="flex-grow-1" />
-                                    @if (_imageUrls.Count > 1)
-                                    {
+                            <MudStack Spacing="2">
+                                <MudText Typo="Typo.h6">تصاویر محلی</MudText>
+                                <InputFile OnChange="OnImagesSelected"
+                                           accept="image/*"
+                                           class="mobile-file-input"
+                                           disabled="@_saving"
+                                           multiple />
+                                <MudText Typo="Typo.caption" Color="Color.Secondary">
+                                    حداکثر ۱۲ تصویر، هرکدام تا ۱۰ مگابایت
+                                </MudText>
+                                @for (var index = 0; index < _selectedImages.Count; index++)
+                                {
+                                    var imageIndex = index;
+                                    var image = _selectedImages[imageIndex];
+                                    <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween">
+                                        <MudText Typo="Typo.body2">@image.Name</MudText>
                                         <MudIconButton Icon="@Icons.Material.Filled.DeleteOutline"
                                                        Color="Color.Error"
-                                                       aria-label="حذف آدرس تصویر"
-                                                       OnClick="@(() => RemoveImageField(imageIndex))" />
-                                    }
-                                </MudStack>
-                            }
+                                                       Disabled="_saving"
+                                                       aria-label="حذف تصویر"
+                                                       OnClick="@(() => RemoveImage(imageIndex))" />
+                                    </MudStack>
+                                }
+                            </MudStack>
 
                             <MudSwitch T="bool"
                                        @bind-Value="_isVisible"
@@ -157,22 +157,68 @@
     private MudForm? _form;
     private string _title = string.Empty;
     private string _category = string.Empty;
+    private List<string> _categories = [];
     private string _description = string.Empty;
-    private List<string> _imageUrls = [string.Empty];
+    private const int MaxImageCount = 12;
+    private const long MaxImageUploadBytes = 10 * 1024 * 1024;
+    private readonly List<IBrowserFile> _selectedImages = [];
     private bool _isVisible = true;
     private bool _saving;
     private Guid? _createdItemId;
     private string? _saveWarning;
 
-    private void AddImageField()
+    protected override async Task OnInitializedAsync()
     {
-        _imageUrls.Add(string.Empty);
+        try
+        {
+            var response = await CategoriesApi.ListAsync();
+            if (response.IsSuccessStatusCode && response.Content is not null)
+            {
+                _categories = response.Content.Where(x => !string.IsNullOrWhiteSpace(x)).Distinct().OrderBy(x => x).ToList();
+                _category = _categories.FirstOrDefault() ?? string.Empty;
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"دریافت دسته‌بندی‌ها ناموفق بود: {ex.Message}", Severity.Error);
+        }
     }
 
-    private void RemoveImageField(int index)
+    private void OnImagesSelected(InputFileChangeEventArgs args)
     {
-        if (_imageUrls.Count > 1)
-            _imageUrls.RemoveAt(index);
+        IReadOnlyList<IBrowserFile> files;
+        try
+        {
+            files = args.GetMultipleFiles(MaxImageCount);
+        }
+        catch (InvalidOperationException)
+        {
+            Snackbar.Add($"حداکثر {MaxImageCount} تصویر می‌توانید انتخاب کنید.", Severity.Error);
+            return;
+        }
+
+        foreach (var file in files)
+        {
+            if (_selectedImages.Count >= MaxImageCount)
+            {
+                Snackbar.Add($"حداکثر {MaxImageCount} تصویر مجاز است.", Severity.Warning);
+                break;
+            }
+
+            if (file.Size > MaxImageUploadBytes)
+            {
+                Snackbar.Add($"فایل «{file.Name}» بیشتر از حد مجاز است.", Severity.Error);
+                continue;
+            }
+
+            _selectedImages.Add(file);
+        }
+    }
+
+    private void RemoveImage(int index)
+    {
+        if (index >= 0 && index < _selectedImages.Count)
+            _selectedImages.RemoveAt(index);
     }
 
     private async Task SaveAsync()
@@ -184,26 +230,10 @@
         if (!_form.IsValid)
             return;
 
-        var imageUrls = _imageUrls
-            .Select(url => url.Trim())
-            .Where(url => !string.IsNullOrWhiteSpace(url))
-            .ToList();
-
-        if (imageUrls.Count == 0)
+        if (_selectedImages.Count == 0)
         {
             Snackbar.Add(
-                "حداقل یک آدرس تصویر وارد کنید.",
-                Severity.Error);
-            return;
-        }
-
-        if (imageUrls.Any(url =>
-                !Uri.TryCreate(url, UriKind.Absolute, out var uri) ||
-                (uri.Scheme != Uri.UriSchemeHttp &&
-                 uri.Scheme != Uri.UriSchemeHttps)))
-        {
-            Snackbar.Add(
-                "آدرس تصویر باید با http:// یا https:// شروع شود.",
+                "حداقل یک تصویر انتخاب کنید.",
                 Severity.Error);
             return;
         }
@@ -234,13 +264,20 @@
             _createdItemId = item.Id;
             var imageErrors = new List<string>();
 
-            for (var index = 0; index < imageUrls.Count; index++)
+            for (var index = 0; index < _selectedImages.Count; index++)
             {
                 try
                 {
+                    var file = _selectedImages[index];
+                    await using var stream = file.OpenReadStream(MaxImageUploadBytes);
+                    var imageUrl = await MediaService.UploadImageAsync(
+                        stream,
+                        file.Name,
+                        file.ContentType);
+
                     await PortfolioService.AddImageAsync(
                         item.Id,
-                        imageUrls[index]);
+                        imageUrl);
                 }
                 catch (Exception ex)
                 {

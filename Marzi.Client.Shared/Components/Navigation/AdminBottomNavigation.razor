@@ -18,6 +18,13 @@
         </Authorized>
     </AuthorizeView>
 
+    <AuthorizeView Roles="Admin">
+        <Authorized Context="adminContext">
+            <MudButton Href="/admin/users" Class="admin-mobile-nav-item" Variant="Variant.Text" Color="Color.Inherit" StartIcon="@Icons.Material.Filled.ManageAccounts"><span>کاربران</span></MudButton>
+            <MudButton Href="/admin/categories" Class="admin-mobile-nav-item" Variant="Variant.Text" Color="Color.Inherit" StartIcon="@Icons.Material.Filled.Category"><span>دسته‌ها</span></MudButton>
+        </Authorized>
+    </AuthorizeView>
+
     <MudButton Href="/admin/courses"
                Class="admin-mobile-nav-item"
                Variant="Variant.Text"
@@ -44,7 +51,7 @@
     </AuthorizeView>
 
 
-    <MudButton Href="/portfolio"
+    <MudButton Href="/admin/portfolio"
                Class="admin-mobile-nav-item"
                Variant="Variant.Text"
                Color="Color.Inherit"
@@ -53,17 +60,6 @@
         <span>نمونه‌کارها</span>
 
     </MudButton>
-
-    <MudButton Href="/admin/portfolio/add"
-               Class="admin-mobile-nav-item"
-               Variant="Variant.Text"
-               Color="Color.Inherit"
-               StartIcon="@Icons.Material.Filled.AddPhotoAlternate">
-
-        <span>افزودن نمونه‌کار</span>
-
-    </MudButton>
-
 
     <MudButton Href="/"
                Class="admin-mobile-nav-item"

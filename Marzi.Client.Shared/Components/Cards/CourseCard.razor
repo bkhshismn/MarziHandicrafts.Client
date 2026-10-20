@@ -1,4 +1,5 @@
 @using Marzi.Client.Core.Models.Courses
+@using System.Globalization
 @using MudBlazor
 
 @if (Course is null)
@@ -54,7 +55,7 @@ else
                     <MudText Typo="Typo.subtitle2"
                              Color="Color.Primary">
 
-                        @($"{Course.Price:N0} تومان")
+                        @($"{Course.Price.ToString("N0", CultureInfo.GetCultureInfo("en-US"))} تومان")
 
                     </MudText>
                 }

@@ -399,8 +399,9 @@ else
             try
             {
                 progress =
-                    await ProgressService.GetProgressAsync(
-                        Lesson.Id);
+                    await ProgressService.GetEpisodeProgressAsync(
+                        Lesson.Id,
+                        episodeId);
 
 
                 if (progress is not null)
@@ -604,7 +605,7 @@ else
             // Progress Loop
             // ====================================================
 
-            StartProgressLoop();
+            StartProgressLoop(Lesson.Id, episodeId);
 
 
             // ====================================================
@@ -676,7 +677,7 @@ else
     // Progress Loop
     // ============================================================
 
-    private void StartProgressLoop()
+    private void StartProgressLoop(Guid lessonId, Guid episodeId)
     {
         StopProgressLoop();
 
@@ -686,10 +687,6 @@ else
         {
             return;
         }
-
-
-        var lessonId =
-            Lesson.Id;
 
 
         _progressCancellation =
@@ -703,6 +700,7 @@ else
         _progressTask =
             ProgressLoopAsync(
                 lessonId,
+                episodeId,
                 cancellationToken);
     }
 
@@ -713,6 +711,7 @@ else
 
     private async Task ProgressLoopAsync(
         Guid lessonId,
+        Guid episodeId,
         CancellationToken cancellationToken)
     {
         try
@@ -733,6 +732,7 @@ else
 
                 await SaveCurrentProgressAsync(
                     lessonId,
+                    episodeId,
                     false);
             }
         }
@@ -760,6 +760,7 @@ else
 
     private async Task SaveCurrentProgressAsync(
         Guid lessonId,
+        Guid episodeId,
         bool completed)
     {
         if (_disposed)
@@ -773,7 +774,8 @@ else
 
 
         if (Lesson is null ||
-            Lesson.Id != lessonId)
+            Lesson.Id != lessonId ||
+            Lesson.EpisodeId != episodeId)
         {
             return;
         }
@@ -813,7 +815,7 @@ else
              */
 
             if (!completed &&
-                watchedSeconds <= _lastSavedWatchedSeconds &&
+                watchedSeconds == _lastSavedWatchedSeconds &&
                 !_progressCompleted)
             {
                 return;
@@ -821,8 +823,9 @@ else
 
 
             var result =
-                await ProgressService.UpdateProgressAsync(
+                await ProgressService.UpdateEpisodeProgressAsync(
                     lessonId,
+                    episodeId,
                     watchedSeconds,
                     completed);
 
@@ -923,6 +926,7 @@ else
 
             await SaveCurrentProgressAsync(
                 Lesson.Id,
+                Lesson.EpisodeId!.Value,
                 true);
         }
         catch (JSDisconnectedException)
@@ -935,6 +939,16 @@ else
             Console.WriteLine(
                 $"[VIDEO PROGRESS] Completed save failed: {ex}");
         }
+    }
+
+    [JSInvokable]
+    public async Task VideoPaused()
+    {
+        if (_disposed || Lesson?.EpisodeId is not Guid episodeId ||
+            _initializedEpisodeId != episodeId)
+            return;
+
+        await SaveCurrentProgressAsync(Lesson.Id, episodeId, false);
     }
 
 

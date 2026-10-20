@@ -1,0 +1,73 @@
+@page "/admin/categories"
+@layout AdminLayout
+@using Marzi.Client.Infrastructure.Api
+@using Microsoft.AspNetCore.Components.Authorization
+@using MudBlazor
+@inject ICourseCategoriesApi CategoriesApi
+@inject ISnackbar Snackbar
+
+<AuthorizeView Roles="Admin">
+    <Authorized>
+        <MudContainer MaxWidth="MaxWidth.Medium" Class="py-6">
+            <MudText Typo="Typo.h4" Class="mb-2">مدیریت دسته‌بندی‌ها</MudText>
+            <MudText Typo="Typo.body2" Class="mb-5">دسته‌های دوره را بسازید تا هنگام ساخت ویدئو و تعیین دسترسی کاربران انتخاب شوند.</MudText>
+            <MudStack Row="true" AlignItems="AlignItems.Center" Class="mb-5">
+                <MudTextField @bind-Value="_newCategory" Label="نام دسته‌بندی جدید" Variant="Variant.Outlined" Immediate="true" MaxLength="100" FullWidth="true" />
+                <MudButton Color="Color.Primary" Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Add" Disabled="_saving" OnClick="CreateAsync">ایجاد دسته</MudButton>
+            </MudStack>
+            @if (_loading) { <MudProgressLinear Indeterminate="true" /> }
+            else if (_categories.Count == 0) { <MudAlert Severity="Severity.Info">هنوز دسته‌ای ساخته نشده است.</MudAlert> }
+            else
+            {
+                <MudPaper Outlined="true" Class="pa-4">
+                    <MudList T="string">
+                        @foreach (var category in _categories)
+                        {
+                            <MudListItem T="string" Icon="@Icons.Material.Filled.FolderOpen">@category</MudListItem>
+                        }
+                    </MudList>
+                </MudPaper>
+            }
+        </MudContainer>
+    </Authorized>
+    <NotAuthorized><MudAlert Severity="Severity.Error" Class="ma-6">این بخش فقط برای ادمین است.</MudAlert></NotAuthorized>
+</AuthorizeView>
+
+@code {
+    private string _newCategory = string.Empty;
+    private List<string> _categories = [];
+    private bool _loading = true;
+    private bool _saving;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            var response = await CategoriesApi.ListAsync();
+            if (response.IsSuccessStatusCode && response.Content is not null) _categories = response.Content;
+        }
+        catch { Snackbar.Add("دریافت دسته‌بندی‌ها انجام نشد.", Severity.Error); }
+        finally { _loading = false; }
+    }
+
+    private async Task CreateAsync()
+    {
+        var name = _newCategory.Trim();
+        if (string.IsNullOrWhiteSpace(name)) { Snackbar.Add("نام دسته‌بندی را وارد کنید.", Severity.Warning); return; }
+        _saving = true;
+        try
+        {
+            var response = await CategoriesApi.CreateAsync(new CreateCourseCategoryRequest { Name = name });
+            if (!response.IsSuccessStatusCode || response.Content is null)
+            {
+                Snackbar.Add(response.StatusCode == System.Net.HttpStatusCode.Conflict ? "این دسته‌بندی قبلاً ساخته شده است." : "ایجاد دسته‌بندی انجام نشد.", Severity.Error);
+                return;
+            }
+            _categories.Add(response.Content);
+            _categories = _categories.OrderBy(x => x).ToList();
+            _newCategory = string.Empty;
+            Snackbar.Add("دسته‌بندی ساخته شد.", Severity.Success);
+        }
+        finally { _saving = false; }
+    }
+}

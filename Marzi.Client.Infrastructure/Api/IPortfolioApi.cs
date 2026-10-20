@@ -5,6 +5,9 @@ namespace Marzi.Client.Infrastructure.Api;
 
 public interface IPortfolioApi
 {
+    [Get("/api/portfolio")]
+    Task<ApiResponse<List<PortfolioItemDto>>> GetAllAsync();
+
     [Get("/api/portfolio/published")]
     Task<ApiResponse<List<PortfolioItemDto>>> GetPublishedAsync();
 

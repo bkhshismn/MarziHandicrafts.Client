@@ -18,7 +18,9 @@
 .admin-lesson-video-upload :deep(input[type="file"]) {
     width: 100%;
     max-width: 100%;
+    min-height: 44px;
     box-sizing: border-box;
+    touch-action: manipulation;
 }
 
 @media (max-width: 600px) {

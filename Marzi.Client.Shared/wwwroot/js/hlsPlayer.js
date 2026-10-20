@@ -1,4 +1,5 @@
-﻿let players = new WeakMap();
+let players = new WeakMap();
+let eventHandlers = new WeakMap();
 
 export async function initialize(video, url, token, dotNetHelper) {
     if (!video) {
@@ -17,6 +18,16 @@ export async function initialize(video, url, token, dotNetHelper) {
     };
 
     video.addEventListener("loadedmetadata", updateVideoRatio);
+    const onPause = async () => {
+        if (!dotNetHelper || video.ended) return;
+        try {
+            await dotNetHelper.invokeMethodAsync("VideoPaused");
+        } catch (error) {
+            console.warn("Could not save paused video progress:", error);
+        }
+    };
+    video.addEventListener("pause", onPause);
+    eventHandlers.set(video, { updateVideoRatio, onPause });
 
     // ============================================================
     // Video Ended
@@ -335,6 +346,13 @@ export function dispose(video) {
         players.delete(video);
     }
 
+
+    const handlers = eventHandlers.get(video);
+    if (handlers) {
+        video.removeEventListener("loadedmetadata", handlers.updateVideoRatio);
+        video.removeEventListener("pause", handlers.onPause);
+        eventHandlers.delete(video);
+    }
 
     video.removeAttribute("src");
 

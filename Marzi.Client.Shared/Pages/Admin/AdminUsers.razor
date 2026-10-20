@@ -1,0 +1,98 @@
+@page "/admin/users"
+@layout AdminLayout
+@using Marzi.Client.Infrastructure.Api
+@using Microsoft.AspNetCore.Components.Authorization
+@using MudBlazor
+@inject IUsersApi UsersApi
+@inject ISnackbar Snackbar
+
+<AuthorizeView Roles="Admin">
+    <Authorized>
+        <MudContainer MaxWidth="MaxWidth.Large" Class="py-6">
+            <MudText Typo="Typo.h4" Class="mb-2">مدیریت کاربران و دسترسی ویدیو</MudText>
+            <MudText Typo="Typo.body2" Class="mb-5">برای هر کاربر، دسته‌های دوره‌ای را که اجازه دیدنشان را دارد انتخاب کنید.</MudText>
+            @if (_loading) { <MudProgressLinear Indeterminate="true" /> }
+            else
+            {
+                <MudGrid Class="mb-5">
+                    <MudItem xs="12" md="3"><MudTextField @bind-Value="_newUser.Name" Label="نام نمایشی" Variant="Variant.Outlined" /></MudItem>
+                    <MudItem xs="12" md="3"><MudTextField @bind-Value="_newUser.Username" Label="نام کاربری" Variant="Variant.Outlined" /></MudItem>
+                    <MudItem xs="12" md="2"><MudTextField @bind-Value="_newUser.Password" Label="رمز عبور (حداقل ۸ نویسه)" InputType="InputType.Password" Variant="Variant.Outlined" /></MudItem>
+                    <MudItem xs="12" md="2">
+                        <MudSelect T="string" @bind-Value="_newUser.Role" Label="نقش حساب" Variant="Variant.Outlined">
+                            <MudSelectItem T="string" Value="@("User")">کاربر</MudSelectItem>
+                            <MudSelectItem T="string" Value="@("Admin")">مدیر</MudSelectItem>
+                        </MudSelect>
+                    </MudItem>
+                    <MudItem xs="12" md="2"><MudButton FullWidth="true" Size="Size.Large" Color="Color.Primary" Variant="Variant.Filled" OnClick="CreateUserAsync">ساخت کاربر</MudButton></MudItem>
+                </MudGrid>
+                <MudTable Items="_users" Hover="true" Dense="true" Breakpoint="Breakpoint.Sm">
+                    <HeaderContent><MudTh>نام</MudTh><MudTh>نام کاربری</MudTh><MudTh>دسته‌های مجاز</MudTh><MudTh></MudTh></HeaderContent>
+                    <RowTemplate Context="user">
+                        <MudTd DataLabel="نام"><MudTextField @bind-Value="user.Name" Label="نام نمایشی" Variant="Variant.Outlined" Dense="true" /></MudTd>
+                        <MudTd DataLabel="نام کاربری" dir="ltr">@user.Username</MudTd>
+                        <MudTd DataLabel="دسته‌ها" Style="min-width:280px">
+                            <MudSelect T="string" MultiSelection="true" SelectedValues="user.Categories" SelectedValuesChanged="@(values => OnCategoriesChanged(user, values))" Label="انتخاب دسته‌ها" Variant="Variant.Outlined" Dense="true">
+                                @foreach (var category in _categories) { <MudSelectItem T="string" Value="category">@category</MudSelectItem> }
+                            </MudSelect>
+                        </MudTd>
+                        <MudTd><MudStack Row="true" Spacing="1"><MudButton Color="Color.Primary" Variant="Variant.Outlined" OnClick="@(() => SaveNameAsync(user))">ذخیره نام</MudButton><MudButton Color="Color.Secondary" Variant="Variant.Outlined" OnClick="@(() => SaveCategoriesAsync(user))">ذخیره دسترسی</MudButton></MudStack></MudTd>
+                    </RowTemplate>
+                    <NoRecordsContent><MudText Class="pa-4">هنوز کاربری ساخته نشده است.</MudText></NoRecordsContent>
+                </MudTable>
+            }
+        </MudContainer>
+    </Authorized>
+    <NotAuthorized><MudAlert Severity="Severity.Error" Class="ma-6">این بخش فقط برای ادمین است.</MudAlert></NotAuthorized>
+</AuthorizeView>
+
+@code {
+    private bool _loading = true;
+    private List<ManagedUserDto> _users = [];
+    private List<string> _categories = [];
+    private CreateManagedUserRequest _newUser = new() { Role = "User" };
+
+    protected override async Task OnInitializedAsync() => await LoadAsync();
+
+    private async Task LoadAsync()
+    {
+        try
+        {
+            var result = await UsersApi.ListAsync();
+            if (!result.IsSuccessStatusCode || result.Content is null) throw new InvalidOperationException("دریافت کاربران انجام نشد.");
+            _users = result.Content.Users;
+            foreach (var user in _users)
+                if (string.IsNullOrWhiteSpace(user.Name) || user.Name.Trim('?', ' ', '\t', '\r', '\n').Length == 0 || user.Name.Contains('\uFFFD'))
+                    user.Name = user.Username;
+            _categories = result.Content.Categories;
+        }
+        catch { Snackbar.Add("دریافت کاربران و دسته‌ها انجام نشد.", Severity.Error); }
+        finally { _loading = false; }
+    }
+
+    private async Task CreateUserAsync()
+    {
+        _newUser.Role = string.IsNullOrWhiteSpace(_newUser.Role) ? "User" : _newUser.Role;
+        if (string.IsNullOrWhiteSpace(_newUser.Username) || _newUser.Password.Length < 8) { Snackbar.Add("نام کاربری را وارد کنید و برای رمز حداقل ۸ نویسه بگذارید.", Severity.Warning); return; }
+        var response = await UsersApi.CreateAsync(_newUser);
+        if (!response.IsSuccessStatusCode || response.Content is null) { Snackbar.Add(response.StatusCode == System.Net.HttpStatusCode.Conflict ? "این نام کاربری قبلاً استفاده شده است." : "ساخت کاربر انجام نشد.", Severity.Error); return; }
+        if (response.Content.Role != "Admin")
+            _users.Insert(0, response.Content);
+        _newUser = new() { Role = "User" };
+        Snackbar.Add(response.Content.Role == "Admin" ? "حساب مدیر ساخته شد." : "کاربر ساخته شد.", Severity.Success);
+    }
+
+    private async Task SaveCategoriesAsync(ManagedUserDto user)
+    {
+        var response = await UsersApi.SetCategoriesAsync(user.Id, new SetUserCategoriesRequest { Categories = user.Categories });
+        Snackbar.Add(response.IsSuccessStatusCode ? "دسترسی دسته‌ها ذخیره شد." : "ذخیره دسترسی انجام نشد.", response.IsSuccessStatusCode ? Severity.Success : Severity.Error);
+    }
+
+    private async Task SaveNameAsync(ManagedUserDto user)
+    {
+        var response = await UsersApi.SetNameAsync(user.Id, new SetUserNameRequest { Name = user.Name });
+        Snackbar.Add(response.IsSuccessStatusCode ? "نام نمایشی ذخیره شد." : "ذخیره نام انجام نشد.", response.IsSuccessStatusCode ? Severity.Success : Severity.Error);
+    }
+
+    private static void OnCategoriesChanged(ManagedUserDto user, IEnumerable<string> values) => user.Categories = values.ToList();
+}

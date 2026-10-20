@@ -1,0 +1,167 @@
+@page "/admin/portfolio"
+@layout AdminLayout
+
+@using Marzi.Client.Core.Models.Portfolio
+@using Marzi.Client.Infrastructure.Services
+@using Marzi.Client.Shared.Layouts
+@using Microsoft.AspNetCore.Components.Authorization
+@using MudBlazor
+
+@inject PortfolioService PortfolioService
+
+<AuthorizeView Roles="Admin,Instructor">
+    <Authorized>
+        <MudContainer MaxWidth="MaxWidth.Large" Class="py-6">
+            <MudStack Spacing="4">
+                <MudStack Row="true"
+                          AlignItems="AlignItems.Center"
+                          Justify="Justify.SpaceBetween">
+                    <div>
+                        <MudText Typo="Typo.h4">مدیریت نمونه‌کارها</MudText>
+                        <MudText Typo="Typo.body2" Color="Color.Secondary" Class="mt-1">
+                            نمونه‌کارهای منتشرشده و پیش‌نویس‌ها را مدیریت کنید.
+                        </MudText>
+                    </div>
+                    <MudButton Href="/admin/portfolio/add"
+                               Variant="Variant.Filled"
+                               Color="Color.Primary"
+                               StartIcon="@Icons.Material.Filled.AddPhotoAlternate">
+                        افزودن نمونه‌کار
+                    </MudButton>
+                </MudStack>
+
+                @if (_loading)
+                {
+                    <MudStack AlignItems="AlignItems.Center" Class="py-12">
+                        <MudProgressCircular Indeterminate="true" Color="Color.Primary" />
+                        <MudText Color="Color.Secondary">در حال بارگذاری نمونه‌کارها...</MudText>
+                    </MudStack>
+                }
+                else if (!string.IsNullOrWhiteSpace(_error))
+                {
+                    <MudAlert Severity="Severity.Error">@_error</MudAlert>
+                    <MudButton Variant="Variant.Outlined" OnClick="LoadItemsAsync">
+                        تلاش دوباره
+                    </MudButton>
+                }
+                else if (_items.Count == 0)
+                {
+                    <MudPaper Class="pa-8 text-center" Elevation="1">
+                        <MudIcon Icon="@Icons.Material.Filled.Palette"
+                                 Size="Size.Large"
+                                 Color="Color.Secondary" />
+                        <MudText Typo="Typo.h6" Class="mt-3">هنوز نمونه‌کاری ثبت نشده است.</MudText>
+                        <MudText Typo="Typo.body2" Color="Color.Secondary" Class="mt-1">
+                            برای شروع، اولین نمونه‌کار را اضافه کنید.
+                        </MudText>
+                        <MudButton Href="/admin/portfolio/add"
+                                   Variant="Variant.Filled"
+                                   Color="Color.Primary"
+                                   StartIcon="@Icons.Material.Filled.AddPhotoAlternate"
+                                   Class="mt-4">
+                            افزودن اولین نمونه‌کار
+                        </MudButton>
+                    </MudPaper>
+                }
+                else
+                {
+                    <MudText Typo="Typo.subtitle2" Color="Color.Secondary">
+                        @_items.Count نمونه‌کار
+                    </MudText>
+                    <MudGrid>
+                        @foreach (var item in _items)
+                        {
+                            var coverImage = GetCoverImage(item);
+                            <MudItem xs="12" sm="6" lg="4" @key="item.Id">
+                                <MudCard Class="h-100" Elevation="2">
+                                    <MudCardMedia Image="@coverImage" Height="210"></MudCardMedia>
+                                    <MudCardContent>
+                                        <MudStack Spacing="2">
+                                            <MudStack Row="true"
+                                                      AlignItems="AlignItems.Start"
+                                                      Justify="Justify.SpaceBetween">
+                                                <MudText Typo="Typo.h6">@item.Title</MudText>
+                                                <MudChip T="string"
+                                                         Size="Size.Small"
+                                                         Color="@(item.IsVisible ? Color.Success : Color.Default)">
+                                                    @(item.IsVisible ? "منتشرشده" : "پیش‌نویس")
+                                                </MudChip>
+                                            </MudStack>
+                                            <MudText Typo="Typo.caption" Color="Color.Secondary">
+                                                @item.Category
+                                            </MudText>
+                                            <MudText Typo="Typo.body2" Class="portfolio-admin-description">
+                                                @item.Description
+                                            </MudText>
+                                            <MudStack Row="true"
+                                                      AlignItems="AlignItems.Center"
+                                                      Justify="Justify.SpaceBetween">
+                                                <MudText Typo="Typo.caption" Color="Color.Secondary">
+                                                    @item.Images.Count تصویر
+                                                </MudText>
+                                                <MudButton Href="@($"/portfolio/{item.Id}")"
+                                                           Variant="Variant.Text"
+                                                           Color="Color.Primary"
+                                                           EndIcon="@Icons.Material.Filled.OpenInNew">
+                                                    مشاهده
+                                                </MudButton>
+                                            </MudStack>
+                                        </MudStack>
+                                    </MudCardContent>
+                                </MudCard>
+                            </MudItem>
+                        }
+                    </MudGrid>
+                }
+            </MudStack>
+        </MudContainer>
+    </Authorized>
+    <NotAuthorized>
+        <MudContainer MaxWidth="MaxWidth.Small" Class="py-8">
+            <MudAlert Severity="Severity.Error">
+                برای مدیریت نمونه‌کارها باید با حساب مدیر یا مربی وارد شوید.
+            </MudAlert>
+            <MudButton Href="/login?returnUrl=%2Fadmin%2Fportfolio"
+                       Variant="Variant.Filled"
+                       Color="Color.Primary"
+                       Class="mt-4">
+                ورود
+            </MudButton>
+        </MudContainer>
+    </NotAuthorized>
+</AuthorizeView>
+
+@code {
+    private IReadOnlyList<PortfolioItemDto> _items = [];
+    private bool _loading = true;
+    private string? _error;
+
+    protected override Task OnInitializedAsync() => LoadItemsAsync();
+
+    private async Task LoadItemsAsync()
+    {
+        _loading = true;
+        _error = null;
+
+        try
+        {
+            _items = await PortfolioService.GetAllAsync();
+        }
+        catch (Exception ex)
+        {
+            _error = ex.Message;
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+
+    private static string GetCoverImage(PortfolioItemDto item)
+    {
+        var image = item.Images.OrderBy(x => x.Order).FirstOrDefault();
+        return string.IsNullOrWhiteSpace(image?.ImageUrl)
+            ? "/images/course-placeholder.jpg"
+            : image.ImageUrl;
+    }
+}

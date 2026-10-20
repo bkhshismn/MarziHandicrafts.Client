@@ -1,0 +1,10 @@
+**/bin/
+**/obj/
+**/.vs/
+**/.vscode/
+Marzi.Client.Maui/
+_backup/
+encoding-backup-*/
+**/*.user
+**/*.tmp
+.git/

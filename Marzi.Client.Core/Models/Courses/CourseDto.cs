@@ -39,5 +39,6 @@ namespace Marzi.Client.Core.Models.Courses
         public string? VideoStatus { get; set; }
         public string? ThumbnailUrl { get; set; }
         public bool HasVideo { get; set; }
+        public List<CourseEpisodeDto> Episodes { get; set; } = [];
     }
 }

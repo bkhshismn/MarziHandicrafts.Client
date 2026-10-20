@@ -7,11 +7,15 @@
 @using Marzi.Client.Infrastructure.Services
 @using Marzi.Client.Shared.Components.Courses
 @using Marzi.Client.Shared.Layouts
+@using Microsoft.AspNetCore.Components.Forms
 @using Microsoft.AspNetCore.Components.Authorization
 @using Microsoft.JSInterop
+@using System.Globalization
 @using MudBlazor
 
 @inject CourseService CourseService
+@inject MediaService MediaService
+@inject IUsersApi UsersApi
 @inject ISnackbar Snackbar
 @inject AuthenticationStateProvider AuthenticationStateProvider
 @inject IJSRuntime JS
@@ -502,14 +506,14 @@
                                                                 <MudAvatar Color="Color.Primary"
                                                                            Size="Size.Small">
 
-                                                                    @section.OrderIndex
+                                                                    @(section.OrderIndex)
 
                                                                 </MudAvatar>
 
 
                                                                 <MudText Typo="Typo.body1">
 
-                                                                    @section.Title
+                                                                    @(section.Title)
 
                                                                 </MudText>
 
@@ -520,7 +524,7 @@
                                                                      Size="Size.Small"
                                                                      Variant="Variant.Outlined">
 
-                                                                @section.Lessons.Count درس
+                                                                @(section.Lessons.Count) درس
 
                                                             </MudChip>
 
@@ -780,17 +784,35 @@
                           FullWidth="true"
                           Required="true" />
 
+            <MudSelect T="string" @bind-Value="_courseCategory" Label="دسته‌بندی ویدیو" Variant="Variant.Outlined" FullWidth="true" Required="true">
+                @foreach (var category in CourseCategoryOptions)
+                {
+                    <MudSelectItem T="string" Value="category">@category</MudSelectItem>
+                }
+            </MudSelect>
 
-            <MudTextField @bind-Value="_courseCoverImageUrl"
-                          Label="آدرس تصویر کاور"
-                          Variant="Variant.Outlined"
-                          FullWidth="true"
-                          Placeholder="https://..." />
 
+            <MudStack Spacing="1">
+                <MudText Typo="Typo.body2">بارگذاری تصویر کاور (اختیاری)</MudText>
+                <InputFile OnChange="OnCourseCoverSelected"
+                           accept="image/*"
+                           class="mobile-file-input"
+                           disabled="@_courseCreating" />
+                @if (_courseCoverFile is not null)
+                {
+                    <MudText Typo="Typo.caption" Color="Color.Secondary">
+                        @_courseCoverFile.Name
+                    </MudText>
+                }
+            </MudStack>
 
             <MudNumericField T="decimal"
                              @bind-Value="_coursePrice"
                              Label="قیمت دوره"
+                             Culture="@PriceCulture"
+                             Format="N0"
+                             Adornment="Adornment.End"
+                             AdornmentText="تومان"
                              Variant="Variant.Outlined"
                              Min="0"
                              FullWidth="true" />
@@ -1078,10 +1100,22 @@
     private string _courseTitle = string.Empty;
 
     private string _courseDescription = string.Empty;
+    private List<string> CourseCategoryOptions =
+    [
+        "پاپیه‌ماشه | سردیس و پرتره",
+        "پاپیه‌ماشه | نقش‌برجسته چهره",
+        "پاپیه‌ماشه | ماسک",
+        "پاپیه‌ماشه | مجسمه‌های دکوراتیو",
+        "پاپیه‌ماشه | آموزش و مراحل ساخت"
+    ];
+    private string _courseCategory = "پاپیه‌ماشه | سردیس و پرتره";
 
-    private string _courseCoverImageUrl = string.Empty;
+    private IBrowserFile? _courseCoverFile;
+
+    private const long MaxImageUploadBytes = 10 * 1024 * 1024;
 
     private decimal _coursePrice;
+    private static readonly CultureInfo PriceCulture = CultureInfo.GetCultureInfo("en-US");
 
     private int _courseDurationMinutes;
 
@@ -1148,6 +1182,11 @@
     {
         if (firstRender)
         {
+            var categoryResponse = await UsersApi.ListAsync();
+            if (categoryResponse.IsSuccessStatusCode && categoryResponse.Content is not null)
+                CourseCategoryOptions = categoryResponse.Content.Categories.Distinct().OrderBy(x => x).ToList();
+            if (CourseCategoryOptions.Count > 0 && !CourseCategoryOptions.Contains(_courseCategory))
+                _courseCategory = CourseCategoryOptions[0];
             await LoadCoursesForAuthorizedUserAsync(
                 await AuthenticationStateProvider.GetAuthenticationStateAsync());
 
@@ -1392,8 +1431,7 @@
         _courseDescription =
             string.Empty;
 
-        _courseCoverImageUrl =
-            string.Empty;
+        _courseCoverFile = null;
 
         _coursePrice =
             0;
@@ -1422,6 +1460,23 @@
 
         _courseDialogError =
             null;
+
+        _courseCoverFile = null;
+    }
+
+
+    private void OnCourseCoverSelected(InputFileChangeEventArgs args)
+    {
+        var file = args.File;
+        if (file.Size > MaxImageUploadBytes)
+        {
+            _courseCoverFile = null;
+            _courseDialogError = "حجم تصویر نباید بیشتر از ۱۰ مگابایت باشد.";
+            return;
+        }
+
+        _courseCoverFile = file;
+        _courseDialogError = null;
     }
 
 
@@ -1453,6 +1508,18 @@
 
         try
         {
+            var coverImageUrl = string.Empty;
+            if (_courseCoverFile is not null)
+            {
+                await using var imageStream =
+                    _courseCoverFile.OpenReadStream(MaxImageUploadBytes);
+
+                coverImageUrl = await MediaService.UploadImageAsync(
+                    imageStream,
+                    _courseCoverFile.Name,
+                    _courseCoverFile.ContentType);
+            }
+
             var request =
                 new CourseCreateRequest
                 {
@@ -1462,11 +1529,7 @@
                     Description =
                         _courseDescription.Trim(),
 
-                    CoverImageUrl =
-                        string.IsNullOrWhiteSpace(
-                            _courseCoverImageUrl)
-                            ? string.Empty
-                            : _courseCoverImageUrl.Trim(),
+                    CoverImageUrl = coverImageUrl,
 
                     Price =
                         _coursePrice,
@@ -1475,7 +1538,8 @@
                         _courseIsPublished,
 
                     DurationMinutes =
-                        _courseDurationMinutes
+                        _courseDurationMinutes,
+                    Category = _courseCategory.Trim()
                 };
 
             var createdCourse =

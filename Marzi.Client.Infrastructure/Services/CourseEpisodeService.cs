@@ -54,12 +54,6 @@ public sealed class CourseEpisodeService
                 "عنوان ویدئو را وارد کنید.");
         }
 
-        if (string.IsNullOrWhiteSpace(description))
-        {
-            throw new InvalidOperationException(
-                "توضیحات ویدئو را وارد کنید.");
-        }
-
         if (order < 1)
         {
             throw new InvalidOperationException(
@@ -319,5 +313,16 @@ public sealed class CourseEpisodeService
             throw new InvalidOperationException(
                 "حذف ویدئو با خطا مواجه شد.");
         }
+    }
+
+    public async Task<CourseEpisodeDto> UpdateAsync(
+        Guid lessonId,
+        Guid episodeId,
+        CourseEpisodeUpdateRequest request)
+    {
+        var response = await _api.UpdateAsync(lessonId, episodeId, request);
+        if (!response.IsSuccessStatusCode || response.Content is null)
+            throw new InvalidOperationException("ویرایش ویدئو با خطا مواجه شد.");
+        return response.Content;
     }
 }

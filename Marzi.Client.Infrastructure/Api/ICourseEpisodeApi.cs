@@ -28,4 +28,10 @@ public interface ICourseEpisodeApi
         Task<ApiResponse<object>> DeleteAsync(
             Guid lessonId,
             Guid episodeId);
+
+    [Put("/api/admin/lessons/{lessonId}/video/{episodeId}")]
+    Task<ApiResponse<CourseEpisodeDto>> UpdateAsync(
+        Guid lessonId,
+        Guid episodeId,
+        [Body] CourseEpisodeUpdateRequest request);
 }
