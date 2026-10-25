@@ -38,6 +38,12 @@
 
             <ThemePicker />
 
+            <AuthorizeView Roles="Admin">
+                <Authorized>
+                    <AdminNotificationCenter />
+                </Authorized>
+            </AuthorizeView>
+
             <AuthorizeView Roles="Admin,Instructor">
                 <Authorized Context="staffContext">
                     <div class="desktop-navigation">
@@ -72,10 +78,16 @@
                     سفارش‌ها
 
                 </MudButton>
+                <MudButton Href="/admin/messages"
+                           Color="Color.Inherit"
+                           StartIcon="@Icons.Material.Filled.Chat">
+                    پیام‌ها
+                </MudButton>
                     </Authorized>
                 </AuthorizeView>
 
 
+                <MudButton Href="/admin/shop-products" Color="Color.Inherit" StartIcon="@Icons.Material.Filled.Storefront">محصولات فروشگاه</MudButton>
                 <MudButton Href="/admin/portfolio"
                            Color="Color.Inherit"
                            StartIcon="@Icons.Material.Filled.Palette">
@@ -166,8 +178,18 @@
                     <MudIcon Icon="@Icons.Material.Filled.Insights" Class="admin-sidebar-icon" />
                     <span>آمار بازدید</span>
                 </NavLink>
+                <NavLink href="/admin/messages"
+                         class="admin-sidebar-link"
+                         ActiveClass="admin-sidebar-link-active">
+                    <MudIcon Icon="@Icons.Material.Filled.Chat" Class="admin-sidebar-icon" />
+                    <span>پیام‌های کاربران</span>
+                </NavLink>
                     </Authorized>
                 </AuthorizeView>
+                <NavLink href="/admin/shop-products" class="admin-sidebar-link" ActiveClass="admin-sidebar-link-active">
+                    <MudIcon Icon="@Icons.Material.Filled.Storefront" Class="admin-sidebar-icon" />
+                    <span>محصولات فروشگاه</span>
+                </NavLink>
                 <NavLink href="/admin/portfolio"
                          class="admin-sidebar-link"
                          ActiveClass="admin-sidebar-link-active">

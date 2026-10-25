@@ -1,6 +1,8 @@
 @page "/admin/users"
+@page "/admin/users/{UserId:guid}"
 @layout AdminLayout
 @using Marzi.Client.Infrastructure.Api
+@using Marzi.Client.Shared.Utilities
 @using Microsoft.AspNetCore.Components.Authorization
 @using MudBlazor
 @inject IUsersApi UsersApi
@@ -8,55 +10,132 @@
 
 <AuthorizeView Roles="Admin">
     <Authorized>
-        <MudContainer MaxWidth="MaxWidth.Large" Class="py-6">
-            <MudText Typo="Typo.h4" Class="mb-2">مدیریت کاربران و دسترسی ویدیو</MudText>
-            <MudText Typo="Typo.body2" Class="mb-5">برای هر کاربر، دسته‌های دوره‌ای را که اجازه دیدنشان را دارد انتخاب کنید.</MudText>
-            @if (_loading) { <MudProgressLinear Indeterminate="true" /> }
+        <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="admin-users-page py-6">
+            @if (_loading)
+            {
+                <MudProgressLinear Indeterminate="true" Color="Color.Primary" />
+            }
+            else if (UserId.HasValue)
+            {
+                @if (SelectedUser is { } user)
+                {
+                    <MudButton Href="/admin/users" Variant="Variant.Text" StartIcon="@Icons.Material.Filled.ArrowForward">بازگشت به فهرست کاربران</MudButton>
+                    <div class="admin-users-heading">
+                        <div><span>پرونده‌ی کاربر</span><h1>@DisplayName(user)</h1><p>نقش، تأیید حساب و دسترسی به دوره‌ها را مدیریت کنید.</p></div>
+                        <MudChip T="string" Color="@(!user.IsApproved ? Color.Warning : user.IsActive ? Color.Success : Color.Error)" Variant="Variant.Filled">@(!user.IsApproved ? "در انتظار تأیید" : user.IsActive ? "فعال" : "مسدود")</MudChip>
+                    </div>
+                    @if (!user.IsApproved)
+                    {
+                        <MudAlert Severity="Severity.Warning" Variant="Variant.Outlined" Class="mb-4" Icon="@Icons.Material.Filled.PersonAdd">این کاربر تازه ثبت‌نام کرده و برای ورود به سایت منتظر تأیید مدیر است.</MudAlert>
+                    }
+                    <MudGrid Spacing="3">
+                        <MudItem xs="12" lg="7">
+                            <MudPaper Class="admin-user-detail-card pa-4" Elevation="1">
+                                <div class="admin-detail-title"><MudIcon Icon="@Icons.Material.Filled.AccountCircle" /><div><h2>مشخصات حساب</h2><span>ثبت‌نام: @PersianDateFormatter.Format(user.CreatedAt.ToLocalTime())</span></div></div>
+                                <MudGrid Spacing="2" Class="mt-2">
+                                    <MudItem xs="12" sm="6"><MudTextField T="string" @bind-Value="user.Name" Label="نام نمایشی" Variant="Variant.Outlined" Class="admin-user-name-field" MaxLength="100" /></MudItem>
+                                    <MudItem xs="12" sm="6"><MudTextField T="string" Value="user.Username" Label="نام کاربری / شماره موبایل" Variant="Variant.Outlined" ReadOnly="true" dir="ltr" /></MudItem>
+                                    <MudItem xs="12" sm="6"><MudSelect T="string" @bind-Value="user.Role" Label="نقش حساب" Variant="Variant.Outlined"><MudSelectItem T="string" Value="@("User")">کاربر</MudSelectItem><MudSelectItem T="string" Value="@("Admin")">مدیر</MudSelectItem></MudSelect></MudItem>
+                                    <MudItem xs="12" sm="6"><MudTextField T="string" Value="@string.Join("، ", user.IpAddresses)" Label="IPهای ثبت‌شده" Variant="Variant.Outlined" ReadOnly="true" dir="ltr" /></MudItem>
+                                </MudGrid>
+                                <MudStack Row="true" Spacing="2" Class="mt-3 admin-user-detail-actions">
+                                    <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Save" OnClick="@(() => SaveNameAsync(user))">ذخیره نام</MudButton>
+                                    <MudButton Variant="Variant.Outlined" Color="Color.Tertiary" StartIcon="@Icons.Material.Filled.ManageAccounts" OnClick="@(() => SaveRoleAsync(user))">ذخیره نقش</MudButton>
+                                    @if (user.Role != "Admin")
+                                    {
+                                        <MudButton Variant="Variant.Outlined" Color="@(user.IsApproved ? (user.IsActive ? Color.Error : Color.Success) : Color.Success)" StartIcon="@(user.IsApproved ? (user.IsActive ? Icons.Material.Filled.Block : Icons.Material.Filled.CheckCircle) : Icons.Material.Filled.VerifiedUser)" OnClick="@(() => SetUserActiveAsync(user, user.IsApproved ? !user.IsActive : true))">
+                                            @(user.IsApproved ? (user.IsActive ? "مسدودکردن حساب" : "رفع انسداد") : "تأیید و فعال‌سازی")
+                                        </MudButton>
+                                    }
+                                </MudStack>
+                            </MudPaper>
+                        </MudItem>
+                        <MudItem xs="12" lg="5">
+                            <MudPaper Class="admin-user-detail-card pa-4" Elevation="1">
+                                <div class="admin-detail-title"><MudIcon Icon="@Icons.Material.Filled.School" /><div><h2>دسترسی دوره‌ها</h2><span>این کاربر به @user.Categories.Count دسته دسترسی دارد.</span></div></div>
+                                <MudSelect T="string" MultiSelection="true" SelectedValues="user.Categories" SelectedValuesChanged="@(values => OnCategoriesChanged(user, values))" Label="دسته‌های مجاز" Variant="Variant.Outlined" Class="mt-3">
+                                    @foreach (var category in _categories)
+                                    {
+                                        <MudSelectItem T="string" Value="category">@category</MudSelectItem>
+                                    }
+                                </MudSelect>
+                                <MudStack Row="true" Spacing="1" Class="mt-2"><MudButton Size="Size.Small" Variant="Variant.Text" OnClick="@(() => SelectAllCategories(user))">انتخاب همه</MudButton><MudButton Size="Size.Small" Variant="Variant.Text" Color="Color.Secondary" OnClick="@(() => ClearCategories(user))">پاک‌کردن انتخاب‌ها</MudButton></MudStack>
+                                <MudButton FullWidth="true" Class="mt-4" Variant="Variant.Filled" Color="Color.Secondary" StartIcon="@Icons.Material.Filled.Save" OnClick="@(() => SaveCategoriesAsync(user))">ذخیره دسترسی دوره‌ها</MudButton>
+                                @if (user.Categories.Count > 0){<div class="admin-user-category-list">@foreach (var category in user.Categories){<MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Color="Color.Primary">@category</MudChip>}</div>}
+                            </MudPaper>
+                        </MudItem>
+                    </MudGrid>
+                }
+                else
+                {
+                    <MudAlert Severity="Severity.Error" Variant="Variant.Outlined">کاربر موردنظر در فهرست پیدا نشد. ممکن است حساب حذف شده باشد.</MudAlert>
+                    <MudButton Href="/admin/users" Class="mt-3" Variant="Variant.Outlined">بازگشت به فهرست</MudButton>
+                }
+            }
             else
             {
-                <MudGrid Class="mb-5">
-                    <MudItem xs="12" md="3"><MudTextField @bind-Value="_newUser.Name" Label="نام نمایشی" Variant="Variant.Outlined" /></MudItem>
-                    <MudItem xs="12" md="3"><MudTextField @bind-Value="_newUser.Username" Label="نام کاربری" Variant="Variant.Outlined" /></MudItem>
-                    <MudItem xs="12" md="2"><MudTextField @bind-Value="_newUser.Password" Label="رمز عبور (حداقل ۸ نویسه)" InputType="InputType.Password" Variant="Variant.Outlined" /></MudItem>
-                    <MudItem xs="12" md="2">
-                        <MudSelect T="string" @bind-Value="_newUser.Role" Label="نقش حساب" Variant="Variant.Outlined">
-                            <MudSelectItem T="string" Value="@("User")">کاربر</MudSelectItem>
-                            <MudSelectItem T="string" Value="@("Admin")">مدیر</MudSelectItem>
-                        </MudSelect>
-                    </MudItem>
-                    <MudItem xs="12" md="2"><MudButton FullWidth="true" Size="Size.Large" Color="Color.Primary" Variant="Variant.Filled" OnClick="CreateUserAsync">ساخت کاربر</MudButton></MudItem>
-                </MudGrid>
-                <MudTable Items="_users" Hover="true" Dense="true" Breakpoint="Breakpoint.Sm">
-                    <HeaderContent><MudTh>نام</MudTh><MudTh>نام کاربری</MudTh><MudTh>نقش</MudTh><MudTh>دسته‌های مجاز</MudTh><MudTh></MudTh></HeaderContent>
-                    <RowTemplate Context="user">
-                        <MudTd DataLabel="نام"><MudTextField @bind-Value="user.Name" Label="نام نمایشی" Variant="Variant.Outlined" Dense="true" /></MudTd>
-                        <MudTd DataLabel="نام کاربری" dir="ltr">@user.Username</MudTd>
-                        <MudTd DataLabel="نقش">
-                            <MudSelect T="string" @bind-Value="user.Role" Label="نقش" Variant="Variant.Outlined" Dense="true">
-                                <MudSelectItem T="string" Value="@("User")">کاربر</MudSelectItem>
-                                <MudSelectItem T="string" Value="@("Admin")">مدیر</MudSelectItem>
-                            </MudSelect>
-                        </MudTd>
-                        <MudTd DataLabel="دسته‌ها" Style="min-width:280px">
-                            <MudSelect T="string" MultiSelection="true" SelectedValues="user.Categories" SelectedValuesChanged="@(values => OnCategoriesChanged(user, values))" Label="انتخاب دسته‌ها" Variant="Variant.Outlined" Dense="true">
-                                @foreach (var category in _categories) { <MudSelectItem T="string" Value="category">@category</MudSelectItem> }
-                            </MudSelect>
-                        </MudTd>
-                        <MudTd><MudStack Row="true" Spacing="1"><MudButton Color="Color.Primary" Variant="Variant.Outlined" OnClick="@(() => SaveNameAsync(user))">ذخیره نام</MudButton><MudButton Color="Color.Tertiary" Variant="Variant.Outlined" OnClick="@(() => SaveRoleAsync(user))">ذخیره نقش</MudButton><MudButton Color="Color.Secondary" Variant="Variant.Outlined" OnClick="@(() => SaveCategoriesAsync(user))">ذخیره دسترسی</MudButton></MudStack></MudTd>
-                    </RowTemplate>
-                    <NoRecordsContent><MudText Class="pa-4">هنوز کاربری ساخته نشده است.</MudText></NoRecordsContent>
-                </MudTable>
+                <div class="admin-users-heading"><div><span>مدیریت دسترسی‌ها</span><h1>کاربران</h1><p>جست‌وجو کنید، درخواست‌های تازه را بررسی و دسترسی هر کاربر را مدیریت کنید.</p></div><div class="admin-user-counts"><span><b>@_users.Count</b> کاربر</span>@if (PendingCount > 0){<span class="pending-count"><b>@PendingCount</b> در انتظار تأیید</span>}</div></div>
+                @if (PendingCount > 0)
+                {
+                    <MudAlert Severity="Severity.Warning" Variant="Variant.Outlined" Class="mb-4" Icon="@Icons.Material.Filled.PersonAdd">@PendingCount درخواست ثبت‌نام جدید در انتظار بررسی است. برای دیدن مشخصات و اعطای دسترسی، پرونده‌ی کاربر را باز کنید.</MudAlert>
+                }
+                <MudExpansionPanels Class="admin-user-create-panel mb-4"><MudExpansionPanel Text="ساخت حساب کاربری" Icon="@Icons.Material.Filled.PersonAdd">
+                    <MudGrid Spacing="2" Class="pa-1">
+                        <MudItem xs="12" sm="6" md="3"><MudTextField T="string" @bind-Value="_newUser.Name" Label="نام نمایشی" Variant="Variant.Outlined" /></MudItem>
+                        <MudItem xs="12" sm="6" md="3"><MudTextField T="string" @bind-Value="_newUser.Username" Label="نام کاربری / موبایل" Variant="Variant.Outlined" /></MudItem>
+                        <MudItem xs="12" sm="6" md="3"><MudTextField T="string" @bind-Value="_newUser.Password" Label="رمز عبور (حداقل ۸ نویسه)" InputType="InputType.Password" Variant="Variant.Outlined" /></MudItem>
+                        <MudItem xs="12" sm="6" md="2"><MudSelect T="string" @bind-Value="_newUser.Role" Label="نقش حساب" Variant="Variant.Outlined"><MudSelectItem T="string" Value="@("User")">کاربر</MudSelectItem><MudSelectItem T="string" Value="@("Admin")">مدیر</MudSelectItem></MudSelect></MudItem>
+                        <MudItem xs="12" md="1" Class="d-flex align-center"><MudButton FullWidth="true" Color="Color.Primary" Variant="Variant.Filled" OnClick="CreateUserAsync">ساخت</MudButton></MudItem>
+                    </MudGrid>
+                </MudExpansionPanel></MudExpansionPanels>
+                <MudPaper Class="admin-users-list-card" Elevation="1">
+                    <div class="admin-users-filters">
+                        <MudTextField T="string" @bind-Value="_search" Immediate="true" DebounceInterval="150" Placeholder="جست‌وجو با نام یا شماره موبایل" Variant="Variant.Outlined" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" Clearable="true" Class="admin-users-search" />
+                        <MudSelect T="string" @bind-Value="_statusFilter" Label="وضعیت حساب" Variant="Variant.Outlined" Class="admin-users-filter"><MudSelectItem T="string" Value="@("all")">همه‌ی وضعیت‌ها</MudSelectItem><MudSelectItem T="string" Value="@("pending")">در انتظار تأیید</MudSelectItem><MudSelectItem T="string" Value="@("active")">فعال</MudSelectItem><MudSelectItem T="string" Value="@("blocked")">مسدود</MudSelectItem></MudSelect>
+                        <MudSelect T="string" @bind-Value="_roleFilter" Label="نقش" Variant="Variant.Outlined" Class="admin-users-filter"><MudSelectItem T="string" Value="@("all")">همه‌ی نقش‌ها</MudSelectItem><MudSelectItem T="string" Value="@("User")">کاربر</MudSelectItem><MudSelectItem T="string" Value="@("Admin")">مدیر</MudSelectItem></MudSelect>
+                        <span class="admin-users-results">نمایش @FilteredUsers.Count از @_users.Count</span>
+                    </div>
+                    @if (FilteredUsers.Count == 0)
+                    {
+                        <div class="admin-users-empty"><MudIcon Icon="@Icons.Material.Filled.PersonSearch" /><b>کاربری با این فیلتر پیدا نشد</b><span>عبارت جست‌وجو یا فیلترها را تغییر دهید.</span></div>
+                    }
+                    else
+                    {
+                        <MudTable Items="FilteredUsers" Hover="true" Dense="true" Breakpoint="Breakpoint.Sm" Class="admin-users-table">
+                            <HeaderContent><MudTh>کاربر</MudTh><MudTh>نقش</MudTh><MudTh>دسترسی</MudTh><MudTh>وضعیت</MudTh><MudTh>تاریخ عضویت</MudTh><MudTh></MudTh></HeaderContent>
+                            <RowTemplate Context="user">
+                                <MudTd DataLabel="کاربر"><div class="admin-user-identity"><span class="admin-user-avatar">@AvatarLetter(user)</span><span class="admin-user-name"><b>@DisplayName(user)</b><small dir="ltr">@user.Username</small></span></div></MudTd>
+                                <MudTd DataLabel="نقش">@(user.Role == "Admin" ? "مدیر" : "کاربر")</MudTd>
+                                <MudTd DataLabel="دسترسی">@(user.Categories.Count == 0 ? "بدون دسته" : $"{user.Categories.Count} دسته")</MudTd>
+                                <MudTd DataLabel="وضعیت"><MudChip T="string" Size="Size.Small" Color="@(!user.IsApproved ? Color.Warning : user.IsActive ? Color.Success : Color.Error)">@(!user.IsApproved ? "در انتظار تأیید" : user.IsActive ? "فعال" : "مسدود")</MudChip></MudTd>
+                                <MudTd DataLabel="تاریخ عضویت">@PersianDateFormatter.FormatMonthDay(user.CreatedAt.ToLocalTime())</MudTd>
+                                <MudTd><MudButton Href="@($"/admin/users/{user.Id}")" Variant="Variant.Outlined" Color="Color.Primary" Size="Size.Small" EndIcon="@Icons.Material.Filled.ArrowBack">مشاهده و دسترسی</MudButton></MudTd>
+                            </RowTemplate>
+                        </MudTable>
+                    }
+                </MudPaper>
             }
         </MudContainer>
     </Authorized>
-    <NotAuthorized><MudAlert Severity="Severity.Error" Class="ma-6">این بخش فقط برای ادمین است.</MudAlert></NotAuthorized>
+    <NotAuthorized><MudAlert Severity="Severity.Error" Class="ma-6">این بخش فقط برای مدیر سایت است.</MudAlert></NotAuthorized>
 </AuthorizeView>
 
 @code {
+    [Parameter] public Guid? UserId { get; set; }
     private bool _loading = true;
     private List<ManagedUserDto> _users = [];
     private List<string> _categories = [];
     private CreateManagedUserRequest _newUser = new() { Role = "User" };
+    private string _search = string.Empty;
+    private string _statusFilter = "all";
+    private string _roleFilter = "all";
+    private int PendingCount => _users.Count(x => !x.IsApproved);
+    private ManagedUserDto? SelectedUser => UserId.HasValue ? _users.FirstOrDefault(x => x.Id == UserId.Value) : null;
+    private List<ManagedUserDto> FilteredUsers => _users
+        .Where(user => string.IsNullOrWhiteSpace(_search) || DisplayName(user).Contains(_search.Trim(), StringComparison.OrdinalIgnoreCase) || user.Username.Contains(_search.Trim(), StringComparison.OrdinalIgnoreCase))
+        .Where(user => _roleFilter == "all" || user.Role == _roleFilter)
+        .Where(user => _statusFilter switch { "pending" => !user.IsApproved, "active" => user.IsApproved && user.IsActive, "blocked" => user.IsApproved && !user.IsActive, _ => true })
+        .OrderByDescending(user => user.CreatedAt).ToList();
 
     protected override async Task OnInitializedAsync() => await LoadAsync();
 
@@ -66,20 +145,22 @@
         {
             var result = await UsersApi.ListAsync();
             if (!result.IsSuccessStatusCode || result.Content is null) throw new InvalidOperationException("دریافت کاربران انجام نشد.");
-            _users = result.Content.Users;
+            _users = result.Content.Users.OrderByDescending(user => user.CreatedAt).ToList();
             foreach (var user in _users)
-                if (string.IsNullOrWhiteSpace(user.Name) || user.Name.Trim('?', ' ', '\t', '\r', '\n').Length == 0 || user.Name.Contains('\uFFFD'))
-                    user.Name = user.Username;
+                if (string.IsNullOrWhiteSpace(user.Name) || user.Name.Trim('?', ' ', '\t', '\r', '\n').Length == 0 || user.Name.Contains('\uFFFD')) user.Name = user.Username;
             _categories = result.Content.Categories;
         }
         catch { Snackbar.Add("دریافت کاربران و دسته‌ها انجام نشد.", Severity.Error); }
         finally { _loading = false; }
     }
 
+    private static string DisplayName(ManagedUserDto user) => string.IsNullOrWhiteSpace(user.Name) ? user.Username : user.Name.Trim();
+    private static string AvatarLetter(ManagedUserDto user) => DisplayName(user).FirstOrDefault().ToString();
+
     private async Task CreateUserAsync()
     {
         _newUser.Role = string.IsNullOrWhiteSpace(_newUser.Role) ? "User" : _newUser.Role;
-        if (string.IsNullOrWhiteSpace(_newUser.Username) || _newUser.Password.Length < 8) { Snackbar.Add("نام کاربری را وارد کنید و برای رمز حداقل ۸ نویسه بگذارید.", Severity.Warning); return; }
+        if (string.IsNullOrWhiteSpace(_newUser.Username) || _newUser.Password.Length < 8) { Snackbar.Add("نام کاربری را وارد کنید و برای رمز دست‌کم ۸ نویسه بگذارید.", Severity.Warning); return; }
         var response = await UsersApi.CreateAsync(_newUser);
         if (!response.IsSuccessStatusCode || response.Content is null) { Snackbar.Add(response.StatusCode == System.Net.HttpStatusCode.Conflict ? "این نام کاربری قبلاً استفاده شده است." : "ساخت کاربر انجام نشد.", Severity.Error); return; }
         _users.Insert(0, response.Content);
@@ -90,7 +171,7 @@
     private async Task SaveCategoriesAsync(ManagedUserDto user)
     {
         var response = await UsersApi.SetCategoriesAsync(user.Id, new SetUserCategoriesRequest { Categories = user.Categories });
-        Snackbar.Add(response.IsSuccessStatusCode ? "دسترسی دسته‌ها ذخیره شد." : "ذخیره دسترسی انجام نشد.", response.IsSuccessStatusCode ? Severity.Success : Severity.Error);
+        Snackbar.Add(response.IsSuccessStatusCode ? "دسترسی دوره‌ها ذخیره شد." : "ذخیره دسترسی انجام نشد.", response.IsSuccessStatusCode ? Severity.Success : Severity.Error);
     }
 
     private async Task SaveNameAsync(ManagedUserDto user)
@@ -102,11 +183,19 @@
     private async Task SaveRoleAsync(ManagedUserDto user)
     {
         var response = await UsersApi.SetRoleAsync(user.Id, new SetUserRoleRequest { Role = user.Role });
-
-        Snackbar.Add(
-            response.IsSuccessStatusCode ? "نقش کاربر ذخیره شد." : "ذخیره نقش انجام نشد.",
-            response.IsSuccessStatusCode ? Severity.Success : Severity.Error);
+        Snackbar.Add(response.IsSuccessStatusCode ? "نقش کاربر ذخیره شد." : "ذخیره نقش انجام نشد.", response.IsSuccessStatusCode ? Severity.Success : Severity.Error);
     }
 
     private static void OnCategoriesChanged(ManagedUserDto user, IEnumerable<string> values) => user.Categories = values.ToList();
+    private void SelectAllCategories(ManagedUserDto user) => user.Categories = _categories.ToList();
+    private static void ClearCategories(ManagedUserDto user) => user.Categories = [];
+
+    private async Task SetUserActiveAsync(ManagedUserDto user, bool isActive)
+    {
+        var response = await UsersApi.SetActiveAsync(user.Id, new SetUserActiveRequest { IsActive = isActive });
+        if (!response.IsSuccessStatusCode) { Snackbar.Add(isActive ? "فعال‌سازی حساب انجام نشد." : "مسدودسازی حساب انجام نشد.", Severity.Error); return; }
+        user.IsActive = isActive;
+        if (isActive) user.IsApproved = true;
+        Snackbar.Add(isActive ? "دسترسی کاربر فعال شد." : "دسترسی کاربر مسدود شد.", Severity.Success);
+    }
 }

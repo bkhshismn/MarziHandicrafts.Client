@@ -4,5 +4,6 @@ Disallow: /admin
 Disallow: /profile
 Disallow: /orders
 Disallow: /login
+Disallow: /register
 
 Sitemap: https://www.marzihandicrafts.ir/sitemap.xml

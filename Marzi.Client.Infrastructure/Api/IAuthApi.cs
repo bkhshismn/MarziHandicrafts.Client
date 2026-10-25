@@ -11,7 +11,7 @@ public interface IAuthApi
     Task<ApiResponse<AuthResponse>> LoginAsync([Body] LoginRequest request);
 
     [Post("/api/auth/register")]
-    Task<ApiResponse<AuthResponse>> RegisterAsync([Body] RegisterRequest request);
+    Task<IApiResponse> RegisterAsync([Body] RegisterRequest request);
 
     [Post("/api/auth/refresh")]
     Task<ApiResponse<AuthResponse>> RefreshAsync([Body] RefreshRequest request);

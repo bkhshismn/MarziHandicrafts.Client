@@ -96,6 +96,26 @@ public sealed class OrderService
         return response.Content;
     }
 
+    public async Task<OrderDto> UpdateByUserAsync(Guid id, CreateOrderRequest request)
+    {
+        var response = await _api.UpdateByUserAsync(id, request);
+        if (!response.IsSuccessStatusCode || response.Content is null)
+            throw new InvalidOperationException("ذخیره تغییرات سفارش با خطا مواجه شد.");
+        return response.Content;
+    }
+
+    public async Task DeleteByUserAsync(Guid id)
+    {
+        var response = await _api.DeleteByUserAsync(id);
+        if (!response.IsSuccessStatusCode) throw new InvalidOperationException("حذف سفارش انجام نشد.");
+    }
+
+    public async Task DeleteByAdminAsync(Guid id)
+    {
+        var response = await _api.DeleteByAdminAsync(id);
+        if (!response.IsSuccessStatusCode) throw new InvalidOperationException("حذف سفارش انجام نشد.");
+    }
+
     public async Task<OrderDto> UpdateByAdminAsync(
     Guid id,
     AdminUpdateOrderRequest request)

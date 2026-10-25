@@ -54,6 +54,8 @@ public sealed class CourseEpisodeService
                 "عنوان ویدئو را وارد کنید.");
         }
 
+        var safeDescription = description ?? throw new ArgumentNullException(nameof(description));
+
         if (order < 1)
         {
             throw new InvalidOperationException(
@@ -66,7 +68,7 @@ public sealed class CourseEpisodeService
             $"[EPISODE UPLOAD] Title: {title}");
 
         Console.WriteLine(
-            $"[EPISODE UPLOAD] Description length: {description?.Length ?? 0}");
+            $"[EPISODE UPLOAD] Description length: {safeDescription.Length}");
 
         Console.WriteLine(
             $"[EPISODE UPLOAD] Order: {order}");
@@ -103,7 +105,7 @@ public sealed class CourseEpisodeService
                 await _api.UploadAsync(
                     lessonId,
                     title,
-                    description,
+                    safeDescription,
                     order,
                     isFree,
                     filePart);

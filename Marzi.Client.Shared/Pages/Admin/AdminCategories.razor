@@ -23,7 +23,24 @@
                     <MudList T="string">
                         @foreach (var category in _categories)
                         {
-                            <MudListItem T="string" Icon="@Icons.Material.Filled.FolderOpen">@category</MudListItem>
+                            <MudListItem T="string" Icon="@Icons.Material.Filled.FolderOpen">
+                                @if (_editing == category)
+                                {
+                                    <MudTextField @bind-Value="_editedName" Label="عنوان جدید" Immediate="true" />
+                                    <MudButton OnClick="RenameAsync" Color="Color.Primary">ذخیره</MudButton>
+                                    <MudButton OnClick="@(() => _editing = null)">انصراف</MudButton>
+                                }
+                                else
+                                {
+                                <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Class="w-100">
+                                    <MudText>@category</MudText>
+                                    <MudStack Row="true" Spacing="1">
+                                        <MudIconButton Icon="@Icons.Material.Filled.Edit" Color="Color.Primary" title="ویرایش عنوان" OnClick="@(() => BeginEdit(category))" />
+                                        <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" title="حذف دسته" OnClick="@(() => DeleteAsync(category))" />
+                                    </MudStack>
+                                </MudStack>
+                                }
+                            </MudListItem>
                         }
                     </MudList>
                 </MudPaper>
@@ -38,6 +55,8 @@
     private List<string> _categories = [];
     private bool _loading = true;
     private bool _saving;
+    private string? _editing;
+    private string _editedName = string.Empty;
 
     protected override async Task OnInitializedAsync()
     {
@@ -69,5 +88,29 @@
             Snackbar.Add("دسته‌بندی ساخته شد.", Severity.Success);
         }
         finally { _saving = false; }
+    }
+
+    private void BeginEdit(string category) { _editing = category; _editedName = category; }
+
+    private async Task DeleteAsync(string category)
+    {
+        var response = await CategoriesApi.DeleteAsync(category);
+        if (response.IsSuccessStatusCode) { _categories.Remove(category); Snackbar.Add("دسته حذف شد.", Severity.Success); }
+        else Snackbar.Add(response.StatusCode == System.Net.HttpStatusCode.Conflict ? "این دسته هنوز در دسترسی کاربران استفاده می‌شود." : "حذف دسته انجام نشد.", Severity.Error);
+    }
+
+    private async Task RenameAsync()
+    {
+        if (string.IsNullOrWhiteSpace(_editedName) || _editing is null) return;
+        var response = await CategoriesApi.RenameAsync(new RenameCourseCategoryRequest { OldName = _editing, NewName = _editedName.Trim() });
+        if (response.IsSuccessStatusCode)
+        {
+            var index = _categories.IndexOf(_editing);
+            _categories[index] = response.Content ?? _editedName.Trim();
+            _categories = _categories.OrderBy(x => x).ToList();
+            _editing = null;
+            Snackbar.Add("عنوان دسته ویرایش شد.", Severity.Success);
+        }
+        else Snackbar.Add(response.StatusCode == System.Net.HttpStatusCode.Conflict ? "این عنوان قبلاً وجود دارد." : "ویرایش عنوان انجام نشد.", Severity.Error);
     }
 }

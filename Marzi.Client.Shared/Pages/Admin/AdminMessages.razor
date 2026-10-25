@@ -1,0 +1,293 @@
+@page "/admin/messages"
+@layout AdminLayout
+
+@using Marzi.Client.Core.Models
+@using Marzi.Client.Infrastructure.Api
+@using Microsoft.AspNetCore.Components.Authorization
+@using MudBlazor
+
+@implements IAsyncDisposable
+
+@inject IChatApi ChatApi
+@inject ISnackbar Snackbar
+
+<AuthorizeView Roles="Admin">
+    <Authorized>
+        <MudContainer MaxWidth="MaxWidth.Large" Class="py-6">
+
+            <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Class="mb-4">
+                <div>
+                    <MudText Typo="Typo.h4">پیام‌های کاربران</MudText>
+                    <MudText Typo="Typo.body2" Color="Color.Secondary">گفتگوها و پاسخ به پیام‌های سایت</MudText>
+                </div>
+
+                <MudButton Variant="Variant.Outlined"
+                           Color="Color.Primary"
+                           StartIcon="@Icons.Material.Filled.Refresh"
+                           OnClick="LoadConversationsAsync">
+                    به‌روزرسانی
+                </MudButton>
+            </MudStack>
+
+            <MudGrid Spacing="3">
+
+                <MudItem xs="12" md="4">
+                    <MudPaper Class="pa-2" Elevation="1">
+                        @if (_conversations.Count == 0)
+                        {
+                            <MudText Typo="Typo.body2" Color="Color.Secondary" Class="pa-3">
+                                هنوز پیامی ثبت نشده است.
+                            </MudText>
+                        }
+
+                        @foreach (var item in _conversations)
+                        {
+                            <MudButton FullWidth="true"
+                                       Variant="@(item.ConversationId == _selectedId ? Variant.Filled : Variant.Text)"
+                                       Color="@(item.ConversationId == _selectedId ? Color.Primary : Color.Default)"
+                                       OnClick="@(() => SelectAsync(item.ConversationId))"
+                                       Class="mb-1 chat-conversation-item">
+
+                                <div style="width:100%;text-align:right">
+                                    <MudText Typo="Typo.body2">@item.SenderName</MudText>
+                                    <MudText Typo="Typo.caption" Color="Color.Secondary" Class="text-truncate">
+                                        @item.LastMessage
+                                    </MudText>
+                                    <MudStack Row="true" Spacing="1" AlignItems="AlignItems.Center">
+                                        <MudChip T="string" Size="Size.Small" Color="@(item.IsGuest ? Color.Warning : Color.Info)">
+                                            @(item.IsGuest ? "مهمان" : "کاربر")
+                                        </MudChip>
+                                        @if (!string.IsNullOrWhiteSpace(item.Phone) && item.Phone != "0")
+                                        {
+                                            <MudText Typo="Typo.caption" Color="Color.Secondary" dir="ltr">
+                                                @item.Phone
+                                            </MudText>
+                                        }
+                                    </MudStack>
+                                </div>
+                            </MudButton>
+                        }
+                    </MudPaper>
+                </MudItem>
+
+                <MudItem xs="12" md="8">
+                    <MudPaper Class="pa-4" Elevation="1">
+                        @if (_selectedId == Guid.Empty)
+                        {
+                            <MudText Typo="Typo.body2" Color="Color.Secondary">
+                                یک گفتگو را از فهرست انتخاب کنید.
+                            </MudText>
+                        }
+                        else
+                        {
+                            var conversation =
+                                _conversations.FirstOrDefault(c => c.ConversationId == _selectedId);
+
+                            @if (conversation is not null)
+                            {
+                                <MudStack Row="true" Spacing="2" AlignItems="AlignItems.Center" Class="mb-2">
+                                    <MudIcon Icon="@Icons.Material.Filled.Person" Size="Size.Small" />
+                                    <MudText Typo="Typo.subtitle2">@conversation.SenderName</MudText>
+                                    @if (!string.IsNullOrWhiteSpace(conversation.Phone) && conversation.Phone != "0")
+                                    {
+                                        <MudText Typo="Typo.caption" Color="Color.Secondary" dir="ltr">
+                                            @conversation.Phone
+                                        </MudText>
+                                    }
+                                    <MudChip T="string" Size="Size.Small" Color="@(conversation.IsGuest ? Color.Warning : Color.Info)">
+                                        @(conversation.IsGuest ? "مهمان" : "کاربر ثبت‌نام‌شده")
+                                    </MudChip>
+                                </MudStack>
+                            }
+
+                            <div class="chat-thread">
+                                @foreach (var message in _messages)
+                                {
+                                    var isAdmin = string.Equals(message.SenderRole, "Admin", StringComparison.OrdinalIgnoreCase);
+
+                                    <div class="@(isAdmin ? "chat-row chat-row-admin" : "chat-row")">
+                                        <div class="@(isAdmin ? "chat-bubble chat-bubble-admin" : "chat-bubble")">
+                                            <MudText Typo="Typo.caption" Color="Color.Secondary">
+                                                @message.SenderName — @PersianDateFormatter.FormatMonthDay(message.CreatedAt.ToLocalTime())
+                                            </MudText>
+                                            <MudText Typo="Typo.body2">@message.Body</MudText>
+                                        </div>
+                                    </div>
+                                }
+                            </div>
+
+                            <MudTextField @bind-Value="_reply"
+                                          Label="پاسخ شما"
+                                          Variant="Variant.Outlined"
+                                          Lines="3"
+                                          Class="mt-3"
+                                          MaxLength="2000" />
+
+                            <MudButton Variant="Variant.Filled"
+                                       Color="Color.Primary"
+                                       StartIcon="@Icons.Material.Filled.Send"
+                                       Disabled="_sending"
+                                       OnClick="SendReplyAsync"
+                                       Class="mt-2">
+                                @(_sending ? "در حال ارسال..." : "ارسال پاسخ")
+                            </MudButton>
+                        }
+                    </MudPaper>
+                </MudItem>
+
+            </MudGrid>
+
+        </MudContainer>
+    </Authorized>
+
+    <NotAuthorized>
+        <MudAlert Severity="Severity.Error" Class="ma-6">این بخش فقط برای مدیر است.</MudAlert>
+    </NotAuthorized>
+</AuthorizeView>
+
+@code {
+    private List<ChatConversationDto> _conversations = [];
+
+    private List<ChatMessageDto> _messages = [];
+
+    private Guid _selectedId = Guid.Empty;
+
+    private string? _reply;
+
+    private bool _sending;
+
+    private CancellationTokenSource? _polling;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadConversationsAsync();
+
+        _polling = new CancellationTokenSource();
+
+        _ = PollAsync(_polling.Token);
+    }
+
+    private async Task PollAsync(CancellationToken cancellationToken)
+    {
+        try
+        {
+            while (!cancellationToken.IsCancellationRequested)
+            {
+                await Task.Delay(TimeSpan.FromSeconds(8), cancellationToken);
+
+                if (cancellationToken.IsCancellationRequested)
+                    break;
+
+                await LoadConversationsAsync();
+
+                if (_selectedId != Guid.Empty)
+                    await LoadMessagesAsync(_selectedId);
+
+                await InvokeAsync(StateHasChanged);
+            }
+        }
+        catch (OperationCanceledException)
+        {
+            // طبیعی است
+        }
+    }
+
+    private async Task LoadConversationsAsync()
+    {
+        try
+        {
+            var response = await ChatApi.GetConversationsAsync();
+
+            if (response.IsSuccessStatusCode && response.Content is not null)
+                _conversations = response.Content;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[CHAT ADMIN] List failed: {ex.Message}");
+        }
+
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private async Task SelectAsync(Guid conversationId)
+    {
+        _selectedId = conversationId;
+        _reply = null;
+
+        await LoadMessagesAsync(conversationId);
+
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private async Task LoadMessagesAsync(Guid conversationId)
+    {
+        try
+        {
+            var response = await ChatApi.GetMessagesAsync(conversationId);
+
+            if (response.IsSuccessStatusCode && response.Content is not null)
+            {
+                _messages = response.Content;
+
+                await InvokeAsync(StateHasChanged);
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[CHAT ADMIN] Messages failed: {ex.Message}");
+        }
+    }
+
+    private async Task SendReplyAsync()
+    {
+        if (_sending || _selectedId == Guid.Empty)
+            return;
+
+        var text = _reply?.Trim();
+
+        if (string.IsNullOrWhiteSpace(text))
+        {
+            Snackbar.Add("متن پاسخ را بنویسید.", Severity.Warning);
+            return;
+        }
+
+        _sending = true;
+
+        try
+        {
+            var response = await ChatApi.ReplyAsync(new ReplyChatRequest
+            {
+                ConversationId = _selectedId,
+                Body = text
+            });
+
+            if (!response.IsSuccessStatusCode)
+            {
+                Snackbar.Add("ارسال پاسخ انجام نشد.", Severity.Error);
+                return;
+            }
+
+            _reply = string.Empty;
+
+            await LoadMessagesAsync(_selectedId);
+            await LoadConversationsAsync();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add(ex.Message, Severity.Error);
+        }
+        finally
+        {
+            _sending = false;
+            await InvokeAsync(StateHasChanged);
+        }
+    }
+
+    public ValueTask DisposeAsync()
+    {
+        _polling?.Cancel();
+        _polling?.Dispose();
+
+        return ValueTask.CompletedTask;
+    }
+}

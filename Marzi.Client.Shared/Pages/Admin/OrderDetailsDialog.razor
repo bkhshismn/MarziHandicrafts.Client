@@ -3,6 +3,7 @@
 @using MudBlazor
 
 @inject OrderService OrderService
+@inject Microsoft.JSInterop.IJSRuntime JS
 
 <MudDialog>
 
@@ -35,12 +36,13 @@
 
                 @if (!string.IsNullOrWhiteSpace(_order.ImageUrl))
                 {
-                    <MudImage Src="@_order.ImageUrl"
-                              Alt="تصویر سفارش"
-                              Height="280"
-                              ObjectFit="ObjectFit.Cover"
-                              Class="rounded-lg"
-                              Style="width:100%;" />
+                    <div class="admin-order-dialog-image-frame">
+                        <MudImage Src="@_order.ImageUrl"
+                                  Alt="تصویر سفارش"
+                                  Height="280"
+                                  ObjectFit="ObjectFit.Contain"
+                                  Class="admin-order-dialog-image" />
+                    </div>
                 }
                 else
                 {
@@ -115,7 +117,7 @@
 
                     @if (_order.CreatedAt != default)
                     {
-                        @_order.CreatedAt.ToString("yyyy/MM/dd HH:mm")
+                        @PersianDateFormatter.Format(_order.CreatedAt.ToLocalTime())
                     }
                     else
                     {
@@ -127,6 +129,9 @@
 
                 <MudDivider />
 
+
+                <MudTextField T="string" @bind-Value="_type" Label="نوع اثر" Variant="Variant.Outlined" FullWidth="true" />
+                <MudTextField T="string" @bind-Value="_description" Label="توضیحات سفارش" Variant="Variant.Outlined" Lines="4" FullWidth="true" />
 
                 <MudNumericField T="decimal?"
                                  @bind-Value="_price"
@@ -210,6 +215,10 @@
 
         </MudButton>
 
+        <MudButton Variant="Variant.Outlined" Color="Color.Error" StartIcon="@Icons.Material.Filled.Delete" OnClick="Delete" Disabled="_saving || _loading">
+            حذف سفارش
+        </MudButton>
+
     </DialogActions>
 
 </MudDialog>
@@ -228,6 +237,8 @@
     private OrderDto? _order;
 
     private decimal? _price;
+    private string _type = string.Empty;
+    private string _description = string.Empty;
 
     private string _status = "Pending";
 
@@ -252,6 +263,8 @@
             if (_order is not null)
             {
                 _price = _order.EstimatedPrice;
+                _type = _order.Type;
+                _description = _order.Description;
 
                 _status =
                     string.IsNullOrWhiteSpace(_order.Status)
@@ -278,6 +291,8 @@
 
                         _price =
                             freshOrder.EstimatedPrice;
+                        _type = freshOrder.Type;
+                        _description = freshOrder.Description;
 
                         _status =
                             string.IsNullOrWhiteSpace(
@@ -354,7 +369,9 @@
                 new AdminUpdateOrderRequest
                 {
                     EstimatedPrice = _price,
-                    Status = _status
+                    Status = _status,
+                    Type = _type.Trim(),
+                    Description = _description.Trim()
                 };
 
 
@@ -379,6 +396,25 @@
         {
             _saving = false;
         }
+    }
+
+    private async Task Delete()
+    {
+        if (_order is null || _saving) return;
+        var confirmed = await JS.InvokeAsync<bool>("confirm", new object?[] { "این سفارش برای همیشه حذف شود؟" });
+        if (!confirmed) return;
+        _saving = true;
+        try
+        {
+            await OrderService.DeleteByAdminAsync(_order.Id);
+            MudDialog.Close(DialogResult.Ok("deleted"));
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[ADMIN ORDER DIALOG] Delete failed: {ex}");
+            _error = "حذف سفارش با خطا مواجه شد.";
+        }
+        finally { _saving = false; }
     }
 
 

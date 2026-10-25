@@ -147,26 +147,16 @@
 
             if (result is null)
             {
-                Snackbar.Add(
-                    "شماره موبایل یا رمز عبور صحیح نیست.",
-                    Severity.Error);
-
+                Snackbar.Add(AuthService.LastErrorMessage ?? "شماره موبایل یا رمز عبور صحیح نیست.", Severity.Error);
                 return;
             }
 
-            Snackbar.Add(
-                "با موفقیت وارد شدید.",
-                Severity.Success);
-
-            Navigation.NavigateTo(
-                GetSafeReturnUrl(),
-                replace: true);
+            Snackbar.Add("با موفقیت وارد شدید.", Severity.Success);
+            Navigation.NavigateTo(GetSafeReturnUrl(), replace: true);
         }
         catch (Exception)
         {
-            Snackbar.Add(
-                "ارتباط با سرور برقرار نشد.",
-                Severity.Error);
+            Snackbar.Add("ارتباط با سرور برقرار نشد.", Severity.Error);
         }
         finally
         {

@@ -66,7 +66,7 @@ else
                     <MudText Typo="Typo.caption"
                              Color="Color.Secondary">
 
-                        @Item.CreatedAt.ToString("yyyy/MM/dd")
+                        @PersianDateFormatter.Format(Item.CreatedAt, includeTime: false)
 
                     </MudText>
 

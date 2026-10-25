@@ -476,7 +476,7 @@
                                                         <MudText Typo="Typo.caption"
                                                                  Color="Color.Secondary">
 
-                                                            @order.CreatedAt.ToString("yyyy/MM/dd HH:mm")
+                                                            @PersianDateFormatter.Format(order.CreatedAt.ToLocalTime())
 
                                                         </MudText>
 

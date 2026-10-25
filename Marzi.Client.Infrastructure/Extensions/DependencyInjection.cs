@@ -88,6 +88,14 @@ public static class DependencyInjection
             return RestService.For<ICourseCategoriesApi>(new HttpClient(refreshHandler) { BaseAddress = new Uri(baseUrl) });
         });
 
+        services.AddScoped<IShopProductsApi>(sp =>
+        {
+            var tokenStorage = sp.GetRequiredService<ITokenStorage>();
+            var authHandler = new AuthorizationHandler(tokenStorage) { InnerHandler = new HttpClientHandler() };
+            var refreshHandler = new RefreshTokenHandler(sp.GetRequiredService<AuthService>(), tokenStorage, sp.GetRequiredService<TokenRefreshCoordinator>()) { InnerHandler = authHandler };
+            return RestService.For<IShopProductsApi>(new HttpClient(refreshHandler) { BaseAddress = new Uri(baseUrl) });
+        });
+
         services.AddScoped<ISystemApi>(sp =>
         {
             var tokenStorage = sp.GetRequiredService<ITokenStorage>();
@@ -102,6 +110,30 @@ public static class DependencyInjection
             var authHandler = new AuthorizationHandler(tokenStorage) { InnerHandler = new HttpClientHandler() };
             var refreshHandler = new RefreshTokenHandler(sp.GetRequiredService<AuthService>(), tokenStorage, sp.GetRequiredService<TokenRefreshCoordinator>()) { InnerHandler = authHandler };
             return RestService.For<IAnalyticsApi>(new HttpClient(refreshHandler) { BaseAddress = new Uri(baseUrl) });
+        });
+
+        services.AddScoped<IChatApi>(sp =>
+        {
+            var tokenStorage = sp.GetRequiredService<ITokenStorage>();
+            var authHandler = new AuthorizationHandler(tokenStorage) { InnerHandler = new HttpClientHandler() };
+            var refreshHandler = new RefreshTokenHandler(sp.GetRequiredService<AuthService>(), tokenStorage, sp.GetRequiredService<TokenRefreshCoordinator>()) { InnerHandler = authHandler };
+            return RestService.For<IChatApi>(new HttpClient(refreshHandler) { BaseAddress = new Uri(baseUrl) });
+        });
+
+        services.AddScoped<IAdminNotificationsApi>(sp =>
+        {
+            var tokenStorage = sp.GetRequiredService<ITokenStorage>();
+            var authHandler = new AuthorizationHandler(tokenStorage) { InnerHandler = new HttpClientHandler() };
+            var refreshHandler = new RefreshTokenHandler(sp.GetRequiredService<AuthService>(), tokenStorage, sp.GetRequiredService<TokenRefreshCoordinator>()) { InnerHandler = authHandler };
+            return RestService.For<IAdminNotificationsApi>(new HttpClient(refreshHandler) { BaseAddress = new Uri(baseUrl) });
+        });
+
+        services.AddScoped<IUserNotificationsApi>(sp =>
+        {
+            var tokenStorage = sp.GetRequiredService<ITokenStorage>();
+            var authHandler = new AuthorizationHandler(tokenStorage) { InnerHandler = new HttpClientHandler() };
+            var refreshHandler = new RefreshTokenHandler(sp.GetRequiredService<AuthService>(), tokenStorage, sp.GetRequiredService<TokenRefreshCoordinator>()) { InnerHandler = authHandler };
+            return RestService.For<IUserNotificationsApi>(new HttpClient(refreshHandler) { BaseAddress = new Uri(baseUrl) });
         });
 
         services.AddScoped<IPortfolioApi>(sp =>

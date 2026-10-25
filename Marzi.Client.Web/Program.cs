@@ -3,6 +3,7 @@ using Marzi.Client.Core.Interfaces;
 using Marzi.Client.Infrastructure.Extensions;
 using Marzi.Client.Infrastructure.Storage;
 using Marzi.Client.Shared.Layouts;
+using Marzi.Client.Shared.Services;
 using Marzi.Client.Shared.Theme;
 using Marzi.Client.Web.Authentication;
 using Marzi.Client.Web.Components;
@@ -14,6 +15,12 @@ using System.Security.Cryptography;
 using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
+
+// Avoid the Windows Event Log provider: on developer machines without event-log
+// write access, Data Protection key creation can fail while reporting warnings.
+builder.Logging.ClearProviders();
+builder.Logging.AddConsole();
+builder.Logging.AddDebug();
 
 builder.Services
     .AddRazorComponents()
@@ -39,6 +46,7 @@ var apiBaseUrl =
         "Api:BaseUrl is not configured.");
 
 builder.Services.AddScoped<ILocalStorage, LocalStorage>();
+builder.Services.AddScoped<ShopCartService>();
 builder.Services.AddScoped<ThemePreferenceService>();
 
 builder.Services.AddInfrastructure(apiBaseUrl);
@@ -127,7 +135,10 @@ app.MapGet("/sitemap.xml", async (IConfiguration configuration) =>
     {
         "/",
         "/courses",
-        "/portfolio"
+        "/portfolio",
+        "/shop",
+        "/about",
+        "/contact"
     };
 
     try

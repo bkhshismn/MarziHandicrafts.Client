@@ -1,0 +1,125 @@
+@page "/admin/portfolio/edit/{Id:guid}"
+@layout AdminLayout
+
+@using Marzi.Client.Infrastructure.Api
+@using Marzi.Client.Infrastructure.Services
+@using Marzi.Client.Shared.Layouts
+@using Microsoft.AspNetCore.Components.Authorization
+@using MudBlazor
+
+@inject PortfolioService PortfolioService
+@inject ICourseCategoriesApi CategoriesApi
+@inject ISnackbar Snackbar
+@inject NavigationManager Navigation
+
+<AuthorizeView Roles="Admin,Instructor">
+    <Authorized>
+        <MudContainer MaxWidth="MaxWidth.Medium" Class="py-6">
+            <MudStack Spacing="4">
+                <MudText Typo="Typo.h4">ویرایش نمونه‌کار</MudText>
+                @if (_loading)
+                {
+                    <MudProgressLinear Indeterminate="true" />
+                }
+                else if (!string.IsNullOrWhiteSpace(_error))
+                {
+                    <MudAlert Severity="Severity.Error">@_error</MudAlert>
+                    <MudButton Href="/admin/portfolio" Variant="Variant.Outlined">بازگشت</MudButton>
+                }
+                else
+                {
+                    <MudPaper Class="pa-4 pa-md-6" Elevation="1">
+                        <MudForm @ref="_form">
+                            <MudStack Spacing="3">
+                                <MudTextField T="string" @bind-Value="_title" Label="عنوان نمونه‌کار" Variant="Variant.Outlined" Required="true" MaxLength="200" />
+                                <MudSelect T="string" @bind-Value="_category" Label="دسته‌بندی" Variant="Variant.Outlined" Required="true">
+                                    @foreach (var category in _categories)
+                                    {
+                                        <MudSelectItem T="string" Value="@category">@category</MudSelectItem>
+                                    }
+                                    @if (!string.IsNullOrWhiteSpace(_category) && !_categories.Contains(_category))
+                                    {
+                                        <MudSelectItem T="string" Value="@_category">@_category</MudSelectItem>
+                                    }
+                                </MudSelect>
+                                <MudTextField T="string" @bind-Value="_description" Label="توضیحات" Variant="Variant.Outlined" Lines="5" Required="true" MaxLength="1000" />
+                                <MudCheckBox T="bool" @bind-Value="_isVisible" Label="نمایش در سایت" Color="Color.Primary" />
+                                <MudStack Row="true" Justify="Justify.SpaceBetween">
+                                    <MudButton Href="/admin/portfolio" Variant="Variant.Text">انصراف</MudButton>
+                                    <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Save" Disabled="_saving" OnClick="SaveAsync">
+                                        @(_saving ? "در حال ذخیره..." : "ذخیره تغییرات")
+                                    </MudButton>
+                                </MudStack>
+                            </MudStack>
+                        </MudForm>
+                    </MudPaper>
+                }
+            </MudStack>
+        </MudContainer>
+    </Authorized>
+    <NotAuthorized>
+        <MudAlert Severity="Severity.Error" Class="ma-6">برای ویرایش نمونه‌کار باید وارد حساب مدیر یا مربی شوید.</MudAlert>
+    </NotAuthorized>
+</AuthorizeView>
+
+@code {
+    [Parameter] public Guid Id { get; set; }
+
+    private MudForm? _form;
+    private string _title = string.Empty;
+    private string _category = string.Empty;
+    private string _description = string.Empty;
+    private List<string> _categories = [];
+    private bool _isVisible;
+    private bool _loading = true;
+    private bool _saving;
+    private string? _error;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            var categories = await CategoriesApi.ListAsync();
+            if (categories.IsSuccessStatusCode && categories.Content is not null)
+                _categories = categories.Content.Where(x => !string.IsNullOrWhiteSpace(x)).Distinct().OrderBy(x => x).ToList();
+
+            var item = await PortfolioService.GetByIdAsync(Id);
+            _title = item.Title;
+            _category = item.Category;
+            _description = item.Description;
+            _isVisible = item.IsVisible;
+        }
+        catch (Exception ex)
+        {
+            _error = ex.Message;
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+
+    private async Task SaveAsync()
+    {
+        if (_form is null) return;
+        await _form.ValidateAsync();
+        if (!_form.IsValid || string.IsNullOrWhiteSpace(_category)) return;
+
+        _saving = true;
+        try
+        {
+            await PortfolioService.UpdateAsync(Id, new PortfolioCreateRequest(
+                _title.Trim(), _category.Trim(), _description.Trim(), _isVisible));
+            Snackbar.Add("تغییرات نمونه‌کار ذخیره شد.", Severity.Success);
+            Navigation.NavigateTo("/admin/portfolio");
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add(ex.Message, Severity.Error);
+        }
+        finally
+        {
+            _saving = false;
+        }
+    }
+}

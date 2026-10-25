@@ -1,0 +1,97 @@
+@page "/shop"
+@using Marzi.Client.Shared.Services
+@using Marzi.Client.Infrastructure.Api
+@using MudBlazor
+@inject ShopCartService Cart
+@inject ISnackbar Snackbar
+
+<PageTitle>فروشگاه دست‌سازه‌های مرزی</PageTitle>
+<HeadContent>
+    <meta name="description" content="سردیس، مجسمه پاپیه‌ماشه و آثار دکوراتیو دست‌ساز کارگاه مرزی در مازندران. برای خرید، اثر را به سبد اضافه کنید و درخواست خود را ثبت کنید." />
+    <meta property="og:title" content="فروشگاه دست‌سازه‌های مرزی" />
+    <meta property="og:description" content="آثار دست‌ساز و تک‌نسخه؛ از کارگاه مرزی در جویبار." />
+</HeadContent>
+
+<main class="shop-page" dir="rtl">
+    <section class="shop-hero">
+        <div class="shop-hero-copy">
+            <span class="shop-eyebrow"><span class="shop-dot"></span> ساخته‌شده با دست، برای ماندن</span>
+            <h1>هر اثر، یک قصه‌ی یگانه</h1>
+            <p>از سردیس و پرتره تا مجسمه‌های پاپیه‌ماشه؛ دست‌سازه‌های کارگاه مرزی را ببینید و برای خرید یا ساخت، درخواستتان را بفرستید.</p>
+            <div class="shop-hero-actions">
+                <a class="shop-primary-link" href="#products">دیدن آثار <span aria-hidden="true">←</span></a>
+                <span class="shop-hero-note"><MudIcon Icon="@Icons.Material.Filled.LocalShipping" /> ارسال پس از هماهنگی با کارگاه</span>
+            </div>
+        </div>
+        <div class="shop-hero-art" role="img" aria-label="نمایی از کارگاه و ساخت اثر دست‌ساز">
+            <div class="shop-art-stamp"><span>هنر دست</span><strong>مرزی</strong></div>
+        </div>
+        <div class="shop-hero-index"><span>کارگاه هنری</span><b>جویبار، مازندران</b></div>
+    </section>
+
+    <section class="shop-trust-row" aria-label="ویژگی‌های فروشگاه">
+        <div><span class="trust-icon"><MudIcon Icon="@Icons.Material.Filled.Handyman" /></span><span><b>ساخت دست‌ساز</b><small>با صبر و جزئیات</small></span></div>
+        <div><span class="trust-icon"><MudIcon Icon="@Icons.Material.Filled.FavoriteBorder" /></span><span><b>هر اثر، خاص خودش</b><small>قطعه‌های تک‌نسخه</small></span></div>
+        <div><span class="trust-icon"><MudIcon Icon="@Icons.Material.Filled.ChatBubbleOutline" /></span><span><b>خرید با هماهنگی</b><small>پاسخ مستقیم از کارگاه</small></span></div>
+    </section>
+
+    <section id="products" class="shop-products-section">
+        <div class="shop-section-heading">
+            <div>
+                <span class="shop-kicker">دست‌سازه‌های کارگاه</span>
+                <h2>آثاری برای خانه و دل</h2>
+                <p>اثرها را به سبدتان اضافه کنید؛ درباره‌ی موجودی، زمان آماده‌سازی و قیمت نهایی با شما هماهنگ می‌کنیم.</p>
+            </div>
+            <a class="shop-cart-shortcut" href="/shop/cart"><MudIcon Icon="@Icons.Material.Filled.ShoppingCart" /> سبد خرید <span>@Cart.ItemCount</span></a>
+        </div>
+
+        <div class="shop-category-list">
+            <button class="@(string.IsNullOrEmpty(_category) ? "selected" : "")" @onclick="() => FilterBy(string.Empty)">همه‌ی آثار</button>
+            @foreach (var category in Categories)
+            {
+                <button class="@(_category == category ? "selected" : "")" @onclick="() => FilterBy(category)">@category</button>
+            }
+        </div>
+
+        <div class="shop-product-grid">
+            @foreach (var product in VisibleProducts)
+            {
+                <article class="shop-product-card" @key="product.Id">
+                    <div class="shop-product-image">
+                        <img src="@product.ImageUrl" alt="@product.Name" loading="lazy" style="object-position:@product.ImagePosition" />
+                        <span class="shop-product-badge">@product.Badge</span>
+                        <button class="shop-quick-add" title="افزودن @product.Name به سبد" aria-label="افزودن @product.Name به سبد خرید" @onclick="() => AddAsync(product)"><MudIcon Icon="@Icons.Material.Filled.AddShoppingCart" /></button>
+                    </div>
+                    <div class="shop-product-info">
+                        <div class="shop-product-category">@product.Category</div>
+                        <h3>@product.Name</h3>
+                        <p>@product.Description</p>
+                        <div class="shop-product-bottom">
+                            <span class="shop-price-hint"><MudIcon Icon="@Icons.Material.Filled.Info" /> قیمت پس از هماهنگی</span>
+                            <button class="shop-add-link" @onclick="() => AddAsync(product)">افزودن به سبد <span aria-hidden="true">←</span></button>
+                        </div>
+                    </div>
+                </article>
+            }
+        </div>
+        <div class="shop-made-note"><MudIcon Icon="@Icons.Material.Filled.AutoAwesome" /><span><b>می‌خواهید اثری ویژه‌ی خودتان داشته باشید؟</b> از صفحه‌ی سفارش ساخت، جزئیات ایده‌تان را برای هنرمند بفرستید.</span><a href="/orders">سفارش ساخت <span>←</span></a></div>
+    </section>
+</main>
+
+@code {
+    private string _category = string.Empty;
+    private string[] Categories => ShopCatalog.Products.Select(x => x.Category).Distinct().ToArray();
+    private IEnumerable<ShopProduct> VisibleProducts => string.IsNullOrEmpty(_category)
+        ? ShopCatalog.Products
+        : ShopCatalog.Products.Where(x => x.Category == _category);
+
+    protected override async Task OnInitializedAsync() => await Cart.LoadAsync();
+
+    private void FilterBy(string category) => _category = category;
+
+    private async Task AddAsync(ShopProduct product)
+    {
+        await Cart.AddAsync(product.Id);
+        Snackbar.Add($"«{product.Name}» به سبد خرید اضافه شد.", Severity.Success);
+    }
+}

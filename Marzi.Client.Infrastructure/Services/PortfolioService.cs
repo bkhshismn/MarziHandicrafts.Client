@@ -40,6 +40,20 @@ public sealed class PortfolioService
         return response.Content;
     }
 
+    public async Task UpdateAsync(Guid id, PortfolioCreateRequest request)
+    {
+        var response = await _api.UpdateAsync(id, request);
+        if (!response.IsSuccessStatusCode || response.Content is null)
+            throw new InvalidOperationException("ویرایش نمونه‌کار با خطا مواجه شد.");
+    }
+
+    public async Task DeleteAsync(Guid id)
+    {
+        var response = await _api.DeleteAsync(id);
+        if (!response.IsSuccessStatusCode)
+            throw new InvalidOperationException("حذف نمونه‌کار با خطا مواجه شد.");
+    }
+
     public async Task AddImageAsync(
         Guid portfolioId,
         string imageUrl)

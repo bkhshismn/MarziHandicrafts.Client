@@ -1,0 +1,51 @@
+@using Marzi.Client.Shared.Services
+@using MudBlazor
+@inject ShopCartService Cart
+@inject ISnackbar Snackbar
+
+<section class="home-shop" dir="rtl" aria-labelledby="home-shop-title">
+    <div class="home-shop-heading">
+        <div>
+            <span class="home-shop-eyebrow">از کارگاه مرزی</span>
+            <h2 id="home-shop-title">دست‌سازه‌هایی برای دوست‌داشتن</h2>
+            <p>هر اثر با دست و با حوصله ساخته شده؛ چند انتخاب از فروشگاه را ببینید.</p>
+        </div>
+        <a class="home-shop-all" href="/shop">دیدن همه‌ی آثار <span aria-hidden="true">←</span></a>
+    </div>
+
+    <div class="home-shop-grid">
+        @foreach (var product in FeaturedProducts)
+        {
+            <article class="home-shop-card" @key="product.Id">
+                <a class="home-shop-image" href="/shop" aria-label="دیدن @product.Name" style="--image-position:@product.ImagePosition">
+                    <img src="@product.ImageUrl" alt="@product.Name" loading="lazy" />
+                    <span>@product.Badge</span>
+                </a>
+                <div class="home-shop-info">
+                    <small>@product.Category</small>
+                    <h3>@product.Name</h3>
+                    <div class="home-shop-card-bottom">
+                        <span><MudIcon Icon="@Icons.Material.Filled.Info" /> هماهنگی قیمت</span>
+                        <button aria-label="افزودن @product.Name به سبد" @onclick="() => AddAsync(product)"><MudIcon Icon="@Icons.Material.Filled.AddShoppingCart" /> افزودن</button>
+                    </div>
+                </div>
+            </article>
+        }
+    </div>
+    <div class="home-shop-footer"><MudIcon Icon="@Icons.Material.Filled.Handyman" /><span>قیمت و امکان ارسال هر اثر پیش از نهایی‌شدن، با کارگاه هماهنگ می‌شود.</span><a href="/shop">رفتن به فروشگاه</a></div>
+</section>
+
+@code {
+    private IReadOnlyList<ShopProduct> FeaturedProducts => ShopCatalog.Products.Take(3).ToArray();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await Cart.LoadAsync();
+    }
+
+    private async Task AddAsync(ShopProduct product)
+    {
+        await Cart.AddAsync(product.Id);
+        Snackbar.Add($"«{product.Name}» به سبد خرید اضافه شد.", Severity.Success);
+    }
+}

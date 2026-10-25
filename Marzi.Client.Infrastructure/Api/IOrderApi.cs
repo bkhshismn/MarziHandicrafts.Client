@@ -39,6 +39,12 @@ public interface IOrderApi
     Task<ApiResponse<OrderDto>> CreateAsync(
         [Body] CreateOrderRequest request);
 
+    [Put("/api/orders/{id}")]
+    Task<ApiResponse<OrderDto>> UpdateByUserAsync(Guid id, [Body] CreateOrderRequest request);
+
+    [Delete("/api/orders/{id}")]
+    Task<IApiResponse> DeleteByUserAsync(Guid id);
+
 
     // ============================================================
     // Admin - Update Order
@@ -48,4 +54,7 @@ public interface IOrderApi
     Task<ApiResponse<OrderDto>> UpdateByAdminAsync(
         Guid id,
         [Body] AdminUpdateOrderRequest request);
+
+    [Delete("/api/orders/{id}/admin")]
+    Task<IApiResponse> DeleteByAdminAsync(Guid id);
 }

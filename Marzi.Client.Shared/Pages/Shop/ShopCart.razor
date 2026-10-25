@@ -1,0 +1,76 @@
+@page "/shop/cart"
+@implements IDisposable
+@using Marzi.Client.Shared.Services
+@using MudBlazor
+@inject ShopCartService Cart
+
+<PageTitle>سبد خرید | مرزی</PageTitle>
+
+<main class="cart-page" dir="rtl">
+    <a class="cart-back" href="/shop"><MudIcon Icon="@Icons.Material.Filled.ArrowForward" /> بازگشت به فروشگاه</a>
+    <header class="cart-heading">
+        <span>انتخاب‌های شما</span>
+        <h1>سبد خرید</h1>
+        <p>پیش از نهایی‌کردن، درباره‌ی قیمت و زمان آماده‌سازی هر اثر با کارگاه هماهنگ می‌کنیم.</p>
+    </header>
+
+    @if (Cart.IsEmpty)
+    {
+        <section class="cart-empty">
+            <span class="cart-empty-icon"><MudIcon Icon="@Icons.Material.Filled.ShoppingBasket" /></span>
+            <h2>سبد شما هنوز خالی است</h2>
+            <p>از میان دست‌سازه‌های کارگاه مرزی، اثری را برای خودتان انتخاب کنید.</p>
+            <a class="cart-continue" href="/shop">رفتن به فروشگاه</a>
+        </section>
+    }
+    else
+    {
+        <div class="cart-layout">
+            <section class="cart-items" aria-label="اقلام سبد خرید">
+                @foreach (var line in Cart.Items)
+                {
+                    var product = ShopCatalog.Find(line.ProductId);
+                    if (product is null) continue;
+                    <article class="cart-item" @key="line.ProductId">
+                        <img src="@product.ImageUrl" alt="@product.Name" />
+                        <div class="cart-item-info">
+                            <span>@product.Category</span>
+                            <h2>@product.Name</h2>
+                            <p>@product.Availability</p>
+                        </div>
+                        <div class="cart-item-actions">
+                            <div class="cart-quantity" aria-label="تعداد">
+                                <button aria-label="افزایش تعداد" @onclick="() => Cart.SetQuantityAsync(line.ProductId, line.Quantity + 1)"><MudIcon Icon="@Icons.Material.Filled.Add" /></button>
+                                <span>@line.Quantity</span>
+                                <button aria-label="کاهش تعداد" @onclick="() => Cart.SetQuantityAsync(line.ProductId, line.Quantity - 1)"><MudIcon Icon="@Icons.Material.Filled.Remove" /></button>
+                            </div>
+                            <button class="cart-remove" @onclick="() => Cart.RemoveAsync(line.ProductId)"><MudIcon Icon="@Icons.Material.Filled.DeleteOutline" /> حذف</button>
+                        </div>
+                    </article>
+                }
+                <a class="cart-keep-shopping" href="/shop"><MudIcon Icon="@Icons.Material.Filled.Add" /> افزودن اثرهای دیگر</a>
+            </section>
+
+            <aside class="cart-summary">
+                <span class="summary-eyebrow">گام بعدی</span>
+                <h2>ثبت درخواست خرید</h2>
+                <div class="summary-count"><span>تعداد اثرها</span><b>@Cart.ItemCount</b></div>
+                <div class="summary-price"><span>مبلغ نهایی</span><b>پس از هماهنگی</b></div>
+                <p>قیمت و امکان ارسال هر اثر پس از بررسی کارگاه با شما هماهنگ می‌شود؛ فعلاً مبلغی از شما دریافت نمی‌شود.</p>
+                <a class="summary-button" href="/shop/checkout">ادامه و واردکردن نشانی <MudIcon Icon="@Icons.Material.Filled.ArrowBack" /></a>
+                <div class="summary-secure"><MudIcon Icon="@Icons.Material.Filled.VerifiedUser" /> اطلاعات شما فقط برای پیگیری این درخواست است.</div>
+            </aside>
+        </div>
+    }
+</main>
+
+@code {
+    protected override async Task OnInitializedAsync()
+    {
+        Cart.Changed += OnCartChanged;
+        await Cart.LoadAsync();
+    }
+
+    private void OnCartChanged() => _ = InvokeAsync(StateHasChanged);
+    public void Dispose() => Cart.Changed -= OnCartChanged;
+}

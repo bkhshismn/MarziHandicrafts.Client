@@ -53,7 +53,7 @@
                                 <MudText Typo="Typo.caption" Color="Color.Secondary">شماره همراه</MudText>
                                 <MudText Typo="Typo.body1" dir="ltr" Align="Align.Center">@_profile.Phone</MudText>
                                 <MudText Typo="Typo.caption" Color="Color.Secondary" Class="mt-3">عضویت از</MudText>
-                                <MudText Typo="Typo.body1" Align="Align.Center">@_profile.CreatedAt.ToLocalTime().ToString("yyyy/MM/dd")</MudText>
+                                <MudText Typo="Typo.body1" Align="Align.Center">@PersianDateFormatter.Format(_profile.CreatedAt.ToLocalTime(), includeTime: false)</MudText>
                                 <MudText Typo="Typo.caption" Color="Color.Secondary" Class="mt-3">وضعیت حساب</MudText>
                                 <MudText Typo="Typo.body1" Align="Align.Center">
                                     @(_profile.IsActive ? "فعال" : "غیرفعال")

@@ -1,0 +1,157 @@
+﻿@using Marzi.Client.Infrastructure.Api
+@implements IAsyncDisposable
+@inject IAdminNotificationsApi NotificationsApi
+@inject NavigationManager Navigation
+
+<div class="admin-notification-center">
+    <MudBadge Content="@_unreadCount" Visible="@(_unreadCount > 0)" Color="Color.Error" Overlap="true">
+        <MudIconButton Icon="@Icons.Material.Filled.Notifications"
+                       Color="Color.Inherit"
+                       title="اعلان‌های مدیریت"
+                       OnClick="TogglePanelAsync" />
+    </MudBadge>
+
+    @if (_panelOpen)
+    {
+        <div class="admin-notification-backdrop" @onclick="ClosePanel"></div>
+        <MudPaper Class="admin-notification-panel" Elevation="8">
+            <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Class="pa-3">
+                <MudText Typo="Typo.subtitle1">اعلان‌های سایت</MudText>
+                <MudIconButton Icon="@Icons.Material.Filled.Close" Size="Size.Small" title="بستن" OnClick="ClosePanel" />
+            </MudStack>
+            <MudDivider />
+            @if (_loading)
+            {
+                <div class="admin-notification-empty">در حال دریافت اعلان‌ها…</div>
+            }
+            else if (_loadFailed)
+            {
+                <div class="admin-notification-empty">دریافت اعلان‌ها ناموفق بود. لطفاً دوباره تلاش کنید.</div>
+                <MudButton Variant="Variant.Text" Color="Color.Primary" Class="mx-auto mb-2" OnClick="ReloadAsync">تلاش دوباره</MudButton>
+            }
+            else if (_notifications.Count == 0)
+            {
+                <div class="admin-notification-empty">اعلان تازه‌ای ندارید.</div>
+            }
+            else
+            {
+                @foreach (var item in _notifications)
+                {
+                    <button type="button" class="admin-notification-item" @onclick="() => OpenNotification(item)">
+                        <MudIcon Icon="@GetIcon(item.Title)" Color="Color.Primary" />
+                        <span>
+                            <strong>@item.Title</strong>
+                            <small>@item.Message</small>
+                            <small>@PersianDateFormatter.Format(item.CreatedAt.ToLocalTime())</small>
+                        </span>
+                    </button>
+                }
+            }
+        </MudPaper>
+    }
+</div>
+
+@code {
+    private readonly CancellationTokenSource _stop = new();
+    private List<AdminNotificationDto> _notifications = [];
+    private Task? _pollTask;
+    private bool _panelOpen;
+    private bool _loadFailed;
+    private bool _loading = true;
+    private int _unreadCount;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await PollAsync();
+        _pollTask = PollContinuouslyAsync(_stop.Token);
+    }
+
+    private async Task PollContinuouslyAsync(CancellationToken cancellationToken)
+    {
+        using var timer = new PeriodicTimer(TimeSpan.FromSeconds(30));
+        try
+        {
+            while (await timer.WaitForNextTickAsync(cancellationToken))
+            {
+                await PollAsync();
+                await InvokeAsync(StateHasChanged);
+            }
+        }
+        catch (OperationCanceledException) { }
+    }
+
+    private async Task PollAsync(bool forceRefresh = false)
+    {
+        try
+        {
+            var response = await NotificationsApi.GetUnreadAsync();
+            if (!response.IsSuccessStatusCode || response.Content is null)
+            {
+                _loadFailed = _notifications.Count == 0;
+                _loading = false;
+                return;
+            }
+
+            _unreadCount = response.Content.Count;
+            if (!_panelOpen || forceRefresh)
+                _notifications = response.Content.OrderByDescending(x => x.CreatedAt).ToList();
+            _loadFailed = false;
+            _loading = false;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[NOTIFICATIONS] Poll failed: {ex.Message}");
+            _loadFailed = _notifications.Count == 0;
+            _loading = false;
+        }
+    }
+
+    private async Task TogglePanelAsync()
+    {
+        _panelOpen = !_panelOpen;
+        if (!_panelOpen) return;
+
+        _loading = true;
+        await PollAsync(forceRefresh: true);
+
+        try
+        {
+            await NotificationsApi.MarkAllReadAsync();
+            _unreadCount = 0;
+        }
+        catch (Exception ex) { Console.WriteLine($"[NOTIFICATIONS] Mark read failed: {ex.Message}"); }
+    }
+
+    private void ClosePanel() => _panelOpen = false;
+
+    private async Task ReloadAsync()
+    {
+        _loading = true;
+        await PollAsync(forceRefresh: true);
+    }
+
+    private void OpenNotification(AdminNotificationDto item)
+    {
+        _panelOpen = false;
+        Navigation.NavigateTo(item.TargetUrl);
+    }
+
+    private static string GetIcon(string title) => title switch
+    {
+        "پیام تازه" => Icons.Material.Filled.Chat,
+        "سفارش جدید" => Icons.Material.Filled.ShoppingCart,
+        "ورود کاربر" => Icons.Material.Filled.Login,
+        "ثبت‌نام جدید" => Icons.Material.Filled.PersonAdd,
+        _ => Icons.Material.Filled.Notifications
+    };
+
+    public async ValueTask DisposeAsync()
+    {
+        await _stop.CancelAsync();
+        if (_pollTask is not null)
+        {
+            try { await _pollTask; } catch (OperationCanceledException) { }
+        }
+        _stop.Dispose();
+    }
+}

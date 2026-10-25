@@ -5,12 +5,14 @@
 @using Marzi.Client.Infrastructure.Services
 @using Marzi.Client.Shared.Components.Common
 @using Marzi.Client.Shared.Components.Cards
+@using Marzi.Client.Shared.Components.Shop
 
 @inject CourseService CourseService
 @inject PortfolioService PortfolioService
 @inject ISnackbar Snackbar
 
-<PageTitle>Marzi Handicrafts</PageTitle>
+<SeoHead Title="مرزی | هنرهای دستی مازندران و سفارش ساخت" Path="/"
+         Description="ساخت آثار هنری دست‌ساز در جویبار، مازندران؛ پاپیه‌ماشه، سردیس و پرتره، ماسک و مجسمه‌های دکوراتیو. سفارش ساخت اثر و مشاهده نمونه‌کارها." />
 
 <HeroBanner />
 
@@ -100,6 +102,8 @@ else
 
     </MudGrid>
 }
+
+<FeaturedShopProducts />
 
 <MudPaper Class="pa-5 order-cta"
           Elevation="1">

@@ -50,7 +50,7 @@
 
             <MudText Typo="Typo.body2">
 
-                @Item.CreatedAt.ToString("yyyy/MM/dd")
+                @PersianDateFormatter.Format(Item.CreatedAt, includeTime: false)
 
             </MudText>
 

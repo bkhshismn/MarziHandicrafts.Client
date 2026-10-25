@@ -1,0 +1,134 @@
+﻿@using Marzi.Client.Infrastructure.Api
+@implements IAsyncDisposable
+@inject IUserNotificationsApi NotificationsApi
+@inject NavigationManager Navigation
+
+<div class="admin-notification-center">
+    <MudBadge Content="@_count" Visible="@(_count > 0)" Color="Color.Error" Overlap="true">
+        <MudIconButton Icon="@Icons.Material.Filled.Notifications" Color="Color.Inherit" title="اعلان‌های سفارش" OnClick="ToggleAsync" />
+    </MudBadge>
+    @if (_open)
+    {
+        <div class="admin-notification-backdrop" @onclick="Close"></div>
+        <MudPaper Class="admin-notification-panel" Elevation="8">
+            <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Class="pa-3">
+                <MudText Typo="Typo.subtitle1">اعلان‌های سفارش</MudText>
+                <MudIconButton Icon="@Icons.Material.Filled.Close" Size="Size.Small" title="بستن" OnClick="Close" />
+            </MudStack>
+            <MudDivider />
+            @if (_loading)
+            {
+                <div class="admin-notification-empty">در حال دریافت اعلان‌ها…</div>
+            }
+            else if (_loadFailed)
+            {
+                <div class="admin-notification-empty">دریافت اعلان‌ها ناموفق بود. لطفاً دوباره تلاش کنید.</div>
+                <MudButton Variant="Variant.Text" Color="Color.Primary" Class="mx-auto mb-2" OnClick="ReloadAsync">تلاش دوباره</MudButton>
+            }
+            else if (_items.Count == 0)
+            {
+                <div class="admin-notification-empty">اعلان تازه‌ای ندارید.</div>
+            }
+            else
+            {
+                @foreach (var item in _items)
+                {
+                    <button type="button" class="admin-notification-item" @onclick="() => Open(item)">
+                        <MudIcon Icon="@Icons.Material.Filled.ShoppingBag" Color="Color.Primary" />
+                        <span>
+                            <strong>@item.Title</strong>
+                            <small>@item.Message</small>
+                            <small>@PersianDateFormatter.Format(item.CreatedAt.ToLocalTime())</small>
+                        </span>
+                    </button>
+                }
+            }
+        </MudPaper>
+    }
+</div>
+
+@code {
+    private readonly CancellationTokenSource _stop = new();
+    private List<AdminNotificationDto> _items = [];
+    private bool _open;
+    private bool _loadFailed;
+    private bool _loading = true;
+    private int _count;
+    private Task? _poll;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await PollAsync();
+        _poll = PollLoopAsync(_stop.Token);
+    }
+
+    private async Task PollLoopAsync(CancellationToken token)
+    {
+        using var timer = new PeriodicTimer(TimeSpan.FromSeconds(30));
+        try
+        {
+            while (await timer.WaitForNextTickAsync(token))
+            {
+                await PollAsync();
+                await InvokeAsync(StateHasChanged);
+            }
+        }
+        catch (OperationCanceledException) { }
+    }
+
+    private async Task PollAsync(bool forceRefresh = false)
+    {
+        try
+        {
+            var response = await NotificationsApi.GetUnreadAsync();
+            if (!response.IsSuccessStatusCode || response.Content is null)
+            {
+                _loadFailed = _items.Count == 0;
+                _loading = false;
+                return;
+            }
+
+            if (!_open || forceRefresh)
+                _items = response.Content.OrderByDescending(x => x.CreatedAt).ToList();
+            _count = response.Content.Count;
+            _loadFailed = false;
+            _loading = false;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[USER NOTIFICATIONS] Poll failed: {ex.Message}");
+            _loadFailed = _items.Count == 0;
+            _loading = false;
+        }
+    }
+
+    private async Task ToggleAsync()
+    {
+        _open = !_open;
+        if (!_open) return;
+        _loading = true;
+        await PollAsync(forceRefresh: true);
+        try
+        {
+            await NotificationsApi.MarkAllReadAsync();
+            _count = 0;
+        }
+        catch (Exception ex) { Console.WriteLine($"[USER NOTIFICATIONS] Mark read failed: {ex.Message}"); }
+    }
+
+    private void Close() => _open = false;
+    private void Open(AdminNotificationDto item) { _open = false; Navigation.NavigateTo(item.TargetUrl); }
+
+    private async Task ReloadAsync()
+    {
+        _loading = true;
+        await PollAsync(forceRefresh: true);
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        await _stop.CancelAsync();
+        if (_poll is not null) try { await _poll; } catch (OperationCanceledException) { }
+        _stop.Dispose();
+    }
+}

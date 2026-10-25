@@ -1,0 +1,123 @@
+@page "/shop/checkout"
+@using Marzi.Client.Shared.Services
+@using Microsoft.AspNetCore.Components.Authorization
+@using MudBlazor
+@inject ShopCartService Cart
+@inject NavigationManager Navigation
+@inject AuthenticationStateProvider Authentication
+
+<PageTitle>تکمیل درخواست خرید | مرزی</PageTitle>
+
+<main class="checkout-page" dir="rtl">
+    <a class="checkout-back" href="/shop/cart"><MudIcon Icon="@Icons.Material.Filled.ArrowForward" /> بازگشت به سبد</a>
+    <header class="checkout-heading"><span>فروشگاه مرزی</span><h1>تکمیل درخواست خرید</h1><p>مشخصات ارسال را وارد کنید؛ در گام آخر حساب می‌سازید یا وارد می‌شوید.</p></header>
+    <div class="checkout-steps" aria-label="مراحل خرید">
+        <div class="@( _step >= 1 ? "active" : "")"><b>۱</b><span>نشانی تحویل</span></div><i></i><div class="@(_step >= 2 ? "active" : "")"><b>۲</b><span>مرور درخواست</span></div><i></i><div class="@(_step >= 3 ? "active" : "")"><b>۳</b><span>ساخت حساب</span></div>
+    </div>
+
+    @if (!_ready)
+    {
+        <section class="checkout-empty"><MudProgressCircular Indeterminate="true" Color="Color.Primary" /><p>در حال آماده‌سازی…</p></section>
+    }
+    else if (_empty)
+    {
+        <section class="checkout-empty"><h2>سبد خرید خالی است</h2><a href="/shop">دیدن دست‌سازه‌ها</a></section>
+    }
+    else if (_step == 1)
+    {
+        <div class="checkout-grid">
+            <section class="checkout-form-card">
+                <div class="checkout-card-title"><span class="checkout-title-icon"><MudIcon Icon="@Icons.Material.Filled.LocalShipping" /></span><div><h2>نشانی دریافت اثر</h2><p>بعداً برای هماهنگی ارسال با شما تماس می‌گیریم.</p></div></div>
+                <MudForm @ref="_form">
+                    <div class="checkout-fields">
+                        <MudTextField T="string" @bind-Value="_details.FullName" Label="نام و نام خانوادگی" Variant="Variant.Outlined" Required="true" RequiredError="نام گیرنده را وارد کنید." MaxLength="100" />
+                        <MudTextField T="string" @bind-Value="_details.Phone" Label="شماره موبایل" Variant="Variant.Outlined" InputType="InputType.Telephone" Required="true" RequiredError="شماره تماس را وارد کنید." Validation="@((string value) => ValidatePhone(value))" />
+                        <MudTextField T="string" @bind-Value="_details.Province" Label="استان" Variant="Variant.Outlined" Required="true" RequiredError="استان را وارد کنید." />
+                        <MudTextField T="string" @bind-Value="_details.City" Label="شهر" Variant="Variant.Outlined" Required="true" RequiredError="شهر را وارد کنید." />
+                        <MudTextField T="string" @bind-Value="_details.Address" Label="نشانی کامل" Variant="Variant.Outlined" Required="true" RequiredError="نشانی را وارد کنید." Lines="3" Class="field-wide" />
+                        <MudTextField T="string" @bind-Value="_details.PostalCode" Label="کد پستی (اختیاری)" Variant="Variant.Outlined" InputType="InputType.Number" />
+                        <MudTextField T="string" @bind-Value="_details.Notes" Label="توضیحات تحویل (اختیاری)" Variant="Variant.Outlined" Lines="2" Class="field-wide" />
+                    </div>
+                </MudForm>
+                <div class="checkout-form-actions"><a href="/shop/cart">بازگشت به سبد</a><button @onclick="ContinueToReviewAsync">مرور درخواست <MudIcon Icon="@Icons.Material.Filled.ArrowBack" /></button></div>
+            </section>
+            <aside class="checkout-side-card"><span class="checkout-mini-label">خلاصه‌ی سبد</span><h2>@Cart.ItemCount اثر انتخاب‌شده</h2><div class="checkout-item-list">
+                    @foreach (var line in Cart.Items)
+                    {
+                        var product = ShopCatalog.Find(line.ProductId);
+                        if (product is null) continue;
+                        <div class="checkout-mini-item"><img src="@product.ImageUrl" alt="" /><span>@product.Name <small>تعداد: @line.Quantity</small></span></div>
+                    }
+                </div><div class="checkout-price-row"><span>قیمت و هزینه‌ی ارسال</span><b>پس از هماهنگی</b></div><p>اطلاعات شما ذخیره می‌شود تا درخواست خرید را با کارگاه ادامه دهید.</p></aside>
+        </div>
+    }
+    else if (_step == 2)
+    {
+        <section class="checkout-review-card">
+            <div class="checkout-card-title"><span class="checkout-title-icon"><MudIcon Icon="@Icons.Material.Filled.FactCheck" /></span><div><h2>مرور اطلاعات</h2><p>اگر همه‌چیز درست است، به گام نهایی بروید.</p></div></div>
+            <div class="review-data"><div><span>گیرنده</span><b>@_details.FullName</b></div><div><span>موبایل</span><b dir="ltr">@_details.Phone</b></div><div><span>نشانی</span><b>@_details.Province، @_details.City، @_details.Address</b></div>@if (!string.IsNullOrWhiteSpace(_details.PostalCode)){<div><span>کد پستی</span><b>@_details.PostalCode</b></div>}</div>
+            <div class="review-items"><h3>آثار انتخاب‌شده</h3>@foreach (var line in Cart.Items){var product=ShopCatalog.Find(line.ProductId);if(product is not null){<div><span>@product.Name</span><b>× @line.Quantity</b></div>}}</div>
+            <div class="review-notice"><MudIcon Icon="@Icons.Material.Filled.Info" /><span>قیمت قطعی، موجودی و روش ارسال قبل از دریافت هرگونه وجه با شما هماهنگ می‌شود.</span></div>
+            <div class="checkout-form-actions"><button class="secondary-action" @onclick="() => _step = 1">ویرایش نشانی</button><button @onclick="ContinueToAccountAsync">ادامه به گام نهایی <MudIcon Icon="@Icons.Material.Filled.ArrowBack" /></button></div>
+        </section>
+    }
+    else
+    {
+        <section class="checkout-account-card">
+            <span class="account-card-icon"><MudIcon Icon="@Icons.Material.Filled.PersonAddAlt1" /></span>
+            <span class="checkout-mini-label">گام آخر</span>
+            <h2>برای پیگیری درخواست، حساب بسازید</h2>
+            <p>سبد خرید و نشانی شما حفظ شده‌اند. پس از ثبت‌نام، درخواست فعال‌سازی برای مدیر ارسال می‌شود؛ با تأیید حساب می‌توانید پیگیری را ادامه دهید.</p>
+            <div class="account-next-actions"><MudButton Href="/register?from=shop" Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.PersonAdd">ثبت‌نام و ادامه</MudButton><MudButton Href="/login?returnUrl=%2Fshop%2Fcheckout%3Fresume%3D1" Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Login">ورود به حساب</MudButton></div>
+            <div class="checkout-payment-note"><MudIcon Icon="@Icons.Material.Filled.LockOpen" /><span>درخواست خرید هنوز ثبت یا پرداخت نشده است. مبلغ و امکان ارسال پس از هماهنگی کارگاه مشخص می‌شود.</span></div>
+            <button class="account-edit-button" @onclick="() => _step = 2">بازبینی اطلاعات و سبد</button>
+        </section>
+    }
+</main>
+
+@code {
+    [SupplyParameterFromQuery(Name = "resume")] public string? Resume { get; set; }
+    private MudForm? _form;
+    private ShopCheckoutDetails _details = new();
+    private int _step = 1;
+    private bool _empty;
+    private bool _ready;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender) return;
+        await Cart.LoadAsync();
+        _empty = Cart.IsEmpty;
+        if (!_empty)
+        {
+            _details = await Cart.GetCheckoutAsync();
+            if (Resume == "1") _step = 3;
+            var state = await Authentication.GetAuthenticationStateAsync();
+            if (state.User.Identity?.IsAuthenticated == true && Resume == "1") _step = 3;
+        }
+        _ready = true;
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private static string? ValidatePhone(string value)
+    {
+        var digits = new string((value ?? string.Empty).Where(char.IsDigit).Select(c => c switch { >= '۰' and <= '۹' => (char)('0' + c - '۰'), >= '٠' and <= '٩' => (char)('0' + c - '٠'), _ => c }).ToArray());
+        return digits.Length == 11 && digits.StartsWith("09", StringComparison.Ordinal) ? null : "شماره موبایل باید ۱۱ رقم و با ۰۹ شروع شود.";
+    }
+
+    private async Task ContinueToReviewAsync()
+    {
+        if (_form is null) return;
+        await _form.ValidateAsync();
+        if (!_form.IsValid) return;
+        _details.FullName = _details.FullName.Trim();
+        await Cart.SaveCheckoutAsync(_details);
+        _step = 2;
+    }
+
+    private async Task ContinueToAccountAsync()
+    {
+        await Cart.SaveCheckoutAsync(_details);
+        _step = 3;
+    }
+}

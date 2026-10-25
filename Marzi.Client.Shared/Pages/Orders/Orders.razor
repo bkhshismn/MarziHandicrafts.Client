@@ -10,6 +10,7 @@
 @inject OrderService OrderService
 @inject MediaService MediaService
 @inject AuthenticationStateProvider AuthenticationStateProvider
+@inject Microsoft.JSInterop.IJSRuntime JS
 
 <MudContainer MaxWidth="MaxWidth.Large" Class="py-6">
 
@@ -219,6 +220,13 @@
 
                             </div>
                         }
+                        else if (!string.IsNullOrWhiteSpace(_ordersLoadError))
+                        {
+                            <MudAlert Severity="Severity.Error" Variant="Variant.Outlined" Class="ma-2">
+                                @_ordersLoadError
+                            </MudAlert>
+                            <MudButton Variant="Variant.Text" OnClick="LoadOrders">تلاش دوباره</MudButton>
+                        }
                         else if (_orders.Count == 0)
                         {
                             <MudText Typo="Typo.body2"
@@ -291,10 +299,26 @@
                                                  Class="d-block mt-1">
 
                                             ثبت شده در:
-                                            @(order.CreatedAt.ToLocalTime()
-                                                .ToString("yyyy/MM/dd HH:mm"))
+                                            @(order.CreatedAt == default
+                                                ? "تاریخ نامشخص"
+                                                : PersianDateFormatter.Format(order.CreatedAt.ToLocalTime()))
 
                                         </MudText>
+
+                                        @if (_editingOrderId == order.Id)
+                                        {
+                                            <MudTextField T="string" Label="نوع اثر" @bind-Value="_editType" Variant="Variant.Outlined" Class="mt-2" />
+                                            <MudTextField T="string" Label="توضیحات" @bind-Value="_editDescription" Variant="Variant.Outlined" Lines="3" />
+                                            <MudStack Row="true" Class="mt-2">
+                                                <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="SaveOrderEditAsync" Disabled="_savingEdit">ذخیره</MudButton>
+                                                <MudButton Variant="Variant.Text" OnClick="CancelOrderEdit">انصراف</MudButton>
+                                            </MudStack>
+                                        }
+                                        else
+                                        {
+                                            <MudButton Size="Size.Small" StartIcon="@Icons.Material.Filled.Edit" OnClick="() => BeginOrderEdit(order)">ویرایش</MudButton>
+                                            <MudButton Size="Size.Small" Color="Color.Error" StartIcon="@Icons.Material.Filled.Delete" OnClick="() => DeleteOrderAsync(order)">حذف</MudButton>
+                                        }
 
                                     </MudPaper>
                                 }
@@ -331,6 +355,48 @@
     private bool _submitSuccess;
 
     private string? _submitError;
+    private string? _ordersLoadError;
+    private Guid? _editingOrderId;
+    private string _editType = string.Empty;
+    private string _editDescription = string.Empty;
+    private bool _savingEdit;
+    private string? _editImageUrl;
+
+    private void BeginOrderEdit(OrderDto order)
+    {
+        _editingOrderId = order.Id;
+        _editType = order.Type;
+        _editDescription = order.Description;
+        _editImageUrl = order.ImageUrl;
+    }
+
+    private void CancelOrderEdit() => _editingOrderId = null;
+
+    private async Task SaveOrderEditAsync()
+    {
+        if (_editingOrderId is not Guid id || string.IsNullOrWhiteSpace(_editType) || string.IsNullOrWhiteSpace(_editDescription)) return;
+        _savingEdit = true;
+        try
+        {
+            var updated = await OrderService.UpdateByUserAsync(id, new CreateOrderRequest { Type = _editType.Trim(), Description = _editDescription.Trim(), ImageUrl = _editImageUrl });
+            var index = _orders.FindIndex(item => item.Id == id);
+            if (index >= 0) _orders[index] = updated;
+            _editingOrderId = null;
+        }
+        catch (Exception ex) { Console.WriteLine($"[ORDERS] Update failed: {ex.Message}"); }
+        finally { _savingEdit = false; }
+    }
+
+    private async Task DeleteOrderAsync(OrderDto order)
+    {
+        if (!await JS.InvokeAsync<bool>("confirm", new object?[] { "این سفارش برای همیشه حذف شود؟" })) return;
+        try
+        {
+            await OrderService.DeleteByUserAsync(order.Id);
+            _orders.RemoveAll(item => item.Id == order.Id);
+        }
+        catch (Exception ex) { Console.WriteLine($"[ORDERS] Delete failed: {ex.Message}"); }
+    }
 
 
     protected override async Task OnInitializedAsync()
@@ -346,6 +412,7 @@
     private async Task LoadOrders()
     {
         _loadingOrders = true;
+        _ordersLoadError = null;
 
         try
         {
@@ -373,6 +440,7 @@
             {
                 Console.WriteLine(
                     "[ORDERS] UserId claim not found.");
+                _ordersLoadError = "شناسه حساب کاربری از نشست ورود دریافت نشد. یک بار خارج و دوباره وارد شوید.";
 
                 return;
             }
@@ -391,6 +459,7 @@
         {
             Console.WriteLine(
                 $"[ORDERS] Load failed: {ex}");
+            _ordersLoadError = "دریافت سفارش‌ها ناموفق بود. اتصال را بررسی کنید و دوباره تلاش کنید.";
         }
         finally
         {

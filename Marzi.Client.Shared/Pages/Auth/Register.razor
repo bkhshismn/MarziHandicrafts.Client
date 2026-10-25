@@ -1,0 +1,124 @@
+@page "/register"
+@using Marzi.Client.Core.Requests
+@using Marzi.Client.Infrastructure.Services
+@using Microsoft.AspNetCore.Components.Web
+@inject AuthService AuthService
+@inject ISnackbar Snackbar
+@inject NavigationManager Navigation
+
+<PageTitle>ثبت‌نام کاربر | مرزی</PageTitle>
+<HeadContent><meta name="robots" content="noindex, nofollow" /></HeadContent>
+
+<MudContainer MaxWidth="MaxWidth.Small" Class="py-8">
+    <MudPaper Class="pa-6" Elevation="3">
+        @if (_submitted)
+        {
+            <MudAlert Severity="Severity.Success" Variant="Variant.Outlined" Class="mb-4">
+                درخواست ثبت‌نام شما ثبت شد. پس از تأیید دسترسی توسط مدیر، می‌توانید وارد حساب شوید.
+            </MudAlert>
+            @if (FromShop)
+            {
+                <MudAlert Severity="Severity.Info" Variant="Variant.Outlined" Class="mb-4">
+                    سبد خرید و نشانی شما حفظ شده است. درخواست دسترسی پس از تأیید مدیر فعال می‌شود.
+                </MudAlert>
+                <MudButton Href="/shop/checkout?resume=1" Color="Color.Primary" Variant="Variant.Filled" FullWidth="true" Class="mb-3">بازگشت به درخواست خرید</MudButton>
+            }
+            <MudButton Href="/login" Color="Color.Primary" Variant="Variant.Filled" FullWidth="true">رفتن به صفحهٔ ورود</MudButton>
+        }
+        else
+        {
+            <MudText Typo="Typo.h5" Align="Align.Center" Class="mb-2">ساخت حساب کاربری</MudText>
+            <MudText Typo="Typo.body2" Align="Align.Center" Color="Color.Secondary" Class="mb-5">
+                درخواست شما برای فعال‌سازی حساب به مدیر سایت ارسال می‌شود.
+            </MudText>
+
+            <MudForm @ref="_form">
+                <MudTextField T="string" @bind-Value="_request.Name" Label="نام و نام خانوادگی"
+                              Variant="Variant.Outlined" Required="true" RequiredError="نام را وارد کنید."
+                              MaxLength="100" Class="mb-3" />
+                <MudTextField T="string" @bind-Value="_request.Phone" Label="شماره موبایل"
+                              Variant="Variant.Outlined" InputType="InputType.Telephone" Required="true"
+                              RequiredError="شماره موبایل را وارد کنید." Validation="@((string value) => ValidatePhone(value))"
+                              Class="mb-3" />
+                <MudTextField T="string" @bind-Value="_request.Password" Label="رمز عبور"
+                              Variant="Variant.Outlined" InputType="InputType.Password" Required="true"
+                              RequiredError="رمز عبور را وارد کنید." Validation="@((string value) => ValidatePassword(value))"
+                              Class="mb-3" />
+                <MudTextField T="string" @bind-Value="_confirmPassword" Label="تکرار رمز عبور"
+                              Variant="Variant.Outlined" InputType="InputType.Password" Required="true"
+                              RequiredError="رمز را دوباره وارد کنید." Validation="@((string value) => ValidateConfirmPassword(value))"
+                              Class="mb-3" />
+                <MudButton Color="Color.Primary" Variant="Variant.Filled" Size="Size.Large" FullWidth="true"
+                           Disabled="_busy" OnClick="SubmitAsync">
+                    @(_busy ? "در حال ثبت…" : "ثبت‌نام و ارسال درخواست دسترسی")
+                </MudButton>
+            </MudForm>
+
+            <MudText Typo="Typo.body2" Align="Align.Center" Class="mt-4">
+                قبلاً حساب ساخته‌اید؟ <MudLink Href="/login">ورود</MudLink>
+            </MudText>
+        }
+    </MudPaper>
+</MudContainer>
+
+@code {
+    [SupplyParameterFromQuery(Name = "from")]
+    public string? From { get; set; }
+
+    private bool FromShop => string.Equals(From, "shop", StringComparison.OrdinalIgnoreCase);
+    private MudForm? _form;
+    private readonly RegisterRequest _request = new();
+    private string _confirmPassword = string.Empty;
+    private bool _busy;
+    private bool _submitted;
+
+    private static string? ValidatePhone(string value)
+    {
+        var digits = NormalizePhone(value);
+        return digits.Length == 11 && digits.StartsWith("09", StringComparison.Ordinal)
+            ? null
+            : "شماره موبایل باید با 09 شروع شود و ۱۱ رقم باشد.";
+    }
+
+    private static string? ValidatePassword(string value) =>
+        (value?.Length ?? 0) >= 8 ? null : "رمز عبور باید حداقل ۸ نویسه باشد.";
+
+    private string? ValidateConfirmPassword(string value) =>
+        value == _request.Password ? null : "تکرار رمز عبور با رمز واردشده یکسان نیست.";
+
+    private async Task SubmitAsync()
+    {
+        if (_form is null) return;
+        await _form.ValidateAsync();
+        if (!_form.IsValid) return;
+
+        _busy = true;
+        try
+        {
+            _request.Phone = NormalizePhone(_request.Phone);
+            _request.Name = _request.Name.Trim();
+            var success = await AuthService.RegisterAsync(_request);
+            if (!success)
+            {
+                Snackbar.Add(AuthService.LastErrorMessage ?? "ثبت درخواست انجام نشد؛ شماره موبایل را بررسی کنید.", Severity.Error);
+                return;
+            }
+
+            _submitted = true;
+            Snackbar.Add("درخواست ثبت‌نام برای تأیید مدیر ارسال شد.", Severity.Success);
+        }
+        finally
+        {
+            _busy = false;
+        }
+    }
+
+    private static string NormalizePhone(string? value) => new((value ?? string.Empty)
+        .Where(char.IsDigit)
+        .Select(c => c switch
+        {
+            >= '۰' and <= '۹' => (char)('0' + c - '۰'),
+            >= '٠' and <= '٩' => (char)('0' + c - '٠'),
+            _ => c
+        }).ToArray());
+}

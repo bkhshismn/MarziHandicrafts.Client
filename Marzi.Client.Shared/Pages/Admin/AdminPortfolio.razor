@@ -5,9 +5,12 @@
 @using Marzi.Client.Infrastructure.Services
 @using Marzi.Client.Shared.Layouts
 @using Microsoft.AspNetCore.Components.Authorization
+@using Microsoft.JSInterop
 @using MudBlazor
 
 @inject PortfolioService PortfolioService
+@inject ISnackbar Snackbar
+@inject IJSRuntime JS
 
 <AuthorizeView Roles="Admin,Instructor">
     <Authorized>
@@ -106,6 +109,24 @@
                                                     مشاهده
                                                 </MudButton>
                                             </MudStack>
+                                            <MudDivider />
+                                            <MudStack Row="true" Spacing="2">
+                                                <MudButton Href="@($"/admin/portfolio/edit/{item.Id}")"
+                                                           Variant="Variant.Outlined"
+                                                           Color="Color.Primary"
+                                                           StartIcon="@Icons.Material.Filled.Edit"
+                                                           FullWidth="true">
+                                                    ویرایش
+                                                </MudButton>
+                                                <MudButton Variant="Variant.Outlined"
+                                                           Color="Color.Error"
+                                                           StartIcon="@Icons.Material.Filled.Delete"
+                                                           Disabled="@_deleting.Contains(item.Id)"
+                                                           OnClick="@(() => DeleteItemAsync(item))"
+                                                           FullWidth="true">
+                                                    حذف
+                                                </MudButton>
+                                            </MudStack>
                                         </MudStack>
                                     </MudCardContent>
                                 </MudCard>
@@ -135,6 +156,7 @@
     private IReadOnlyList<PortfolioItemDto> _items = [];
     private bool _loading = true;
     private string? _error;
+    private readonly HashSet<Guid> _deleting = [];
 
     protected override Task OnInitializedAsync() => LoadItemsAsync();
 
@@ -154,6 +176,28 @@
         finally
         {
             _loading = false;
+        }
+    }
+
+    private async Task DeleteItemAsync(PortfolioItemDto item)
+    {
+        var confirmed = await JS.InvokeAsync<bool>("confirm", $"نمونه‌کار «{item.Title}» حذف شود؟ این کار برگشت‌پذیر نیست.");
+        if (!confirmed) return;
+
+        _deleting.Add(item.Id);
+        try
+        {
+            await PortfolioService.DeleteAsync(item.Id);
+            _items = _items.Where(x => x.Id != item.Id).ToList();
+            Snackbar.Add("نمونه‌کار حذف شد.", Severity.Success);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add(ex.Message, Severity.Error);
+        }
+        finally
+        {
+            _deleting.Remove(item.Id);
         }
     }
 

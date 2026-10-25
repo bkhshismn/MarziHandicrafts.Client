@@ -1,0 +1,19 @@
+@using Microsoft.AspNetCore.Components.Web
+
+<PageTitle>@Title</PageTitle>
+<HeadContent>
+    <meta name="description" content="@Description" />
+    <link rel="canonical" href="@($"https://www.marzihandicrafts.ir{Path}")" />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="مرزی | هنرهای دستی" />
+    <meta property="og:title" content="@Title" />
+    <meta property="og:description" content="@Description" />
+    <meta property="og:url" content="@($"https://www.marzihandicrafts.ir{Path}")" />
+    <meta name="twitter:card" content="summary" />
+</HeadContent>
+
+@code {
+    [Parameter, EditorRequired] public string Title { get; set; } = string.Empty;
+    [Parameter, EditorRequired] public string Description { get; set; } = string.Empty;
+    [Parameter] public string Path { get; set; } = "/";
+}

@@ -5,14 +5,17 @@
 @using Microsoft.AspNetCore.Components.Authorization
 @using Marzi.Client.Shared.Components.Navigation
 @using Marzi.Client.Shared.Theme
+@using Marzi.Client.Shared.Services
+@using Marzi.Client.Shared.Components.Common
 @using Marzi.Client.Infrastructure.Services
 @using Marzi.Client.Infrastructure.Api
+@using Microsoft.JSInterop
 
 @inject AuthService AuthService
 @inject NavigationManager Navigation
 @inject IAnalyticsApi AnalyticsApi
 
-<MudRTLProvider RightToLeft="true">
+<MudRTLProvider RightToLeft="@(!_english)">
 
     <MudThemeProvider Theme="@ThemePreference.CurrentTheme" />
     <MudPopoverProvider />
@@ -33,6 +36,10 @@
             <MudSpacer />
 
             <ThemePicker />
+            <AuthorizeView>
+                <Authorized><UserOrderNotificationCenter /></Authorized>
+            </AuthorizeView>
+            @* Language switch is temporarily hidden while the English UI is being completed. *@
 
             <div class="desktop-navigation">
 
@@ -48,6 +55,12 @@
                     دوره‌ها
                 </MudButton>
 
+                <MudButton Href="/shop"
+                           Color="Color.Inherit"
+                           StartIcon="@Icons.Material.Filled.Storefront">
+                    فروشگاه
+                </MudButton>
+
                 <MudButton Href="/portfolio"
                            Color="Color.Inherit"
                            StartIcon="@Icons.Material.Filled.Palette">
@@ -58,6 +71,12 @@
                            Color="Color.Inherit"
                            StartIcon="@Icons.Material.Filled.ShoppingBag">
                     سفارش
+                </MudButton>
+
+                <MudButton Href="/shop/cart"
+                           Color="Color.Inherit"
+                           StartIcon="@Icons.Material.Filled.ShoppingCart">
+                    سبد خرید (@CartItemCount)
                 </MudButton>
 
                 <AuthorizeView Roles="Admin">
@@ -90,6 +109,11 @@
                                    StartIcon="@Icons.Material.Filled.Login">
                             ورود
                         </MudButton>
+                        <MudButton Href="/register"
+                                   Color="Color.Inherit"
+                                   StartIcon="@Icons.Material.Filled.PersonAdd">
+                            ثبت‌نام
+                        </MudButton>
                     </NotAuthorized>
                 </AuthorizeView>
 
@@ -112,8 +136,18 @@
                 </AuthorizeView>
             </div>
 
-            <MudIconButton Icon="@Icons.Material.Filled.Notifications"
-                           Color="Color.Inherit" />
+            <AuthorizeView>
+                <NotAuthorized>
+                    <MudIconButton Href="/register"
+                                   Icon="@Icons.Material.Filled.PersonAdd"
+                                   Color="Color.Inherit"
+                                   title="ثبت‌نام" />
+                </NotAuthorized>
+            </AuthorizeView>
+            <MudIconButton Href="/shop/cart"
+                           Icon="@Icons.Material.Filled.ShoppingCart"
+                           Color="Color.Inherit"
+                           title="سبد خرید" />
 
         </MudAppBar>
 
@@ -129,6 +163,9 @@
         </MudMainContent>
 
 
+        <SiteFooter />
+
+
         <div class="mobile-bottom-navigation">
 
             <BottomNavigation />
@@ -141,6 +178,10 @@
 
 @code {
     [Inject] private ThemePreferenceService ThemePreference { get; set; } = default!;
+    [Inject] private ShopCartService ShopCart { get; set; } = default!;
+    [Inject] private IJSRuntime JS { get; set; } = default!;
+    private bool _english;
+    private int CartItemCount => ShopCart.ItemCount;
 
     protected override void OnInitialized()
     {
@@ -151,7 +192,12 @@
     {
         if (firstRender)
         {
+            _english = await JS.InvokeAsync<string>("localStorage.getItem", "marzi-language") == "en";
+            await JS.InvokeVoidAsync("marziLanguage.set", _english ? "en" : "fa");
+            StateHasChanged();
             await ThemePreference.InitializeAsync();
+            ShopCart.Changed += OnCartChanged;
+            await ShopCart.LoadAsync();
 
             Navigation.LocationChanged += OnLocationChanged;
 
@@ -182,10 +228,12 @@
     }
 
     private void OnThemeChanged() => _ = InvokeAsync(StateHasChanged);
+    private void OnCartChanged() => _ = InvokeAsync(StateHasChanged);
 
     public void Dispose()
     {
         ThemePreference.Changed -= OnThemeChanged;
+        ShopCart.Changed -= OnCartChanged;
 
         Navigation.LocationChanged -= OnLocationChanged;
     }

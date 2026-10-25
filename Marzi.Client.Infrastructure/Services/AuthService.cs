@@ -4,6 +4,7 @@ using Marzi.Client.Core.Requests;
 using Marzi.Client.Core.Responses;
 using Marzi.Client.Infrastructure.Api;
 using Refit;
+using System.Text.Json;
 
 namespace Marzi.Client.Infrastructure.Services;
 
@@ -12,6 +13,7 @@ public sealed class AuthService
     private readonly IAuthApi _api;
     private readonly ITokenStorage _tokenStorage;
     private readonly IAuthenticationNotifier _authenticationNotifier;
+    public string? LastErrorMessage { get; private set; }
 
     public AuthService(
         IAuthApi api,
@@ -27,6 +29,7 @@ public sealed class AuthService
         LoginRequest request,
         CancellationToken cancellationToken = default)
     {
+        LastErrorMessage = null;
         try
         {
             var response = await _api.LoginAsync(request);
@@ -34,6 +37,9 @@ public sealed class AuthService
             if (!response.IsSuccessStatusCode ||
                 response.Content is null)
             {
+                LastErrorMessage = response.Error is ApiException apiException
+                    ? ReadApiError(apiException.Content)
+                    : null;
                 return null;
             }
 
@@ -44,37 +50,44 @@ public sealed class AuthService
 
             return response.Content;
         }
-        catch (ApiException)
+        catch (ApiException exception)
         {
+            LastErrorMessage = ReadApiError(exception.Content);
             return null;
         }
     }
 
-    public async Task<AuthResponse?> RegisterAsync(
+    public async Task<bool> RegisterAsync(
         RegisterRequest request,
         CancellationToken cancellationToken = default)
     {
+        LastErrorMessage = null;
         try
         {
             var response = await _api.RegisterAsync(request);
-
-            if (!response.IsSuccessStatusCode ||
-                response.Content is null)
-            {
-                return null;
-            }
-
-            await SaveAuthResponseAsync(response.Content);
-
-            _authenticationNotifier.NotifyAuthenticated(
-                response.Content.Token);
-
-            return response.Content;
+            if (response.IsSuccessStatusCode) return true;
+            if (response.Error is ApiException apiException)
+                LastErrorMessage = ReadApiError(apiException.Content);
+            return false;
         }
-        catch (ApiException)
+        catch (ApiException exception)
         {
-            return null;
+            LastErrorMessage = ReadApiError(exception.Content);
+            return false;
         }
+    }
+
+    private static string? ReadApiError(string? content)
+    {
+        if (string.IsNullOrWhiteSpace(content)) return null;
+        try
+        {
+            using var json = JsonDocument.Parse(content);
+            if (json.RootElement.TryGetProperty("message", out var message))
+                return message.GetString();
+        }
+        catch (JsonException) { }
+        return null;
     }
 
     public Task<string?> GetAccessTokenAsync()

@@ -1,0 +1,103 @@
+﻿@page "/admin/shop-products"
+@layout AdminLayout
+@using Marzi.Client.Infrastructure.Api
+@using Marzi.Client.Infrastructure.Services
+@using Microsoft.AspNetCore.Components.Authorization
+@inject IShopProductsApi ProductsApi
+@inject ISnackbar Snackbar
+@inject MediaService MediaService
+
+<AuthorizeView Roles="Admin">
+<Authorized>
+<MudContainer MaxWidth="MaxWidth.Large" Class="py-6">
+    <MudText Typo="Typo.h4" Class="mb-4">مدیریت محصولات فروشگاه</MudText>
+    <MudPaper Class="pa-4 mb-5" Outlined="true">
+        <MudText Typo="Typo.h6" Class="mb-3">@(_editingId is null ? "افزودن محصول" : "ویرایش محصول")</MudText>
+        <MudGrid>
+            <MudItem xs="12" sm="6"><MudTextField @bind-Value="_form.Name" Label="نام محصول" Required="true" /></MudItem>
+            <MudItem xs="12" sm="6"><MudTextField @bind-Value="_form.Category" Label="دسته‌بندی" Required="true" /></MudItem>
+            <MudItem xs="12"><MudTextField @bind-Value="_form.Description" Label="توضیحات" Lines="3" Required="true" /></MudItem>
+            <MudItem xs="12" sm="8">
+                <MudTextField @bind-Value="_form.ImageUrl" Label="نشانی تصویر (یا تصویر را بارگذاری کنید)" Required="true" />
+                <InputFile OnChange="UploadImageAsync" accept="image/jpeg,image/png,image/webp,image/gif" class="mobile-file-input" disabled="_saving" />
+                @if (!string.IsNullOrWhiteSpace(_form.ImageUrl)) { <img src="@_form.ImageUrl" alt="پیش‌نمایش تصویر محصول" style="max-width:180px;max-height:120px;object-fit:cover;border-radius:10px" /> }
+            </MudItem>
+            <MudItem xs="12" sm="4"><MudTextField @bind-Value="_form.Badge" Label="برچسب" /></MudItem>
+            <MudItem xs="12"><MudTextField @bind-Value="_form.Availability" Label="وضعیت موجودی/هماهنگی" /></MudItem>
+            <MudItem xs="12"><MudCheckBox @bind-Value="_form.IsPublished" Label="نمایش در فروشگاه و صفحه‌ی اصلی" /></MudItem>
+            <MudItem xs="12">
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" Disabled="_saving" OnClick="SaveAsync">ذخیره</MudButton>
+                @if (_editingId is not null) { <MudButton Class="ms-2" OnClick="ResetForm">انصراف</MudButton> }
+            </MudItem>
+        </MudGrid>
+    </MudPaper>
+    @if (_loading) { <MudProgressLinear Indeterminate="true" /> }
+    else
+    {
+        <MudGrid>
+        @foreach (var product in _products)
+        {
+            <MudItem xs="12" sm="6" md="4" @key="product.Id">
+                <MudCard>
+                    <MudCardMedia Image="@product.ImageUrl" Height="180" />
+                    <MudCardContent><MudText Typo="Typo.h6">@product.Name</MudText><MudText Typo="Typo.body2">@product.Category · @(product.IsPublished ? "منتشرشده" : "پیش‌نویس")</MudText><MudText Class="mt-2">@product.Description</MudText></MudCardContent>
+                    <MudCardActions><MudButton Color="Color.Primary" OnClick="@(() => Edit(product))">ویرایش</MudButton><MudButton Color="Color.Error" OnClick="@(() => DeleteAsync(product))">حذف</MudButton></MudCardActions>
+                </MudCard>
+            </MudItem>
+        }
+        </MudGrid>
+    }
+</MudContainer>
+</Authorized>
+<NotAuthorized><MudAlert Severity="Severity.Error" Class="ma-6">این بخش فقط برای مدیر است.</MudAlert></NotAuthorized>
+</AuthorizeView>
+
+@code {
+    private List<ShopProductDto> _products = [];
+    private ShopProductRequest _form = new();
+    private string? _editingId;
+    private bool _loading = true;
+    private bool _saving;
+    protected override async Task OnInitializedAsync() => await LoadAsync();
+    private async Task LoadAsync()
+    {
+        var response = await ProductsApi.ManageAsync();
+        if (response.IsSuccessStatusCode && response.Content is not null) _products = response.Content;
+        _loading = false;
+    }
+    private void Edit(ShopProductDto p)
+    {
+        _editingId = p.Id;
+        _form = new() { Name=p.Name, Category=p.Category, Description=p.Description, ImageUrl=p.ImageUrl, ImagePosition=p.ImagePosition, Badge=p.Badge, Availability=p.Availability, IsPublished=p.IsPublished };
+    }
+    private void ResetForm() { _editingId=null; _form=new(); }
+    private async Task SaveAsync()
+    {
+        _saving=true;
+        try
+        {
+            var response = _editingId is null ? await ProductsApi.CreateAsync(_form) : await ProductsApi.UpdateAsync(_editingId, _form);
+            if (!response.IsSuccessStatusCode || response.Content is null) { Snackbar.Add("ذخیره‌ی محصول انجام نشد.", Severity.Error); return; }
+            Snackbar.Add("محصول ذخیره شد.", Severity.Success); ResetForm(); await LoadAsync();
+        }
+        finally { _saving=false; }
+    }
+    private async Task DeleteAsync(ShopProductDto p)
+    {
+        var response=await ProductsApi.DeleteAsync(p.Id);
+        if(response.IsSuccessStatusCode) { _products.Remove(p); Snackbar.Add("محصول حذف شد.", Severity.Success); }
+        else Snackbar.Add("حذف محصول انجام نشد.", Severity.Error);
+    }
+    private async Task UploadImageAsync(InputFileChangeEventArgs args)
+    {
+        var file = args.File;
+        if (file.Size > 10 * 1024 * 1024) { Snackbar.Add("حجم تصویر حداکثر ۱۰ مگابایت باشد.", Severity.Warning); return; }
+        try
+        {
+            await using var stream = file.OpenReadStream(10 * 1024 * 1024);
+            _form.ImageUrl = await MediaService.UploadImageAsync(stream, file.Name, file.ContentType);
+            Snackbar.Add("تصویر بارگذاری شد.", Severity.Success);
+        }
+        catch (Exception ex) { Snackbar.Add($"بارگذاری تصویر انجام نشد: {ex.Message}", Severity.Error); }
+    }
+}

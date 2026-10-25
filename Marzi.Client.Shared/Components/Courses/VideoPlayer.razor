@@ -149,10 +149,16 @@ else
             authState.User.Identity?.Name
             ?? authState.User.FindFirst("nameid")?.Value;
 
-        _watermarkText =
-            string.IsNullOrWhiteSpace(identity)
-                ? null
-                : $"{identity} · marzihandicrafts.ir";
+        var phone = authState.User.FindFirst("phone")?.Value;
+        var phoneDigits = new string((phone ?? string.Empty).Where(char.IsDigit).ToArray());
+        var maskedPhone = phoneDigits.Length >= 4
+            ? $"•••• {phoneDigits[^4..]}"
+            : null;
+
+        _watermarkText = _isAuthenticated
+            ? string.Join(" · ", new[] { identity, maskedPhone, "marzihandicrafts.ir" }
+                .Where(value => !string.IsNullOrWhiteSpace(value)))
+            : "پیش‌نمایش عمومی · marzihandicrafts.ir";
     }
 
     private bool _initializing;
@@ -574,7 +580,7 @@ else
                 _module =
                     await JS.InvokeAsync<IJSObjectReference>(
                         "import",
-                        "./_content/Marzi.Client.Shared/js/hlsPlayer.js");
+                        "./_content/Marzi.Client.Shared/js/hlsPlayer.js?v=20261021");
             }
 
 

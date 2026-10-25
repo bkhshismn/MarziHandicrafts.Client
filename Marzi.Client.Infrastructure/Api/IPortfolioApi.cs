@@ -15,6 +15,12 @@ public interface IPortfolioApi
     Task<ApiResponse<PortfolioItemDto>> CreateAsync(
         [Body] PortfolioCreateRequest request);
 
+    [Put("/api/portfolio/{id}")]
+    Task<ApiResponse<PortfolioItemDto>> UpdateAsync(Guid id, [Body] PortfolioCreateRequest request);
+
+    [Delete("/api/portfolio/{id}")]
+    Task<IApiResponse> DeleteAsync(Guid id);
+
     [Get("/api/portfolio/category/{category}")]
     Task<ApiResponse<List<PortfolioItemDto>>> GetByCategoryAsync(string category);
 

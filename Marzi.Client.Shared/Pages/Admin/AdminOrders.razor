@@ -15,6 +15,7 @@
 @inject AuthenticationStateProvider AuthenticationStateProvider
 @inject ISnackbar Snackbar
 @inject IDialogService DialogService
+@inject Microsoft.JSInterop.IJSRuntime JS
 
 <MudContainer MaxWidth="MaxWidth.False"
               Class="py-6">
@@ -160,8 +161,13 @@
 
                             @if (!string.IsNullOrWhiteSpace(order.ImageUrl))
                             {
-                                <MudCardMedia Image="@order.ImageUrl"
-                                              Height="220" />
+                                <div class="admin-order-image-frame">
+                                    <MudImage Src="@order.ImageUrl"
+                                              Alt="تصویر سفارش"
+                                              Height="220"
+                                              ObjectFit="ObjectFit.Contain"
+                                              Class="admin-order-card-image" />
+                                </div>
                             }
                             else
                             {
@@ -252,7 +258,7 @@
 
                                         <MudText Typo="Typo.body2">
 
-                                            @order.CreatedAt.ToString("yyyy/MM/dd HH:mm")
+                                            @PersianDateFormatter.Format(order.CreatedAt.ToLocalTime())
 
                                         </MudText>
 
@@ -306,7 +312,17 @@
                             </MudCardContent>
 
 
-                            <MudCardActions Class="px-4 pb-4">
+                            <MudCardActions Class="px-4 pb-4 d-flex flex-wrap">
+                                <MudStack Row="true" Spacing="1" Class="w-100 flex-wrap">
+                                    <MudButton Variant="Variant.Outlined" Color="Color.Secondary"
+                                               StartIcon="@Icons.Material.Filled.Edit"
+                                               Style="flex: 1 1 30%; min-width: 0;"
+                                               OnClick="@(() => ShowOrderInfo(order))">ویرایش</MudButton>
+                                    <MudButton Variant="Variant.Outlined" Color="Color.Error"
+                                               StartIcon="@Icons.Material.Filled.Delete"
+                                               Style="flex: 1 1 30%; min-width: 0;"
+                                               OnClick="@(() => DeleteOrderAsync(order))">حذف</MudButton>
+                                </MudStack>
 
                                 <MudButton Variant="Variant.Outlined"
                                            Color="Color.Primary"
@@ -512,8 +528,32 @@
             await InvokeAsync(
                 StateHasChanged);
         }
+        else if (result.Data is string action && action == "deleted")
+        {
+            _orders = _orders.Where(item => item.Id != order.Id).ToList();
+            await InvokeAsync(StateHasChanged);
+        }
     }
 
+
+    private async Task DeleteOrderAsync(OrderDto order)
+    {
+        var confirmed = await JS.InvokeAsync<bool>("confirm", new object?[] { $"سفارش «{order.Type}» حذف شود؟" });
+        if (!confirmed)
+            return;
+
+        try
+        {
+            await OrderService.DeleteByAdminAsync(order.Id);
+            _orders = _orders.Where(item => item.Id != order.Id).ToList();
+            Snackbar.Add("سفارش حذف شد.", Severity.Success);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[ADMIN ORDERS] Delete failed: {ex}");
+            Snackbar.Add("حذف سفارش انجام نشد. دوباره تلاش کنید.", Severity.Error);
+        }
+    }
 
     private static string GetTypeText(
         string type)
